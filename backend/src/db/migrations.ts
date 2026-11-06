@@ -1,10 +1,12 @@
+import { agencySchema } from './agency-schema.js';
+import { financialSchema } from './financial-schema.js';
 import { serviceSchema } from './service-schema.js';
 import { createHash } from 'node:crypto';
 import type { Database } from 'better-sqlite3';
 import type { Mode } from '../config.js';
 
 export interface Migration { readonly version: number; readonly name: string; readonly sql: string }
-// Only migration metadata exists in M1B-1. Domain migrations must append later.
+// Append migrations only; applied SQL is checked against its recorded checksum.
 export const migrations: readonly Migration[] = [{
   version: 1, name: 'migration_metadata',
   sql: `CREATE TABLE schema_migrations (
@@ -14,7 +16,7 @@ export const migrations: readonly Migration[] = [{
     mode TEXT NOT NULL CHECK (mode IN ('test', 'demo', 'real')),
     applied_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
   ) STRICT;`
-}, { version: 2, name: 'service_identity', sql: serviceSchema }];
+}, { version: 2, name: 'service_identity', sql: serviceSchema }, { version: 3, name: 'synthetic_financial_engine', sql: financialSchema }, { version: 4, name: 'agency_projects_and_allocations', sql: agencySchema }];
 export class MigrationError extends Error {
   constructor() { super('Database migration failed; no pending migrations were committed.'); }
 }

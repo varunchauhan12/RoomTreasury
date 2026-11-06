@@ -1,3 +1,5 @@
+import { registerClientProjects } from './api/client-projects.js';
+import { registerDashboard } from './web/dashboard.js';
 import { registerIdentity } from './security/identity-route.js';
 import { randomUUID } from 'node:crypto';
 import Fastify from 'fastify';
@@ -42,6 +44,8 @@ export async function buildApp(db: Database) {
     return { status: 'ok' };
   });
   registerIdentity(app, db);
+  registerClientProjects(app, db);
+  registerDashboard(app);
   app.addHook('onClose', async () => { if (db.open) db.close(); });
   return app;
 }

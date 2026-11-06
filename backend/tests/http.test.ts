@@ -65,7 +65,7 @@ test('generated OpenAPI validates, matches committed artifact, and documents onl
   try {
     await app.ready();
     const spec = app.swagger();
-    assert.deepEqual(Object.keys(spec.paths ?? {}), ['/health', '/v1/projects/{projectId}/service-identity']);
+    assert.deepEqual(Object.keys(spec.paths ?? {}), ['/health', '/v1/projects/{projectId}/service-identity', '/v1/client-projects/', '/v1/client-projects/{projectId}']);
     assert.deepEqual(Object.keys(spec.paths?.['/health'] ?? {}), ['get']);
     assert.deepEqual(Object.keys(spec.paths?.['/health']?.get?.responses ?? {}).sort(), ['200', '400', '500', '503']);
     assert.deepEqual(spec, JSON.parse(readFileSync('backend/openapi.json', 'utf8')));

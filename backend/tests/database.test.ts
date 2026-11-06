@@ -29,11 +29,11 @@ test('a transaction commits; a deliberately failed transaction rolls back all wr
   assert.equal(db.inTransaction, false);
 });
 
-test('identity schema contains only metadata and service tables and repeat/reopen applies exactly once', (t) => {
+test('financial schema is empty at initialization and repeat/reopen applies exactly once', (t) => {
   const { db, config } = testDatabase(t);
   const rows = db.prepare('SELECT * FROM schema_migrations').all();
-  assert.equal(rows.length, 2);
-  assert.deepEqual(db.prepare("SELECT name FROM sqlite_master WHERE type='table'").pluck().all(), ['schema_migrations', 'service_principals', 'service_scopes', 'service_credentials', 'service_auth_events']);
+  assert.equal(rows.length, 4);
+  assert.deepEqual(db.prepare("SELECT name FROM sqlite_master WHERE type='table'").pluck().all(), ['schema_migrations', 'service_principals', 'service_scopes', 'service_credentials', 'service_auth_events', 'projects', 'project_recipients', 'payment_requests', 'request_revisions', 'commitments', 'payment_approvals', 'reservations', 'ledger_entries', 'settlement_receipts', 'financial_audit_events', 'settlement_idempotency', 'client_projects', 'delivery_proposals', 'workstream_allocations', 'request_allocations', 'commitment_allocations']);
   applyMigrations(db, 'test');
   assert.deepEqual(db.prepare('SELECT * FROM schema_migrations').all(), rows);
   db.close();
@@ -45,21 +45,21 @@ test('identity schema contains only metadata and service tables and repeat/reope
 test('ordered pending migrations commit together and only once', (t) => {
   const { db } = testDatabase(t);
   const ordered = [...migrations,
-    { version: 3, name: 'smoke_table', sql: 'CREATE TABLE smoke(value INTEGER);' },
-    { version: 4, name: 'smoke_row', sql: 'INSERT INTO smoke VALUES (42);' }
+    { version: 5, name: 'smoke_table', sql: 'CREATE TABLE smoke(value INTEGER);' },
+    { version: 6, name: 'smoke_row', sql: 'INSERT INTO smoke VALUES (42);' }
   ];
   applyMigrations(db, 'test', ordered);
   applyMigrations(db, 'test', ordered);
   assert.equal(db.prepare('SELECT count(*) FROM smoke').pluck().get(), 1);
-  assert.deepEqual(db.prepare('SELECT version FROM schema_migrations ORDER BY version').pluck().all(), [1, 2, 3, 4]);
+  assert.deepEqual(db.prepare('SELECT version FROM schema_migrations ORDER BY version').pluck().all(), [1, 2, 3, 4, 5, 6]);
 });
 
 test('migration error rolls back every pending DDL/write and leaves previous history intact', (t) => {
   const { db } = testDatabase(t);
   const before = db.prepare('SELECT * FROM schema_migrations').all();
   assert.throws(() => applyMigrations(db, 'test', [...migrations,
-    { version: 3, name: 'temporary', sql: 'CREATE TABLE should_rollback(id INTEGER);' },
-    { version: 4, name: 'broken', sql: 'NOT VALID SQL;' }
+    { version: 5, name: 'temporary', sql: 'CREATE TABLE should_rollback(id INTEGER);' },
+    { version: 6, name: 'broken', sql: 'NOT VALID SQL;' }
   ]), MigrationError);
   assert.equal(db.prepare("SELECT name FROM sqlite_master WHERE name='should_rollback'").get(), undefined);
   assert.deepEqual(db.prepare('SELECT * FROM schema_migrations').all(), before);
@@ -70,7 +70,7 @@ test('a failure during first bootstrap rolls back migration metadata too', (t) =
   const db = new BetterSqlite3(join(temporaryRoot(t), 'bootstrap.sqlite'));
   try {
     db.pragma('foreign_keys = ON');
-    assert.throws(() => applyMigrations(db, 'test', [...migrations, { version: 3, name: 'broken', sql: 'NOT SQL;' }]), MigrationError);
+    assert.throws(() => applyMigrations(db, 'test', [...migrations, { version: 5, name: 'broken', sql: 'NOT SQL;' }]), MigrationError);
     assert.deepEqual(db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all(), []);
     assert.equal(db.inTransaction, false);
   } finally { db.close(); }
@@ -78,7 +78,7 @@ test('a failure during first bootstrap rolls back migration metadata too', (t) =
 
 test('invalid order, changed historical SQL, unknown versions and mode mismatch fail closed', (t) => {
   const { db } = testDatabase(t);
-  assert.throws(() => applyMigrations(db, 'test', [...migrations, { version: 4, name: 'gap', sql: 'SELECT 1;' }]), MigrationError);
+  assert.throws(() => applyMigrations(db, 'test', [...migrations, { version: 6, name: 'gap', sql: 'SELECT 1;' }]), MigrationError);
   assert.throws(() => applyMigrations(db, 'test', [{ ...migrations[0]!, sql: 'SELECT 1;' }]), MigrationError);
   assert.throws(() => applyMigrations(db, 'real'), MigrationError);
   db.prepare('UPDATE schema_migrations SET version=99 WHERE version=2').run();
@@ -91,7 +91,7 @@ test('two independent SQLite files remain isolated', (t) => {
   assert.notEqual(first.config.databasePath, second.config.databasePath);
   first.db.exec('CREATE TABLE local_only(value INTEGER); INSERT INTO local_only VALUES (1);');
   assert.equal(second.db.prepare("SELECT 1 FROM sqlite_master WHERE name='local_only'").get(), undefined);
-  assert.equal(second.db.prepare('SELECT count(*) FROM schema_migrations').pluck().get(), 2);
+  assert.equal(second.db.prepare('SELECT count(*) FROM schema_migrations').pluck().get(), 4);
 });
 
 test('two connections use bounded contention and recover after lock release', (t) => {
