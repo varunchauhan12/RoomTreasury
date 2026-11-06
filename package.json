@@ -11,6 +11,7 @@
     "start": "node dist/server.js",
     "migrate": "node dist/db/migrate.js",
     "demo:setup": "node dist/demo/cli.js",
+    "owner:admin": "node dist/security/owner-cli.js",
     "test": "tsc -p tsconfig.test.json && NODE_ENV=test node --test .test-build/tests/*.test.js",
     "openapi": "node dist/api/export-openapi.js"
   },

@@ -1,3 +1,8 @@
+import { registerLoginPage } from './security/owner-login-page.js';
+import { authSettings } from './security/owner-auth.js';
+import { registerOwnerAuth } from './security/owner-routes.js';
+import { registerReview } from './reviews/routes.js';
+import { registerReviewWidget } from './reviews/widget.js';
 import { registerImports } from './imports/routes.js';
 import { registerImportWorkspace } from './imports/workspace.js';
 import { registerEstimation } from './api/estimation.js';
@@ -18,6 +23,7 @@ export async function buildApp(db: Database, options: {aiFetch?:typeof fetch} = 
     ajv: { customOptions: { removeAdditional: false, coerceTypes: false, useDefaults: false } }
   });
   installErrorHandling(app);
+  const ownerSettings=authSettings(db);
   await app.register(swagger, {
     openapi: {
       openapi: '3.0.3', info: { title: 'RoomTreasury foundation', version: '0.1.0' },
@@ -52,6 +58,10 @@ export async function buildApp(db: Database, options: {aiFetch?:typeof fetch} = 
   registerDashboard(app);
   registerImports(app,db);
   registerImportWorkspace(app);
+  registerOwnerAuth(app,db,ownerSettings);
+  registerLoginPage(app);
+  registerReview(app,db,ownerSettings);
+  registerReviewWidget(app);
   app.addHook('onClose', async () => { if (db.open) db.close(); });
   return app;
 }
