@@ -77,6 +77,6 @@ test('migration 9 upgrades populated version-8 storage without claiming legacy p
   assert.deepEqual(db.prepare('SELECT * FROM client_projects').get(),project);
   assert.equal(db.prepare('SELECT count(*) FROM project_task_bindings').pluck().get(),0);
   assert.equal(db.prepare('SELECT count(*) FROM processing_jobs').pluck().get(),0);
-  assert.equal(db.prepare('SELECT count(*) FROM schema_migrations').pluck().get(),9);
+  assert.equal(db.prepare('SELECT count(*) FROM schema_migrations').pluck().get(),10);
  }finally{db.close();}
 });

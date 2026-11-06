@@ -1,3 +1,5 @@
+import {projectImportLink,checkLinkedTerms} from '../imports/project-linked.js';
+import {bindingAuthorized,type Binding} from '../jobs/bindings.js';
 import { randomUUID } from 'node:crypto';
 import type { Database } from 'better-sqlite3';
 import { AgencyEngine } from '../domain/agency-engine.js';
@@ -31,7 +33,8 @@ export class OwnerReview {
  }
  private owner(actor:FinancialActor,importId:string):asserts actor is HumanActor {
   if(actor.kind==='service')denyServiceOwner(actor);
-  if(actor.kind!=='human'||actor.role!=='owner'||actor.projectId!==this.original(importId).task_id||!text(actor.id))reject('Trusted project owner context required; no browser owner identity exists.',403);
+  if(actor.kind!=='human'||actor.role!=='owner'||actor.projectId!==this.original(importId).task_id||!text(actor.id))reject('Trusted project owner context required.',403);
+  const link=projectImportLink(this.db,importId);if(link)bindingAuthorized(this.db,actor.id,link.binding_id);
  }
  snapshot(importId:string){return this.db.transaction(()=>{
   const root=this.root(importId);const revisions=this.db.prepare('SELECT * FROM owner_review_revisions WHERE import_id=? ORDER BY revision').all(importId) as Revision[];
@@ -39,10 +42,13 @@ export class OwnerReview {
   const notes=this.db.prepare('SELECT * FROM owner_review_notes WHERE revision_id=? ORDER BY rowid').all(revision.id);
   const verifications=this.db.prepare('SELECT * FROM owner_review_verifications WHERE revision_id=?').all(revision.id) as {gate:Gate;fingerprint:string;note_id:string}[];
   const decision=this.db.prepare('SELECT * FROM owner_review_decisions WHERE revision_id=?').get(revision.id) as any;
+  const link=projectImportLink(this.db,importId);
+  const bound=link?this.db.prepare('SELECT * FROM project_task_bindings WHERE id=?').get(link.binding_id) as Binding:undefined;
+  const deliveryProjectId=bound?.client_project_id??('review-'+p.taskId);
   const blockers:string[]=[];
   for(const gate of Object.keys(gates) as Gate[])if(!verifications.some(v=>v.gate===gate&&v.fingerprint===revision.fingerprint))blockers.push('Verification required: '+gate);
   for(const verification of verifications){const latest=(notes as any[]).filter(n=>n.gate===verification.gate).at(-1);if(latest&&latest.id!==verification.note_id)blockers.push('New unverified note requires a fresh review revision: '+verification.gate);}
-  if(!decision&&this.db.prepare('SELECT 1 FROM projects WHERE id=?').get('review-'+p.taskId))blockers.push('A delivery project already exists for this task; budget amendments require a separate workflow.');
+  if(!decision&&this.db.prepare('SELECT 1 FROM projects WHERE id=?').get(deliveryProjectId))blockers.push('A delivery project already exists for this task; budget amendments require a separate workflow.');
   if(revision.revision===0)blockers.push('Original agent analysis cannot authorize delivery; create a separately reviewed revision.');
   if(p.status!=='READY_FOR_OWNER_REVIEW')blockers.push('Proposal status blocks approval: '+p.status);
   if(p.blockingReviews.length)blockers.push(...p.blockingReviews.map((s:string)=>'Proposal blocker: '+s));
@@ -52,7 +58,7 @@ export class OwnerReview {
   if(marginPercent<15&&!verifications.some(v=>v.gate==='margin_review'))blockers.push('Explicit financial review required: low or negative projected margin.');
   if(p.proposal.budgetCents>1000000||p.project.agreedRevenueCents>1000000)blockers.push('Local review policy cap is 1,000,000 cents for revenue and delivery budget.');
   const latestImport=this.db.prepare('SELECT id FROM proposal_imports WHERE task_id=? ORDER BY revision DESC LIMIT 1').pluck().get(this.original(importId).task_id);if(latestImport!==importId)blockers.push('A newer imported proposal exists.');
-  return {revision:{...revision,proposal:p},history:revisions.length?revisions:[root],notes,verifications,decision:decision??null,gates,blockers,status:decision?.decision??(blockers.length?'BLOCKED':'ELIGIBLE_FOR_TRUSTED_OWNER_REVIEW'),projectedGrossMarginCents:margin,projectedGrossMarginPercent:marginPercent,ownerHttpApprovalAvailable:false,authBasis:'trusted_domain_only_no_human_authentication',unresolvedQuestions:p.unresolvedQuestions};
+  return {projectLink:link?{projectId:bound!.client_project_id,jobId:link.job_id,intakeRevision:link.intake_revision}:null,revision:{...revision,proposal:p},history:revisions.length?revisions:[root],notes,verifications,decision:decision??null,gates,blockers,status:decision?.decision??(blockers.length?'BLOCKED':'ELIGIBLE_FOR_TRUSTED_OWNER_REVIEW'),projectedGrossMarginCents:margin,projectedGrossMarginPercent:marginPercent,ownerHttpApprovalAvailable:false,authBasis:'trusted_domain_only_no_human_authentication',unresolvedQuestions:p.unresolvedQuestions};
  })();}
  recordNote(importId:string,id:string,fingerprint:string,gate:Gate,answer:string,reference:string,actor?:FinancialActor):string {
   return this.write(()=>{this.current(importId,id,fingerprint);if(actor)this.owner(actor,importId);
@@ -80,6 +86,7 @@ export class OwnerReview {
   return this.write(()=>{this.owner(actor,importId);const parent=this.current(importId,id,fingerprint);if(!text(reason))reject('Revision reason required.',400);
    if(this.db.prepare("SELECT 1 FROM owner_review_decisions WHERE import_id=? AND decision='APPROVED_SYNTHETIC_DELIVERY'").get(importId))reject('Review already decided.');
    const original=this.original(importId);const bundle={proposal:{name:'revision.json',content:JSON.stringify(payload)}};const valid=validateBundle(bundle);
+   const link=projectImportLink(this.db,importId);if(link)checkLinkedTerms(this.db,bindingAuthorized(this.db,actor.id,link.binding_id),valid.proposal);
    if(valid.proposal.taskId!==original.task_id)reject('Revisions must preserve the original task identity.',400);
    if(valid.proposalFingerprint===parent.fingerprint)reject('Materially unchanged proposal; record a note instead.');
    this.ensure(importId);const revisedId=randomUUID();this.db.prepare('INSERT INTO owner_review_revisions VALUES (?,?,?,?,?,?,?,?,?,?)').run(revisedId,importId,id,parent.revision+1,valid.proposalFingerprint,valid.original,reason,'trusted_owner_revision',actor.id,Date.now());return revisedId;
@@ -94,8 +101,10 @@ export class OwnerReview {
    if(decision==='APPROVED_SYNTHETIC_DELIVERY'){
     const review=this.snapshot(importId);if(review.blockers.length)throw new ImportError(review.blockers);
     const p=validateBundle({proposal:{name:'approved-revision.json',content:revision.payload}}).proposal;
-    projectId='review-'+p.taskId;const financialActor:HumanActor=Object.freeze({kind:'human',role:'owner',id:actor.id,projectId});
-    const agency=new AgencyEngine(this.db);agency.createClientProject(financialActor,projectId,p.client.name,p.project.brief,p.project.agreedRevenueCents);
+    const link=projectImportLink(this.db,importId),bound=link?bindingAuthorized(this.db,actor.id,link.binding_id):null;
+    if(bound)checkLinkedTerms(this.db,bound,p);
+    projectId=bound?.client_project_id??('review-'+p.taskId);const financialActor:HumanActor=Object.freeze({kind:'human',role:'owner',id:actor.id,projectId});
+    const agency=new AgencyEngine(this.db);if(!bound)agency.createClientProject(financialActor,projectId,p.client.name,p.project.brief,p.project.agreedRevenueCents);
     const proposal=agency.createProposal(financialActor,projectId,{budgetCents:p.proposal.budgetCents,explanation:p.proposal.explanation,allocations:p.proposal.allocations.map((a:any)=>({name:a.workstream,limitCents:a.limitCents}))});
     agency.approveProposal(financialActor,projectId,proposal.proposalId);
    }

@@ -9,7 +9,7 @@ export type JobState='queued'|'dispatching'|'dispatched'|'running'|'collecting'|
 export interface Job {
  id:string;binding_id:string;submitting_owner_id:string;intake_snapshot:string;intake_hash:string;intake_revision:number;attempt:number;
  transport:'mock';correlation_id:string;idempotency_key:string;state:JobState;created_at:number;updated_at:number;completed_at:number|null;
- error_code:string|null;diagnostic:string|null;lease_owner:string|null;lease_until:number|null;result_import_id:null;
+ error_code:string|null;diagnostic:string|null;lease_owner:string|null;lease_until:number|null;result_import_id:string|null;
 }
 const terminal=new Set<JobState>(['needs_attention','failed','cancelled','imported']);
 const next:Record<JobState,readonly JobState[]>={queued:['dispatching','failed','cancelled'],dispatching:['dispatched','failed','dispatch_uncertain','cancelled'],dispatched:['running','failed','needs_attention','cancelled'],running:['collecting','failed','needs_attention','cancelled'],collecting:['validating','failed','needs_attention','cancelled'],validating:['needs_attention','failed','cancelled'],dispatch_uncertain:['cancelled'],needs_attention:[],failed:[],cancelled:[],imported:[]};

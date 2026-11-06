@@ -1,3 +1,5 @@
+import {projectImportLink} from '../imports/project-linked.js';
+import {bindingAuthorized} from '../jobs/bindings.js';
 import type {FastifyInstance,FastifyRequest} from 'fastify';
 import type {Database} from 'better-sqlite3';
 import {gates,OwnerReview,type Gate} from './service.js';
@@ -11,7 +13,7 @@ export function registerReview(app:FastifyInstance,db:Database,settings:AuthSett
  const params={type:'object',additionalProperties:false,required:['id'],properties:{id:{type:'string',minLength:1,maxLength:100}}};
  const binding={revisionId:{type:'string',minLength:1,maxLength:100},fingerprint:{type:'string',pattern:'^[a-f0-9]{64}$'}};
  const string={type:'string',minLength:1,maxLength:8000};
- function actor(request:FastifyRequest,id:string,mutation:boolean){const session=ownerSession(db,request,settings,mutation);const taskId=authorizeOwner(db,session,id);return {session,actor:Object.freeze({kind:'human' as const,id:session.ownerId,role:'owner' as const,projectId:taskId})};}
+ function actor(request:FastifyRequest,id:string,mutation:boolean){const session=ownerSession(db,request,settings,mutation);const taskId=authorizeOwner(db,session,id);const link=projectImportLink(db,id);if(link)bindingAuthorized(db,session.ownerId,link.binding_id);return {session,actor:Object.freeze({kind:'human' as const,id:session.ownerId,role:'owner' as const,projectId:taskId})};}
  function authenticationBlockers(id:string){const snapshot=new OwnerReview(db).snapshot(id);const verifications=db.prepare(`SELECT v.gate FROM owner_review_verifications v JOIN authenticated_review_events a
  ON a.revision_id=v.revision_id AND a.fingerprint=v.fingerprint AND a.action='verify' AND a.target_id=v.note_id AND a.gate=v.gate AND a.owner_id=v.owner_id
  JOIN human_owners o ON o.id=a.owner_id JOIN human_owner_scopes s ON s.owner_id=o.id

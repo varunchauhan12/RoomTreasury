@@ -1,3 +1,5 @@
+import {registerProjectImports} from './imports/project-routes.js';
+import {registerProjectWorkspace} from './web/project-workspace.js';
 import { registerJobs } from './jobs/routes.js';
 import { registerLoginPage } from './security/owner-login-page.js';
 import { authSettings } from './security/owner-auth.js';
@@ -54,10 +56,12 @@ export async function buildApp(db: Database, options: {aiFetch?:typeof fetch} = 
     return { status: 'ok' };
   });
   registerIdentity(app, db);
-  registerClientProjects(app, db);
+  registerClientProjects(app, db,ownerSettings);
   registerEstimation(app,db,options.aiFetch);
   registerDashboard(app);
-  registerImports(app,db);
+  registerProjectWorkspace(app);
+  registerImports(app,db,ownerSettings);
+  registerProjectImports(app,db,ownerSettings);
   registerImportWorkspace(app);
   registerOwnerAuth(app,db,ownerSettings);
   registerLoginPage(app);
