@@ -1,0 +1,881 @@
+{
+  "taskId": "RT-APEX-001",
+  "currency": "USD",
+  "status": "NEEDS_CLIENT_CLARIFICATION",
+  "client": {
+    "name": "Apex Media"
+  },
+  "project": {
+    "name": "Apex Media Agency Website",
+    "brief": "Build a professional website for a video production agency with a homepage, portfolio, service pages, lead capture form, responsive design and basic SEO.",
+    "agreedRevenueCents": 150000,
+    "deadline": null
+  },
+  "proposal": {
+    "budgetCents": 141000,
+    "provenance": "switch_agent",
+    "explanation": "Supersedes the original unvalidated 90000-cent / 30-hour smoke-test baseline for the same proposed six-page scope. Actual independent specialist analysis estimates 47 hours (41–58-hour range) at an unverified blended internal cost of 2500 cents/hour: 117500-cent base plus 23500-cent contingency (20%) = 141000 cents. This leaves only 9000 cents projected gross margin. Recommend deferring delivery approval until scope and financial assumptions are validated, then reducing scope or renegotiating price. This is a provisional cost baseline, not a commercially endorsed fixed-price offer.",
+    "assumptions": [
+      {
+        "assumptionId": "RT-APEX-001-A1",
+        "description": "Proposed scope cap, subject to client confirmation: one homepage, one portfolio page with up to six video embeds, three service pages and one contact page.",
+        "verificationStatus": "UNVERIFIED",
+        "requiredConfirmation": "Client written scope/SOW confirmation before delivery commitment."
+      },
+      {
+        "assumptionId": "RT-APEX-001-A2",
+        "description": "Single language; reusable templates; no custom CMS or administrative interface.",
+        "verificationStatus": "UNVERIFIED",
+        "requiredConfirmation": "Client written scope/SOW confirmation before delivery commitment."
+      },
+      {
+        "assumptionId": "RT-APEX-001-A3",
+        "description": "Client supplies approved copy, logo, images, video links, usage rights and privacy wording before implementation.",
+        "verificationStatus": "UNVERIFIED",
+        "requiredConfirmation": "Client written scope/SOW confirmation before delivery commitment."
+      },
+      {
+        "assumptionId": "RT-APEX-001-A4",
+        "description": "One consolidated design revision and one acceptance correction round within the agreed scope.",
+        "verificationStatus": "UNVERIFIED",
+        "requiredConfirmation": "Client written scope/SOW confirmation before delivery commitment."
+      },
+      {
+        "assumptionId": "RT-APEX-001-A5",
+        "description": "Videos use existing client-controlled external hosting; domain, website hosting, form-service charges and other subscriptions are client-funded separately.",
+        "verificationStatus": "UNVERIFIED",
+        "requiredConfirmation": "Client written scope/SOW confirmation before delivery commitment."
+      },
+      {
+        "assumptionId": "RT-APEX-001-A6",
+        "description": "47 planning hours at 2500 USD cents/hour; actual internal rates and assigned resources are unverified.",
+        "verificationStatus": "UNVERIFIED",
+        "requiredConfirmation": "Owner validates rates and capacity before approving delivery."
+      },
+      {
+        "assumptionId": "RT-APEX-001-A7",
+        "description": "Conditional estimate: 15 business days after written scope approval, complete assets/access and confirmed capacity; at least four productive delivery hours per business day and client feedback within two business days of each review request. Feedback is included in this planning window; missed gates require rescheduling. No confirmed start or deadline.",
+        "verificationStatus": "UNVERIFIED",
+        "requiredConfirmation": "Owner confirms capacity; client confirms review cadence and launch needs."
+      }
+    ],
+    "risks": [
+      "Unconfirmed scope and service/portfolio counts prevent a binding offer.",
+      "Revised 141000-cent cost baseline leaves only 6% projected margin before overhead and taxes.",
+      "Upper 58-hour scenario plus 20% contingency costs174000 cents, exceeding revenue by24000.",
+      "Funding, rates, capacity, third-party costs and client approvals remain unverified."
+    ],
+    "allocations": [
+      {
+        "workstream": "Research",
+        "limitCents": 15000,
+        "baseCostCents": 12500,
+        "contingencyCents": 2500,
+        "estimatedEffortHours": 5,
+        "explanation": "5 planning hours at 2500 cents/hour, with separately tracked 20% contingency. Limit is proposed only; contingency use requires documented justification and owner authority.",
+        "relatedTasks": [
+          "RT-APEX-001-R1",
+          "RT-APEX-001-R2"
+        ]
+      },
+      {
+        "workstream": "Design",
+        "limitCents": 30000,
+        "baseCostCents": 25000,
+        "contingencyCents": 5000,
+        "estimatedEffortHours": 10,
+        "explanation": "10 planning hours at 2500 cents/hour, with separately tracked 20% contingency. Limit is proposed only; contingency use requires documented justification and owner authority.",
+        "relatedTasks": [
+          "RT-APEX-001-D1",
+          "RT-APEX-001-D2"
+        ]
+      },
+      {
+        "workstream": "Development",
+        "limitCents": 72000,
+        "baseCostCents": 60000,
+        "contingencyCents": 12000,
+        "estimatedEffortHours": 24,
+        "explanation": "24 planning hours at 2500 cents/hour, with separately tracked 20% contingency. Limit is proposed only; contingency use requires documented justification and owner authority.",
+        "relatedTasks": [
+          "RT-APEX-001-DEV1",
+          "RT-APEX-001-DEV2",
+          "RT-APEX-001-DEV3",
+          "RT-APEX-001-DEV4",
+          "RT-APEX-001-DEV5"
+        ]
+      },
+      {
+        "workstream": "QA",
+        "limitCents": 24000,
+        "baseCostCents": 20000,
+        "contingencyCents": 4000,
+        "estimatedEffortHours": 8,
+        "explanation": "8 planning hours at 2500 cents/hour, with separately tracked 20% contingency. Limit is proposed only; contingency use requires documented justification and owner authority.",
+        "relatedTasks": [
+          "RT-APEX-001-Q1",
+          "RT-APEX-001-Q2"
+        ]
+      }
+    ],
+    "contingencyPolicy": "23500 cents total contingency is included in the four limits, not additional to the 141000-cent budget. Track base and contingency separately. Any use or transfer requires documented review and owner authority; no automatic spending entitlement."
+  },
+  "statementOfWork": {
+    "objective": "Present Apex Media's production work and services clearly and enable prospective clients to submit enquiries.",
+    "scope": [
+      "Proposed six-page marketing website using reusable templates.",
+      "Portfolio with up to six externally hosted video embeds.",
+      "Lead form with name, email and enquiry fields, validation, spam protection and delivery to one client-approved inbox.",
+      "Responsive layouts and basic on-page and technical SEO.",
+      "Basic SEO includes page titles/descriptions, headings, meaningful image alt text, canonical domain, sitemap and robots/indexing configuration; no migration, keyword campaign, schema expansion, analytics or ranking guarantee."
+    ],
+    "deliverables": [
+      {
+        "name": "Scope and content map",
+        "description": "Page inventory, service list and content checklist.",
+        "expectedOutcome": "Bounded, reviewable requirements.",
+        "acceptanceCriteria": [
+          "Client confirms page counts, content ownership and enquiry destination."
+        ],
+        "dependencies": [
+          "Client answers scope questions."
+        ]
+      },
+      {
+        "name": "Responsive design",
+        "description": "Homepage and reusable portfolio, service and contact layouts.",
+        "expectedOutcome": "Consistent agency presentation.",
+        "acceptanceCriteria": [
+          "Client approves layouts, navigation, typography and call-to-action placement."
+        ],
+        "dependencies": [
+          "Approved content map and brand assets."
+        ]
+      },
+      {
+        "name": "Implemented website",
+        "description": "Six proposed pages, six video embeds, working enquiry form and SEO setup.",
+        "expectedOutcome": "Visitors can review work and submit enquiries.",
+        "acceptanceCriteria": [
+          "All agreed pages and videos work.",
+          "A valid test enquiry reaches the approved inbox; invalid input is rejected.",
+          "Pages have unique titles and descriptions, appropriate headings, image alt text, sitemap and robots configuration."
+        ],
+        "dependencies": [
+          "Approved design, final content and client-provided hosting access through an approved secure method."
+        ]
+      },
+      {
+        "name": "QA and handover",
+        "description": "Test results, deployment and ownership instructions.",
+        "expectedOutcome": "Reviewed website ready for client acceptance.",
+        "acceptanceCriteria": [
+          "Acceptance checks pass and no critical defects remain.",
+          "Client receives deployment and service ownership instructions."
+        ],
+        "dependencies": [
+          "Completed build and client acceptance review."
+        ]
+      }
+    ],
+    "exclusions": [
+      "Video production or editing, copywriting, branding and media licensing.",
+      "Custom CMS, ecommerce, accounts, CRM integration and multilingual content.",
+      "Ongoing maintenance, subscriptions, additional pages or revisions.",
+      "Search ranking guarantees and ongoing SEO campaigns.",
+      "Formal accessibility certification/audit, guaranteed performance scores, uptime SLA, analytics/consent platform implementation and migration/redirect mapping unless separately scoped. Baseline usability, keyboard/form checks and embed privacy review remain included."
+    ],
+    "acceptanceCriteria": [
+      "Approved scope and content are present.",
+      "No horizontal overflow at 375, 768 and 1440 CSS-pixel widths.",
+      "Navigation, video playback and form delivery pass on current Chrome, Safari and Firefox at acceptance.",
+      "Form labels, keyboard navigation, visible focus and error messages pass manual checks.",
+      "HTTPS is enabled; no server secrets are exposed in browser assets; form input is validated server-side or by the selected form provider.",
+      "Client reviews the agreed checklist; unresolved defects are recorded before acceptance.",
+      "Every agreed page is reachable; internal links have no broken targets; canonical domain and production indexing match approved instructions.",
+      "Approved portfolio embeds play on the agreed test matrix or show an informative fallback when the external host is unavailable.",
+      "Client approves browser/version matrix before build; testing covers Chrome and Firefox desktop and Safari desktop/mobile at 375, 768 and 1440 CSS-pixel layout widths where applicable.",
+      "No critical or high-severity defects remain; lower-severity items require written client acceptance or an agreed correction plan."
+    ],
+    "milestones": [
+      {
+        "milestoneId": "RT-APEX-001-M1",
+        "name": "Scope and readiness",
+        "estimatedDurationBusinessDays": 2,
+        "expectedCompletion": "Estimated day2",
+        "completionCriteria": "Client confirms scope, content manifest, rights, providers, privacy requirements, acceptance authority and access.",
+        "dependencies": [
+          "Client scope decisions",
+          "Owner-confirmed staffing and financial review"
+        ],
+        "deliverable": "Approved scope and readiness checklist"
+      },
+      {
+        "milestoneId": "RT-APEX-001-M2",
+        "name": "Design approval",
+        "estimatedDurationBusinessDays": 3,
+        "expectedCompletion": "Estimated day5",
+        "completionCriteria": "Client approves responsive templates after one consolidated revision.",
+        "dependencies": [
+          "M1"
+        ],
+        "deliverable": "Approved page layouts"
+      },
+      {
+        "milestoneId": "RT-APEX-001-M3",
+        "name": "Implementation",
+        "estimatedDurationBusinessDays": 6,
+        "expectedCompletion": "Estimated day11",
+        "completionCriteria": "Agreed pages, portfolio, form, SEO and staging deployment pass developer checks.",
+        "dependencies": [
+          "M2",
+          "Final assets and functional provider access"
+        ],
+        "deliverable": "Review build"
+      },
+      {
+        "milestoneId": "RT-APEX-001-M4",
+        "name": "QA, acceptance and handover",
+        "estimatedDurationBusinessDays": 4,
+        "expectedCompletion": "Estimated day15",
+        "completionCriteria": "Acceptance matrix passes, launch blockers resolved, client acceptance recorded and handover delivered.",
+        "dependencies": [
+          "M3",
+          "Client availability",
+          "Production domain and launch decision"
+        ],
+        "deliverable": "Accepted deployment and handover"
+      }
+    ],
+    "commercialTerms": [
+      "Agreed client revenue:150000 USD cents. Receipt, tax treatment, payment due dates and collectability unverified.",
+      "Proposed payment schedule for negotiation:75000 cents on accepted SOW and75000 cents on final acceptance; neither milestone is confirmed or received.",
+      "Client-funded domain, hosting, form and video subscriptions require named billing owners and confirmed costs; these costs are excluded from the agency delivery budget only if client agrees to pay directly.",
+      "Draft acceptance process: named client decision-maker reviews against the checklist within two business days per milestone; silence does not imply acceptance. Review and correction terms require agreement.",
+      "This SOW is a draft for scope/commercial review, not an accepted contract or authorization to start. Agency recommends resolving scope and financial viability before offering a binding delivery commitment."
+    ],
+    "projectOverview": {
+      "clientName": "Apex Media",
+      "projectName": "Apex Media Agency Website",
+      "businessObjective": "Present Apex Media's production work and services clearly and enable prospective clients to submit enquiries.",
+      "summary": "Build a professional website for a video production agency with a homepage, portfolio, service pages, lead capture form, responsive design and basic SEO.",
+      "documentStatus": "DRAFT_FOR_REVIEW_NOT_ACCEPTED_CONTRACT"
+    },
+    "assumptions": [
+      {
+        "assumptionId": "RT-APEX-001-A1",
+        "description": "Proposed scope cap, subject to client confirmation: one homepage, one portfolio page with up to six video embeds, three service pages and one contact page.",
+        "verificationStatus": "UNVERIFIED",
+        "requiredConfirmation": "Client written scope/SOW confirmation before delivery commitment."
+      },
+      {
+        "assumptionId": "RT-APEX-001-A2",
+        "description": "Single language; reusable templates; no custom CMS or administrative interface.",
+        "verificationStatus": "UNVERIFIED",
+        "requiredConfirmation": "Client written scope/SOW confirmation before delivery commitment."
+      },
+      {
+        "assumptionId": "RT-APEX-001-A3",
+        "description": "Client supplies approved copy, logo, images, video links, usage rights and privacy wording before implementation.",
+        "verificationStatus": "UNVERIFIED",
+        "requiredConfirmation": "Client written scope/SOW confirmation before delivery commitment."
+      },
+      {
+        "assumptionId": "RT-APEX-001-A4",
+        "description": "One consolidated design revision and one acceptance correction round within the agreed scope.",
+        "verificationStatus": "UNVERIFIED",
+        "requiredConfirmation": "Client written scope/SOW confirmation before delivery commitment."
+      },
+      {
+        "assumptionId": "RT-APEX-001-A5",
+        "description": "Videos use existing client-controlled external hosting; domain, website hosting, form-service charges and other subscriptions are client-funded separately.",
+        "verificationStatus": "UNVERIFIED",
+        "requiredConfirmation": "Client written scope/SOW confirmation before delivery commitment."
+      },
+      {
+        "assumptionId": "RT-APEX-001-A7",
+        "description": "Conditional estimate: 15 business days after written scope approval, complete assets/access and confirmed capacity; at least four productive delivery hours per business day and client feedback within two business days of each review request. Feedback is included in this planning window; missed gates require rescheduling. No confirmed start or deadline.",
+        "verificationStatus": "UNVERIFIED",
+        "requiredConfirmation": "Owner confirms capacity; client confirms review cadence and launch needs."
+      }
+    ],
+    "timelineBasis": "Conditional 15-business-day estimate from readiness gate; no confirmed start/deadline. Actual content delays, provider problems or review delays change forecast; calendar dates must be agreed after capacity confirmation.",
+    "changeManagement": "Record requested changes, assess effort, third-party costs, schedule and acceptance impact, then obtain client agreement and separate authorized owner financial review before implementation. Extra features, pages, revisions or changed integration requirements are changes. Fixing failure to meet agreed acceptance criteria is not automatically a billable scope change; estimates assume one consolidated acceptance review and require reforecasting if defects exceed contingency."
+  },
+  "executionPlan": {
+    "tasks": [
+      {
+        "taskId": "RT-APEX-001-R1",
+        "title": "Confirm scope and acceptance",
+        "description": "Confirm service/page/embed counts, CMS decision, SEO boundaries, revision limits and named decision-maker.",
+        "workstream": "Research",
+        "priority": "High",
+        "estimatedEffortHours": 2,
+        "dependencies": [],
+        "expectedOutput": "Written scope and test matrix",
+        "completionCriteria": "Client confirms inventory and acceptance responsibilities."
+      },
+      {
+        "taskId": "RT-APEX-001-R2",
+        "title": "Resolve assets and provider readiness",
+        "description": "Build content/rights manifest; confirm hosting/DNS, form inbox/provider, privacy decisions, cost owners and access.",
+        "workstream": "Research",
+        "priority": "High",
+        "estimatedEffortHours": 3,
+        "dependencies": [
+          "RT-APEX-001-R1"
+        ],
+        "expectedOutput": "Readiness checklist",
+        "completionCriteria": "Required assets, rights and access demonstrated; unresolved launch dependencies identified."
+      },
+      {
+        "taskId": "RT-APEX-001-D1",
+        "title": "Set visual direction",
+        "description": "Prepare homepage direction and reusable component rules from approved brand assets.",
+        "workstream": "Design",
+        "priority": "High",
+        "estimatedEffortHours": 4,
+        "dependencies": [
+          "RT-APEX-001-R1",
+          "RT-APEX-001-R2"
+        ],
+        "expectedOutput": "Design direction",
+        "completionCriteria": "Client approves visual direction."
+      },
+      {
+        "taskId": "RT-APEX-001-D2",
+        "title": "Complete responsive templates",
+        "description": "Specify portfolio/service/contact templates, responsive navigation and one consolidated design revision.",
+        "workstream": "Design",
+        "priority": "High",
+        "estimatedEffortHours": 6,
+        "dependencies": [
+          "RT-APEX-001-D1"
+        ],
+        "expectedOutput": "Responsive layouts",
+        "completionCriteria": "Client approves templates, content placement and CTA."
+      },
+      {
+        "taskId": "RT-APEX-001-DEV1",
+        "title": "Build pages and navigation",
+        "description": "Implement six agreed pages and insert client-supplied copy using reusable templates.",
+        "workstream": "Development",
+        "priority": "High",
+        "estimatedEffortHours": 10,
+        "dependencies": [
+          "RT-APEX-001-D2"
+        ],
+        "expectedOutput": "Staging pages",
+        "completionCriteria": "Agreed page inventory and navigation complete."
+      },
+      {
+        "taskId": "RT-APEX-001-DEV2",
+        "title": "Integrate portfolio",
+        "description": "Add up to six approved video embeds, poster images, deferred loading and failure fallbacks.",
+        "workstream": "Development",
+        "priority": "High",
+        "estimatedEffortHours": 4,
+        "dependencies": [
+          "RT-APEX-001-DEV1",
+          "RT-APEX-001-R2"
+        ],
+        "expectedOutput": "Portfolio",
+        "completionCriteria": "Approved embeds and fallback behavior work on representative devices."
+      },
+      {
+        "taskId": "RT-APEX-001-DEV3",
+        "title": "Integrate enquiry form",
+        "description": "Configure agreed fields, provider-side validation, spam controls, success/failure messages and inbox routing.",
+        "workstream": "Development",
+        "priority": "High",
+        "estimatedEffortHours": 4,
+        "dependencies": [
+          "RT-APEX-001-DEV1",
+          "RT-APEX-001-R2"
+        ],
+        "expectedOutput": "Lead capture",
+        "completionCriteria": "Valid test reaches nominated inbox; invalid/spam paths behave as agreed."
+      },
+      {
+        "taskId": "RT-APEX-001-DEV4",
+        "title": "Complete responsive behavior and SEO",
+        "description": "Check responsive layout; configure unique metadata, headings, alt text, canonical, sitemap and robots.",
+        "workstream": "Development",
+        "priority": "High",
+        "estimatedEffortHours": 3,
+        "dependencies": [
+          "RT-APEX-001-DEV1"
+        ],
+        "expectedOutput": "Responsive/SEO build",
+        "completionCriteria": "Defined SEO and viewport checks pass."
+      },
+      {
+        "taskId": "RT-APEX-001-DEV5",
+        "title": "Configure deployment",
+        "description": "Configure staging/production build, domain and HTTPS with client-authorized access; document deployment.",
+        "workstream": "Development",
+        "priority": "High",
+        "estimatedEffortHours": 3,
+        "dependencies": [
+          "RT-APEX-001-DEV2",
+          "RT-APEX-001-DEV3",
+          "RT-APEX-001-DEV4"
+        ],
+        "expectedOutput": "Deployable release",
+        "completionCriteria": "Review environment works and production launch configuration is documented."
+      },
+      {
+        "taskId": "RT-APEX-001-Q1",
+        "title": "Execute acceptance matrix",
+        "description": "Run browser/viewport, keyboard, form-delivery, SEO, embed, HTTPS and exposed-secret checks; triage and verify in-scope corrections.",
+        "workstream": "QA",
+        "priority": "High",
+        "estimatedEffortHours": 5,
+        "dependencies": [
+          "RT-APEX-001-DEV5"
+        ],
+        "expectedOutput": "QA evidence and defect log",
+        "completionCriteria": "No critical/high launch blockers; remaining items handled by acceptance plan."
+      },
+      {
+        "taskId": "RT-APEX-001-Q2",
+        "title": "Coordinate acceptance and handover",
+        "description": "Obtain recorded client acceptance, perform agreed production launch and smoke checks, document accounts and maintenance ownership.",
+        "workstream": "QA",
+        "priority": "High",
+        "estimatedEffortHours": 3,
+        "dependencies": [
+          "RT-APEX-001-Q1"
+        ],
+        "expectedOutput": "Acceptance and handover record",
+        "completionCriteria": "Acceptance recorded; production smoke checks pass and ownership instructions delivered."
+      }
+    ],
+    "dependencies": [
+      {
+        "taskId": "RT-APEX-001-R2",
+        "dependsOn": [
+          "RT-APEX-001-R1"
+        ]
+      },
+      {
+        "taskId": "RT-APEX-001-D1",
+        "dependsOn": [
+          "RT-APEX-001-R1",
+          "RT-APEX-001-R2"
+        ]
+      },
+      {
+        "taskId": "RT-APEX-001-D2",
+        "dependsOn": [
+          "RT-APEX-001-D1"
+        ]
+      },
+      {
+        "taskId": "RT-APEX-001-DEV1",
+        "dependsOn": [
+          "RT-APEX-001-D2"
+        ]
+      },
+      {
+        "taskId": "RT-APEX-001-DEV2",
+        "dependsOn": [
+          "RT-APEX-001-DEV1",
+          "RT-APEX-001-R2"
+        ]
+      },
+      {
+        "taskId": "RT-APEX-001-DEV3",
+        "dependsOn": [
+          "RT-APEX-001-DEV1",
+          "RT-APEX-001-R2"
+        ]
+      },
+      {
+        "taskId": "RT-APEX-001-DEV4",
+        "dependsOn": [
+          "RT-APEX-001-DEV1"
+        ]
+      },
+      {
+        "taskId": "RT-APEX-001-DEV5",
+        "dependsOn": [
+          "RT-APEX-001-DEV2",
+          "RT-APEX-001-DEV3",
+          "RT-APEX-001-DEV4"
+        ]
+      },
+      {
+        "taskId": "RT-APEX-001-Q1",
+        "dependsOn": [
+          "RT-APEX-001-DEV5"
+        ]
+      },
+      {
+        "taskId": "RT-APEX-001-Q2",
+        "dependsOn": [
+          "RT-APEX-001-Q1"
+        ]
+      }
+    ],
+    "qualityChecks": [
+      "Execute all SOW acceptance criteria and record results.",
+      "Test successful, invalid and failed form submissions; verify actual inbox receipt.",
+      "Check broken links, console errors, video loading and image sizing.",
+      "Verify production indexing configuration, sitemap and metadata.",
+      "Review third-party embed privacy behavior and client-approved privacy wording before launch.",
+      "Record browser versions, viewport sizes, test results and remaining defect dispositions.",
+      "Confirm agreed data-retention and privacy wording with client; do not claim legal compliance certification.",
+      "Obtain explicit production launch authorization from client; no silent acceptance."
+    ],
+    "estimatedTotalHours": 47,
+    "resources": [
+      {
+        "role": "Delivery lead/strategist",
+        "hours": 5
+      },
+      {
+        "role": "Web designer",
+        "hours": 10
+      },
+      {
+        "role": "Web developer",
+        "hours": 24
+      },
+      {
+        "role": "QA/delivery lead",
+        "hours": 8
+      }
+    ],
+    "resourceStatus": "Roles are required capabilities, not assigned or confirmed personnel; overlap is possible but capacity is unverified."
+  },
+  "riskRegister": [
+    {
+      "riskId": "RT-APEX-001-K1",
+      "description": "Unaccepted page/embed caps, CMS and revision expectations.",
+      "category": "Scope",
+      "severity": "Critical",
+      "probability": "High",
+      "potentialImpact": "Unbounded delivery effort.",
+      "mitigation": "Confirm capped scope and change process before offer.",
+      "responsibleWorkstream": "Research",
+      "evidenceStatus": "SPECIALIST_IDENTIFIED_RISK_NOT_OBSERVED_INCIDENT"
+    },
+    {
+      "riskId": "RT-APEX-001-K2",
+      "description": "Basic SEO remains undefined by client.",
+      "category": "Scope",
+      "severity": "High",
+      "probability": "High",
+      "potentialImpact": "Keyword, migration or analytics work may be expected.",
+      "mitigation": "Approve the explicit metadata/indexing checklist and exclusions.",
+      "responsibleWorkstream": "Research",
+      "evidenceStatus": "SPECIALIST_IDENTIFIED_RISK_NOT_OBSERVED_INCIDENT"
+    },
+    {
+      "riskId": "RT-APEX-001-K3",
+      "description": "Copy, brand assets or media rights are unavailable.",
+      "category": "External dependency",
+      "severity": "High",
+      "probability": "High",
+      "potentialImpact": "Blocked build, delay and rights disputes.",
+      "mitigation": "Require content manifest and rights evidence at readiness gate.",
+      "responsibleWorkstream": "Research",
+      "evidenceStatus": "SPECIALIST_IDENTIFIED_RISK_NOT_OBSERVED_INCIDENT"
+    },
+    {
+      "riskId": "RT-APEX-001-K4",
+      "description": "Form privacy, spam protection and inbox delivery are unresolved.",
+      "category": "Security",
+      "severity": "Critical",
+      "probability": "Medium",
+      "potentialImpact": "Mishandled personal data or lost leads.",
+      "mitigation": "Agree fields, provider, retention, privacy text and validate actual inbox receipt.",
+      "responsibleWorkstream": "Development",
+      "evidenceStatus": "SPECIALIST_IDENTIFIED_RISK_NOT_OBSERVED_INCIDENT"
+    },
+    {
+      "riskId": "RT-APEX-001-K5",
+      "description": "Hosting, DNS and subscription ownership are unconfirmed.",
+      "category": "External dependency",
+      "severity": "High",
+      "probability": "Medium",
+      "potentialImpact": "Access delays and extra expenses.",
+      "mitigation": "Confirm providers, account owners, access and recurring costs before schedule commitment.",
+      "responsibleWorkstream": "Research",
+      "evidenceStatus": "SPECIALIST_IDENTIFIED_RISK_NOT_OBSERVED_INCIDENT"
+    },
+    {
+      "riskId": "RT-APEX-001-K6",
+      "description": "Video host, embed permissions and mobile behavior fail expectations.",
+      "category": "Technical",
+      "severity": "High",
+      "probability": "Medium",
+      "potentialImpact": "Portfolio fails acceptance or slows pages.",
+      "mitigation": "Test representative embeds early; use posters, deferred loading and informative fallbacks.",
+      "responsibleWorkstream": "Development",
+      "evidenceStatus": "SPECIALIST_IDENTIFIED_RISK_NOT_OBSERVED_INCIDENT"
+    },
+    {
+      "riskId": "RT-APEX-001-K7",
+      "description": "47h planning estimate and2500-cent hourly rate are unverified.",
+      "category": "Financial",
+      "severity": "High",
+      "probability": "High",
+      "potentialImpact": "141000-cent baseline may understate actual costs.",
+      "mitigation": "Validate bottom-up tasks, actual rates and capacity; use41–58h range for review.",
+      "responsibleWorkstream": "Research",
+      "evidenceStatus": "SPECIALIST_IDENTIFIED_RISK_NOT_OBSERVED_INCIDENT"
+    },
+    {
+      "riskId": "RT-APEX-001-K8",
+      "description": "Revision limits and correction process are unaccepted.",
+      "category": "Scope",
+      "severity": "High",
+      "probability": "High",
+      "potentialImpact": "Repeated reviews consume contingency.",
+      "mitigation": "Agree revision cap, defect distinction and client feedback timing.",
+      "responsibleWorkstream": "Design",
+      "evidenceStatus": "SPECIALIST_IDENTIFIED_RISK_NOT_OBSERVED_INCIDENT"
+    },
+    {
+      "riskId": "RT-APEX-001-K9",
+      "description": "Sequential handoffs and client delays undermine15-day estimate.",
+      "category": "Schedule",
+      "severity": "High",
+      "probability": "Medium",
+      "potentialImpact": "Missed launch expectation.",
+      "mitigation": "Capacity-confirm milestone gates and feedback timing; reforecast on delays.",
+      "responsibleWorkstream": "QA",
+      "evidenceStatus": "SPECIALIST_IDENTIFIED_RISK_NOT_OBSERVED_INCIDENT"
+    },
+    {
+      "riskId": "RT-APEX-001-K10",
+      "description": "Browser, accessibility and performance expectations differ.",
+      "category": "Quality",
+      "severity": "High",
+      "probability": "High",
+      "potentialImpact": "Acceptance disputes and rework.",
+      "mitigation": "Approve measurable matrix and baseline usability checks; explicitly scope any certification or score guarantees.",
+      "responsibleWorkstream": "QA",
+      "evidenceStatus": "SPECIALIST_IDENTIFIED_RISK_NOT_OBSERVED_INCIDENT"
+    },
+    {
+      "riskId": "RT-APEX-001-K11",
+      "description": "Revenue receipt, funds, commitments, policy limits and capacity are unverified.",
+      "category": "Financial",
+      "severity": "High",
+      "probability": "Medium",
+      "potentialImpact": "Positive projected margin does not establish funding or spending authority.",
+      "mitigation": "Owner checks authoritative financial engine and actual rates before delivery approval.",
+      "responsibleWorkstream": "Research",
+      "evidenceStatus": "SPECIALIST_IDENTIFIED_RISK_NOT_OBSERVED_INCIDENT"
+    },
+    {
+      "riskId": "RT-APEX-001-K12",
+      "description": "141000-cent budget leaves only9000 cents before overhead; upper scenario174000 exceeds revenue.",
+      "category": "Financial",
+      "severity": "Critical",
+      "probability": "Medium",
+      "potentialImpact": "6% nominal margin can become a loss.",
+      "mitigation": "Defer approval; reduce scope or renegotiate revenue, then independently re-review.",
+      "responsibleWorkstream": "Research",
+      "evidenceStatus": "SPECIALIST_IDENTIFIED_RISK_NOT_OBSERVED_INCIDENT"
+    },
+    {
+      "riskId": "RT-APEX-001-K13",
+      "description": "Contingency embedded in allocations may be mistaken for ordinary spend.",
+      "category": "Financial",
+      "severity": "Medium",
+      "probability": "High",
+      "potentialImpact": "Unnoticed overruns or double-counted reserve.",
+      "mitigation": "Track117500 base and23500 contingency separately within limits; require justified owner-controlled changes.",
+      "responsibleWorkstream": "Research",
+      "evidenceStatus": "SPECIALIST_IDENTIFIED_RISK_NOT_OBSERVED_INCIDENT"
+    }
+  ],
+  "specialistContributions": [
+    {
+      "specialist": "req-agent",
+      "analysisTaskId": "RT-APEX-001-REQ",
+      "status": "RECEIVED_AND_REVIEWED",
+      "sourceMessageIds": [
+        "sw_4eab27f1e2794300a0f7bbc23b38cb76"
+      ],
+      "findings": [
+        "Confirmed brief does not specify page counts, CMS, SEO boundaries or acceptance details.",
+        "Six-page cap and six embeds are suggested limits requiring client acceptance.",
+        "Defined requirements, measurable acceptance and scope/assets/build/launch gates."
+      ],
+      "integration": "Preserved caps as unverified; added explicit acceptance, exclusions and client clarification gates.",
+      "projectId": "RT-APEX-001"
+    },
+    {
+      "specialist": "challenge-agent",
+      "analysisTaskId": "RT-APEX-001-RISK",
+      "status": "RECEIVED_AND_REVIEWED",
+      "sourceMessageIds": [
+        "sw_a6794bce88334e47a58dbe1070011ec2"
+      ],
+      "findings": [
+        "Original30h/10-day model lacks validated scope, capacity and rates.",
+        "Raised12 scope, technical, security, quality, schedule and financial risks.",
+        "Required separate tracking of base and contingency."
+      ],
+      "integration": "Replaced original cost baseline with independent estimate; withdrew10-day offer; added gated conditional schedule and contingency breakdown.",
+      "projectId": "RT-APEX-001"
+    },
+    {
+      "specialist": "commitment-intelligence-agent",
+      "analysisTaskId": "RT-APEX-001-COST",
+      "status": "RECEIVED_AND_REVIEWED",
+      "sourceMessageIds": [
+        "sw_b2110d7282ad4fa8906539f464670114",
+        "sw_00986f2b60094b41a85824422fc2db8f"
+      ],
+      "findings": [
+        "Planning47h; range41–58h.",
+        "Research5h, Design10h, Development24h, QA8h at unverified2500 cents/h.",
+        "Base117500 cents plus23500 contingency; budget141000 cents; margin9000 cents.",
+        "Confirmed revised four limits and123000–174000-cent range; accepted36h/no-contingency arithmetic correction; supported15-day schedule only conditionally."
+      ],
+      "integration": "Adopted provisional47h full-scope baseline, confirmed revised four allocations, corrected original capacity wording and retained conditional15-day schedule.",
+      "projectId": "RT-APEX-001"
+    },
+    {
+      "specialist": "treasury-ops-agent",
+      "analysisTaskId": "RT-APEX-001-FIN",
+      "status": "RECEIVED_AND_REVIEWED",
+      "sourceMessageIds": [
+        "sw_ad700ea94843495e944f8f7d198f903e",
+        "sw_69c23f3ae5bf47088cce246ef56bb004"
+      ],
+      "findings": [
+        "Original90000 allocations and60000 projected margin are arithmetically consistent but conditionally feasible only.",
+        "No authorized backend balances, commitments, reservations, policy limits or capacity available.",
+        "Revenue is not verified cash; spending requires separate owner authority.",
+        "Revised assessment confirms141000 budget and9000 margin; concludes6% pre-overhead margin and range crossing revenue make approval imprudent.",
+        "Recommends NEEDS_CLIENT_CLARIFICATION with financial review blocking execution, then re-scope or reprice."
+      ],
+      "integration": "Actual revised treasury review incorporated; recommend deferring delivery and financial approval.",
+      "projectId": "RT-APEX-001"
+    }
+  ],
+  "financialSummary": {
+    "agreedRevenueCents": 150000,
+    "proposedDeliveryBudgetCents": 141000,
+    "projectedGrossMarginCents": 9000,
+    "totalAllocationCents": 141000,
+    "projectedGrossMarginPercent": 6,
+    "baseEstimatedCostCents": 117500,
+    "contingencyCents": 23500,
+    "cashReceivedCents": null,
+    "availableDeliveryFundsCents": null,
+    "backendVerificationStatus": "UNVERIFIED_NO_AUTHORIZED_BACKEND_EVIDENCE",
+    "explanation": "Revenue minus proposed full delivery budget. Not actual margin or available cash. Overhead, taxes, payment fees and any separately client-funded costs are outside this provisional calculation.",
+    "scenarios": [
+      {
+        "name": "Low41h plus20% contingency",
+        "hours": 41,
+        "baseCostCents": 102500,
+        "contingencyCents": 20500,
+        "totalCostCents": 123000,
+        "projectedGrossMarginCents": 27000
+      },
+      {
+        "name": "Planning47h plus20% contingency",
+        "hours": 47,
+        "baseCostCents": 117500,
+        "contingencyCents": 23500,
+        "totalCostCents": 141000,
+        "projectedGrossMarginCents": 9000
+      },
+      {
+        "name": "High58h plus20% contingency",
+        "hours": 58,
+        "baseCostCents": 145000,
+        "contingencyCents": 29000,
+        "totalCostCents": 174000,
+        "projectedGrossMarginCents": -24000
+      }
+    ],
+    "financialReviewStatus": "REVISED_TREASURY_ASSESSMENT_RECEIVED_DEFER_APPROVAL"
+  },
+  "unresolvedQuestions": [
+    "Client: confirm final sitemap, service/page counts, portfolio count, single language, CMS need and revision limits.",
+    "Client: name decision-maker and acceptance authority; confirm launch needs, review cadence and readiness date.",
+    "Client: supply copy, branding, approved media links and rights evidence.",
+    "Client: choose hosting/domain/form providers, inbox, access ownership, privacy wording and retention requirements; confirm recurring-charge responsibility.",
+    "Client: accept explicit basic SEO scope, browser/viewport matrix, usability checks and exclusions.",
+    "Owner: validate actual rates, assigned capacity, authoritative funds, existing commitments/reservations and policy limits.",
+    "Owner/client: resolve150000 revenue versus141000 planning budget and174000 upper scenario; reduce scope or renegotiate price before commitment.",
+    "Owner/client: agree payment due dates, tax/fee treatment, acceptance terms and maintenance ownership."
+  ],
+  "ownerApprovalRequired": true,
+  "readinessExplanation": "NEEDS_CLIENT_CLARIFICATION is the primary execution-readiness status. Financial review also blocks execution: full-scope planning leaves6% margin and high-case cost exceeds revenue. All four actual specialist assessments and both requested cost/financial reconciliations were received and inspected. Treasury recommends deferring approval and re-scoping or repricing. No delivery or spending approval is recommended.",
+  "reconciliation": [
+    {
+      "issue": "Effort and budget",
+      "original": "30h;90000 cents",
+      "specialistFinding": "47h planning;141000 cents;41–58h range",
+      "resolution": "Supersede original baseline for unchanged proposed scope; increase51000 cents.90000 remains an unvalidated reduced-scope alternative, not a delivery promise."
+    },
+    {
+      "issue": "Gross margin",
+      "original": "60000 cents;40%",
+      "specialistFinding": "9000 cents;6% at planning cost",
+      "resolution": "Withdraw original margin claim for unchanged scope; defer financial approval and evaluate scope reduction or repricing."
+    },
+    {
+      "issue": "Contingency structure",
+      "original": "15000 cents embedded without explicit per-workstream accounting",
+      "specialistFinding": "Track reserve separately; cost specialist recommends23500 shared contingency",
+      "resolution": "Include23500 within four proposed limits with explicit base/reserve split; no additional fifth allocation or double count."
+    },
+    {
+      "issue": "Timeline",
+      "original": "10 business days",
+      "specialistFinding": "Insufficient evidence for a promise;47h planning effort and sequential gates",
+      "resolution": "Replace original10-day suggestion with conditional15-business-day planning estimate, supported by cost specialist only after prerequisites, confirmed capacity and two-day client feedback assumption. No confirmed start/deadline."
+    },
+    {
+      "issue": "Accessibility scope",
+      "original": "Basic keyboard/form checks included",
+      "specialistFinding": "Requirements specialist excludes unspecified accessibility targets; challenge specialist asks for explicit quality expectations",
+      "resolution": "Keep baseline usability and keyboard/form checks; exclude certification or comprehensive audit unless separately agreed."
+    },
+    {
+      "issue": "90000-cent capacity arithmetic",
+      "original": "Cost specialist described30h at cap with no contingency",
+      "specialistFinding": "90000 /2500 equals36h without reserve, or30h plus15000 reserve",
+      "resolution": "Cost specialist explicitly accepted correction in sw_00986f2b60094b41a85824422fc2db8f; it does not validate unchanged scope."
+    }
+  ],
+  "blockingReviews": [
+    "CLIENT_SCOPE_AND_DEPENDENCIES",
+    "FINANCIAL_VIABILITY_AND_BACKEND_VALIDATION",
+    "RESOURCE_CAPACITY"
+  ],
+  "ownerDecisionRecommendation": {
+    "recommendation": "DEFER_DELIVERY_AND_FINANCIAL_APPROVAL",
+    "reason": "Do not approve unchanged six-page scope at90000 cents or automatically approve141000 cents. Confirm scope and true costs, then re-scope or renegotiate commercial terms and seek independent financial review.",
+    "options": [
+      {
+        "name": "Full proposed scope",
+        "budgetCents": 141000,
+        "status": "PROVISIONAL_NOT_APPROVED",
+        "condition": "Re-scope or reprice and independently re-review true costs, overhead, fees, taxes and defined margin before any approval; current unchanged commercial terms are not recommended for approval."
+      },
+      {
+        "name": "Retain original ceiling",
+        "budgetCents": 90000,
+        "status": "REQUIRES_NEW_SCOPE_AND_ESTIMATE",
+        "condition": "Reduce/customize scope explicitly with client; retain required form, responsive and QA safeguards."
+      }
+    ],
+    "ownerApprovalRequired": true
+  },
+  "authorityStatement": "Analytical proposal only. No financial operations, project creation, backend submission or agent configuration changes performed.",
+  "specialistContactFailures": []
+}
+

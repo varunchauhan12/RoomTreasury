@@ -210,7 +210,7 @@ test('v2 upgrades through v4 without changing history, repeats once, and real-mo
   const identityBefore=db.prepare('SELECT * FROM service_principals').all();
   const old=db.prepare('SELECT * FROM schema_migrations').all();
   applyMigrations(db,'test');applyMigrations(db,'test');assert.deepEqual(db.prepare('SELECT * FROM schema_migrations WHERE version<3').all(),old);
-  assert.equal(db.prepare('SELECT count(*) FROM schema_migrations').pluck().get(),5);
+  assert.equal(db.prepare('SELECT count(*) FROM schema_migrations').pluck().get(),6);
   assert.equal(db.prepare('SELECT count(*) FROM projects').pluck().get(),0);
   assert.deepEqual(db.prepare('SELECT * FROM service_principals').all(),identityBefore);
   assert.equal(authenticate(db,token).principalId,principal);

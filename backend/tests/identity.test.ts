@@ -197,7 +197,7 @@ test('operational issuance is blocked; diagnostic probe is absent in test/demo/r
   const app = await buildApp(db);
   try {
     await app.ready();
-    assert.deepEqual(Object.keys(app.swagger().paths ?? {}).sort(), ['/health', '/v1/client-projects/', '/v1/client-projects/estimate', '/v1/client-projects/{projectId}', '/v1/projects/{projectId}/service-identity']);
+    assert.deepEqual(Object.keys(app.swagger().paths ?? {}).sort(), ['/health', '/v1/client-projects/', '/v1/client-projects/estimate', '/v1/client-projects/{projectId}', '/v1/projects/{projectId}/service-identity', '/v1/proposal-imports/', '/v1/proposal-imports/confirm', '/v1/proposal-imports/preview', '/v1/proposal-imports/{id}']);
     assert.equal((await app.inject({ method: 'POST', url: '/v1/projects/a/service-auth-probes/x/result' })).statusCode, 404);
   } finally { await app.close(); }
 });
@@ -210,7 +210,7 @@ test('version 1 upgrades through version 4 without altering its SQL or history a
   const before = db.prepare('SELECT * FROM schema_migrations WHERE version=1').get();
   applyMigrations(db, 'test');
   assert.deepEqual(db.prepare('SELECT * FROM schema_migrations WHERE version=1').get(), before);
-  assert.deepEqual(db.prepare('SELECT version FROM schema_migrations ORDER BY version').pluck().all(), [1, 2, 3, 4, 5]);
+  assert.deepEqual(db.prepare('SELECT version FROM schema_migrations ORDER BY version').pluck().all(), [1, 2, 3, 4, 5, 6]);
   assert.equal(migrations[0]!.name, 'migration_metadata');
 });
 

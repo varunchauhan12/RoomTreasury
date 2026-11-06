@@ -1,3 +1,5 @@
+import { registerImports } from './imports/routes.js';
+import { registerImportWorkspace } from './imports/workspace.js';
 import { registerEstimation } from './api/estimation.js';
 import { registerClientProjects } from './api/client-projects.js';
 import { registerDashboard } from './web/dashboard.js';
@@ -48,6 +50,8 @@ export async function buildApp(db: Database, options: {aiFetch?:typeof fetch} = 
   registerClientProjects(app, db);
   registerEstimation(app,db,options.aiFetch);
   registerDashboard(app);
+  registerImports(app,db);
+  registerImportWorkspace(app);
   app.addHook('onClose', async () => { if (db.open) db.close(); });
   return app;
 }

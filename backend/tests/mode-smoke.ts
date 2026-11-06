@@ -8,7 +8,7 @@ const app = await buildApp(db);
 try {
   await app.ready();
   const spec = app.swagger();
-  assert.deepEqual(Object.keys(spec.paths ?? {}).sort(), ['/health', '/v1/client-projects/', '/v1/client-projects/estimate', '/v1/client-projects/{projectId}', '/v1/projects/{projectId}/service-identity']);
+  assert.deepEqual(Object.keys(spec.paths ?? {}).sort(), ['/health', '/v1/client-projects/', '/v1/client-projects/estimate', '/v1/client-projects/{projectId}', '/v1/projects/{projectId}/service-identity', '/v1/proposal-imports/', '/v1/proposal-imports/confirm', '/v1/proposal-imports/preview', '/v1/proposal-imports/{id}']);
   await SwaggerParser.validate(JSON.parse(JSON.stringify(spec)));
   assert.equal((await app.inject({ method: 'POST', url: '/v1/projects/a/service-auth-probes/x/result' })).statusCode, 404);
   assert.equal((await app.inject('/v1/projects/a/service-identity')).statusCode, 401);

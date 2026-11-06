@@ -1,3 +1,4 @@
+import { importSchema } from './import-schema.js';
 import { aiSchema } from './ai-schema.js';
 import { agencySchema } from './agency-schema.js';
 import { financialSchema } from './financial-schema.js';
@@ -17,7 +18,7 @@ export const migrations: readonly Migration[] = [{
     mode TEXT NOT NULL CHECK (mode IN ('test', 'demo', 'real')),
     applied_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
   ) STRICT;`
-}, { version: 2, name: 'service_identity', sql: serviceSchema }, { version: 3, name: 'synthetic_financial_engine', sql: financialSchema }, { version: 4, name: 'agency_projects_and_allocations', sql: agencySchema }, { version: 5, name: 'ai_estimation_provenance', sql: aiSchema }];
+}, { version: 2, name: 'service_identity', sql: serviceSchema }, { version: 3, name: 'synthetic_financial_engine', sql: financialSchema }, { version: 4, name: 'agency_projects_and_allocations', sql: agencySchema }, { version: 5, name: 'ai_estimation_provenance', sql: aiSchema }, { version: 6, name: 'review_only_proposal_imports', sql: importSchema }];
 export class MigrationError extends Error {
   constructor() { super('Database migration failed; no pending migrations were committed.'); }
 }
