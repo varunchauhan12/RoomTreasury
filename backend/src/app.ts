@@ -1,3 +1,4 @@
+import { registerJobs } from './jobs/routes.js';
 import { registerLoginPage } from './security/owner-login-page.js';
 import { authSettings } from './security/owner-auth.js';
 import { registerOwnerAuth } from './security/owner-routes.js';
@@ -28,7 +29,7 @@ export async function buildApp(db: Database, options: {aiFetch?:typeof fetch} = 
     openapi: {
       openapi: '3.0.3', info: { title: 'RoomTreasury foundation', version: '0.1.0' },
       components: {
-        securitySchemes: { serviceBearer: { type: 'http', scheme: 'bearer' } },
+        securitySchemes: { serviceBearer: { type: 'http', scheme: 'bearer' }, ownerCookie: {type:'apiKey',in:'cookie',name:ownerSettings.cookieName} },
         responses: { NotFound: { description: 'Unknown routes return HTTP 404 with this envelope.', content: { 'application/json': { schema: errorSchema } } } }
       }
     }
@@ -62,6 +63,7 @@ export async function buildApp(db: Database, options: {aiFetch?:typeof fetch} = 
   registerLoginPage(app);
   registerReview(app,db,ownerSettings);
   registerReviewWidget(app);
+  registerJobs(app,db,ownerSettings);
   app.addHook('onClose', async () => { if (db.open) db.close(); });
   return app;
 }
