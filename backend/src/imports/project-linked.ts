@@ -57,3 +57,27 @@ export function confirmProjectImport(db:Database,session:OwnerSession,projectId:
   return {id:imported.id,jobId:job.id,duplicate:false};
  }).immediate();
 }
+export function importDiscordPackage(db:Database,jobId:string,bundle:ImportBundle):{id:string;duplicate:boolean}{
+ return db.transaction(()=>{
+  const job=db.prepare('SELECT * FROM processing_jobs WHERE id=?').get(jobId) as Job|undefined;
+  if(!job)throw new ImportError(['Processing job not found.'],404);
+  const binding=db.prepare('SELECT * FROM project_task_bindings WHERE id=?').get(job.binding_id) as Binding|undefined;
+  if(!binding)throw new ImportError(['Project binding not found.'],404);
+  if(!bundle.proposal||!bundle.evidence||!bundle.summary)throw new ImportError(['All three files are required: proposal.json, evidence.json and summary.md.']);
+  const validated=validateBundle(bundle);
+  checkLinkedTerms(db,binding,validated.proposal);
+  if(job.state==='imported'){
+   const link=projectImportLink(db,job.result_import_id!);
+   if(!link||link.bundle_fingerprint!==validated.fingerprint)throw new ImportError(['This attempt already has an immutable result.'],409);
+   return {id:link.import_id,duplicate:true};
+  }
+  const imported=importBundle(db,bundle,validated.fingerprint);
+  const existing=projectImportLink(db,imported.id);
+  if(existing)throw new ImportError(['This immutable package is already linked to another processing attempt.'],409);
+  const now=Date.now();
+  db.prepare("INSERT INTO project_import_links(import_id,job_id,binding_id,intake_revision,intake_hash,bundle_fingerprint,owner_id,session_digest,source,created_at) VALUES (?,?,?,?,?,?,?,NULL,'discord_agent_delivery',?)").run(imported.id,job.id,binding.id,job.intake_revision,job.intake_hash,validated.fingerprint,job.submitting_owner_id,now);
+  db.prepare("UPDATE processing_jobs SET state='imported',result_import_id=?,updated_at=?,completed_at=?,error_code=NULL,diagnostic=NULL,lease_owner=NULL,lease_until=NULL WHERE id=?").run(imported.id,now,now,job.id);
+  db.prepare("INSERT INTO processing_job_events(job_id,event_key,from_state,to_state,code,occurred_at,actor_kind,actor_id) VALUES (?,'discord-artifact-import',?,'imported','discord_agent_delivery',?,'backend','discord-transport')").run(job.id,job.state,now);
+  return {id:imported.id,duplicate:false};
+ }).immediate();
+}

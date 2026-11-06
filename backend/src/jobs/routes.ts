@@ -21,10 +21,10 @@ export function registerJobs(app:FastifyInstance,db:Database,settings:AuthSettin
   return reply.code(201).send({binding});
  });
  const projectPath='/v1/client-projects/:projectId/processing-jobs';
- app.post<{Params:{projectId:string}}>(projectPath,{onRequest:noStore,schema:{operationId:'createProcessingJob',security,headers:keyHeader,params:params('projectId'),querystring:empty,body:empty,response:responses}},(request,reply)=>{
+ app.post<{Params:{projectId:string};Body?:{transport?:'mock'|'discord'}}>(projectPath,{onRequest:noStore,schema:{operationId:'createProcessingJob',security,headers:keyHeader,params:params('projectId'),querystring:empty,body:{type:'object',additionalProperties:false,properties:{transport:{type:'string',enum:['mock','discord']}}},response:responses}},(request,reply)=>{
   const job=db.transaction(()=>{const owner=session(request,true);const binding=db.prepare('SELECT id FROM project_task_bindings WHERE client_project_id=?').get(request.params.projectId) as {id:string}|undefined;
    if(!binding)throw new AuthError(403,'BOUND_OWNER_SCOPE_REQUIRED');
-   return jobs.create(owner,binding.id,idempotency(request));
+   return jobs.create(owner,binding.id,idempotency(request),request.body?.transport??'mock');
   }).immediate();
   return reply.code(201).send({job:jobView(job)});
  });

@@ -6268,8 +6268,16 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "properties": {},
-                "additionalProperties": false
+                "additionalProperties": false,
+                "properties": {
+                  "transport": {
+                    "type": "string",
+                    "enum": [
+                      "mock",
+                      "discord"
+                    ]
+                  }
+                }
               }
             }
           }

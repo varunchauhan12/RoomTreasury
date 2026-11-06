@@ -210,7 +210,7 @@ test('version 1 upgrades through version 4 without altering its SQL or history a
   const before = db.prepare('SELECT * FROM schema_migrations WHERE version=1').get();
   applyMigrations(db, 'test');
   assert.deepEqual(db.prepare('SELECT * FROM schema_migrations WHERE version=1').get(), before);
-  assert.deepEqual(db.prepare('SELECT version FROM schema_migrations ORDER BY version').pluck().all(), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+  assert.deepEqual(db.prepare('SELECT version FROM schema_migrations ORDER BY version').pluck().all(), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]);
   assert.equal(migrations[0]!.name, 'migration_metadata');
 });
 

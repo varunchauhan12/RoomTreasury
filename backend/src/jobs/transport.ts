@@ -1,11 +1,27 @@
-export interface DispatchRequest {readonly jobId:string;readonly correlationId:string;readonly intakeHash:string}
-export interface TransportEvent {readonly key:string;readonly state:'running'|'collecting'|'validating'|'needs_attention'|'failed';readonly code?:'artifact_import_deferred'|'mock_execution_failed'}
-export interface JobTransport {
- readonly type:'mock';
- dispatch(request:DispatchRequest):Promise<{correlationId:string}>;
- events(request:DispatchRequest):AsyncIterable<TransportEvent>;
+export interface DispatchRequest {
+  readonly jobId: string;
+  readonly correlationId: string;
+  readonly intakeHash: string;
+  readonly projectId?: string;
+  readonly taskId?: string;
+  readonly clientName?: string;
+  readonly brief?: string;
+  readonly revenueCents?: number;
+  readonly currency?: string;
+  readonly intakeRevision?: number;
 }
-export class DispatchFailure extends Error {constructor(readonly certain:boolean){super('Mock dispatch failed.');}}
+export interface TransportEvent {
+  readonly key: string;
+  readonly state: 'running' | 'collecting' | 'validating' | 'needs_attention' | 'failed' | 'imported';
+  readonly code?: string;
+  readonly diagnostic?: string;
+}
+export interface JobTransport {
+  readonly type: 'mock' | 'discord';
+  dispatch(request: DispatchRequest): Promise<{ correlationId: string; messageId?: string }>;
+  events(request: DispatchRequest): AsyncIterable<TransportEvent>;
+}
+export class DispatchFailure extends Error { constructor(readonly certain: boolean, message = 'Dispatch failed.') { super(message); } }
 export type MockScenario='success'|'dispatch_failure'|'uncertain'|'execution_failure'|'duplicate';
 // No network, generated artifacts, proposal imports or financial operations.
 export class MockTransport implements JobTransport {
