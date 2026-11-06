@@ -38,9 +38,13 @@ export function authorizeOwner(db:Database,session:OwnerSession,importId:string)
  if(!row)throw new AuthError(403,'OWNER_SCOPE_REQUIRED');return row.task_id;
 }
 function passwordHash(password:string,salt:Buffer):Promise<Buffer>{return new Promise((resolve,reject)=>scrypt(password,salt,64,{N:131072,r:8,p:1,maxmem:256*1024*1024},(error,key)=>error?reject(error):resolve(key)));}
+export function ownerPasswordMinimum(db:Database,env:NodeJS.ProcessEnv=process.env):number {
+ const modes=db.prepare('SELECT DISTINCT mode FROM schema_migrations').pluck().all();
+ return env.NODE_ENV!=='production'&&modes.length===1&&['demo','test'].includes(modes[0] as string)?3:15;
+}
 // Operator-only function. No public registration or scope-management endpoint imports it.
 export async function provisionOwner(db:Database,username:string,password:string,taskId:string):Promise<string>{
- if(!/^[a-z0-9][a-z0-9_.-]{2,63}$/.test(username)||typeof password!=='string'||password.length<15||password.length>128||!taskId.trim()||taskId.length>100)throw new Error('Invalid owner provisioning input.');
+ if(!/^[a-z0-9][a-z0-9_.-]{2,63}$/.test(username)||typeof password!=='string'||password.length<ownerPasswordMinimum(db)||password.length>128||!taskId.trim()||taskId.length>100)throw new Error('Invalid owner provisioning input.');
  const salt=randomBytes(16),hash=await passwordHash(password,salt),id=randomUUID();
  db.transaction(()=>{db.prepare('INSERT INTO human_owners VALUES (?,?,?,?,?,NULL)').run(id,username,salt,hash,Date.now());db.prepare('INSERT INTO human_owner_scopes VALUES (?,?,?,NULL)').run(id,taskId,Date.now());}).immediate();return id;
 }

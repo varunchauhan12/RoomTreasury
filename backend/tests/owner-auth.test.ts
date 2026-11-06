@@ -3,9 +3,12 @@ import {test,type TestContext} from 'node:test';
 import {readFileSync} from 'node:fs';
 import {Script} from 'node:vm';
 import {Worker} from 'node:worker_threads';
+import BetterSqlite3 from 'better-sqlite3';
+import {randomBytes} from 'node:crypto';
+import {applyMigrations} from '../src/db/migrations.js';
 import {buildApp} from '../src/app.js';
 import {testDatabase} from './helpers.js';
-import {provisionOwner,authSettings} from '../src/security/owner-auth.js';
+import {provisionOwner,authSettings,ownerPasswordMinimum} from '../src/security/owner-auth.js';
 import {validateBundle,importBundle} from '../src/imports/service.js';
 import {gates,OwnerReview} from '../src/reviews/service.js';
 import {openDatabase} from '../src/db/connection.js';
@@ -99,3 +102,44 @@ test('independent authenticated worker connections converge to exactly one appro
  for(const w of workers)w.worker.postMessage('go');const results=await Promise.all(workers.map(w=>w.result));await Promise.all(workers.map(w=>w.exit));assert.ok(results.every(r=>r.status===200));assert.equal(results[0].id,results[1].id);
  assert.equal(data.db.prepare('SELECT count(*) FROM projects').pluck().get(),1);assert.equal(data.db.prepare("SELECT count(*) FROM authenticated_review_events WHERE action='decision'").pluck().get(),1);
 });
+
+
+test('local test provisioning accepts short passwords and login; production helper requires 15 characters',async t=>{
+ const {db}=testDatabase(t);assert.equal(ownerPasswordMinimum(db),3);assert.equal(ownerPasswordMinimum(db,{NODE_ENV:'production'}),15);
+ await assert.rejects(()=>provisionOwner(db,'too-short','12','SYNTHETIC-TEST'));
+ const id=await provisionOwner(db,'short-demo','123','SYNTHETIC-TEST');assert.ok(id);
+ const app=await buildApp(db);try{const response=await app.inject({method:'POST',url:'/v1/owner-auth/login',headers:base,payload:{username:'short-demo',password:'123'}});assert.equal(response.statusCode,200);}finally{await app.close();}
+});
+
+for(const mode of ['test','demo','real'] as const)for(const environment of ['development','production'] as const){
+ test(`owner provisioning enforces password boundaries in ${mode} mode with NODE_ENV=${environment}`,async()=>{
+  // In-memory migrated databases exercise each mode without opening persistent storage.
+  // These tests run serially because provisioning reads the actual process environment.
+  const db=new BetterSqlite3(':memory:');
+  const previousEnvironment=process.env.NODE_ENV;
+  try{
+   db.pragma('foreign_keys=ON');applyMigrations(db,mode);
+   process.env.NODE_ENV=environment;
+   for(const length of [2,3,14,15]){
+    const permitted=length>=15||(length>=3&&mode!=='real'&&environment!=='production');
+    const before=db.prepare('SELECT count(*) FROM human_owners').pluck().get() as number;
+    const beforeScopes=db.prepare('SELECT count(*) FROM human_owner_scopes').pluck().get() as number;
+    // Generate disposable values; assertions and test names never include passwords.
+    const candidate=randomBytes(16).toString('hex').slice(0,length);
+    let id:string|undefined,rejected=false,safeError=false;
+    try{id=await provisionOwner(db,`fixture-${length}`,candidate,'SYNTHETIC-PASSWORD-POLICY');}
+    catch(error){rejected=true;safeError=error instanceof Error&&error.message==='Invalid owner provisioning input.';}
+    assert.equal(rejected,!permitted,`Unexpected provisioning outcome for length ${length}`);
+    if(permitted){
+     assert.ok(id,'Accepted provisioning must return an owner ID');
+     assert.equal(db.prepare('SELECT count(*) FROM human_owner_scopes WHERE owner_id=? AND task_id=?').pluck().get(id,'SYNTHETIC-PASSWORD-POLICY'),1);
+    }else assert.ok(safeError,'Rejected provisioning must return the generic validation error');
+    assert.equal(db.prepare('SELECT count(*) FROM human_owners').pluck().get(),before+(permitted?1:0));
+    assert.equal(db.prepare('SELECT count(*) FROM human_owner_scopes').pluck().get(),beforeScopes+(permitted?1:0));
+   }
+  }finally{
+   if(previousEnvironment===undefined)delete process.env.NODE_ENV;else process.env.NODE_ENV=previousEnvironment;
+   db.close();
+  }
+ });
+}
