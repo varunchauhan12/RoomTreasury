@@ -1,0 +1,486 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "RoomTreasury foundation",
+    "version": "0.1.0"
+  },
+  "components": {
+    "securitySchemes": {
+      "serviceBearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    },
+    "responses": {
+      "NotFound": {
+        "description": "Unknown routes return HTTP 404 with this envelope.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "error"
+              ],
+              "properties": {
+                "error": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "code",
+                    "message",
+                    "details",
+                    "correlationId"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": false
+                    },
+                    "correlationId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "schemas": {}
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "operationId": "getHealth",
+        "summary": "Check service and SQLite readiness",
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "status"
+                  ],
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "ok"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "code",
+                        "message",
+                        "details",
+                        "correlationId"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": false
+                        },
+                        "correlationId": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "code",
+                        "message",
+                        "details",
+                        "correlationId"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": false
+                        },
+                        "correlationId": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "code",
+                        "message",
+                        "details",
+                        "correlationId"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": false
+                        },
+                        "correlationId": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{projectId}/service-identity": {
+      "get": {
+        "operationId": "getServiceIdentity",
+        "summary": "Read authenticated service identity in one project",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^[A-Za-z0-9_-]+$"
+            },
+            "in": "path",
+            "name": "projectId",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "serviceBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "principalId",
+                    "kind",
+                    "projectId",
+                    "role"
+                  ],
+                  "properties": {
+                    "principalId": {
+                      "type": "string"
+                    },
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "service"
+                      ]
+                    },
+                    "projectId": {
+                      "type": "string"
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "coordinator",
+                        "request",
+                        "challenge",
+                        "commitment_intelligence",
+                        "treasury_ops"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "code",
+                        "message",
+                        "details",
+                        "correlationId"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": false
+                        },
+                        "correlationId": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "code",
+                        "message",
+                        "details",
+                        "correlationId"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": false
+                        },
+                        "correlationId": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "code",
+                        "message",
+                        "details",
+                        "correlationId"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": false
+                        },
+                        "correlationId": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "code",
+                        "message",
+                        "details",
+                        "correlationId"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": false
+                        },
+                        "correlationId": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "code",
+                        "message",
+                        "details",
+                        "correlationId"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": false
+                        },
+                        "correlationId": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

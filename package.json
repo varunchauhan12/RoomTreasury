@@ -1,0 +1,28 @@
+{
+  "name": "roomtreasury-lite",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": "22.22.3", "npm": "10.9.8" },
+  "packageManager": "npm@10.9.8",
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.test.json",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server.js",
+    "migrate": "node dist/db/migrate.js",
+    "test": "tsc -p tsconfig.test.json && NODE_ENV=test node --test .test-build/tests/*.test.js",
+    "openapi": "node dist/api/export-openapi.js"
+  },
+  "dependencies": {
+    "@fastify/swagger": "9.9.3",
+    "ajv": "8.20.0",
+    "better-sqlite3": "13.0.3",
+    "fastify": "5.12.8"
+  },
+  "devDependencies": {
+    "@apidevtools/swagger-parser": "13.1.0",
+    "@types/better-sqlite3": "9.6.0",
+    "@types/node": "22.20.5",
+    "typescript": "5.9.3"
+  }
+}

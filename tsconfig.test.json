@@ -1,0 +1,5 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "rootDir": "backend", "outDir": ".test-build" },
+  "include": ["backend/src/**/*.ts", "backend/tests/**/*.ts"]
+}
