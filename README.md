@@ -9,8 +9,9 @@ One user request -> Coordinator -> Specialist agents -> Human approval
 ## Status
 Under development for Flip the Switch Hackathon.
 
-M1B-2B backend service identity is implemented. See [backend setup and tests](backend/README.md).
-Financial domain, human identity, operational credential provisioning and live agent integration remain pending.
+M2A synthetic financial engine and M1B-2B backend service identity are implemented. See [backend setup and tests](backend/README.md).
+The financial engine is tested through trusted in-process actors; no financial HTTP routes exist yet. Human identity, operational credential provisioning and live agent integration remain pending.
+See the [M2A completion report](docs/m2a-financial-engine-report.md).
 
 ## Design review
 

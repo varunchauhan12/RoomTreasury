@@ -1,3 +1,4 @@
+import { registerEstimation } from './api/estimation.js';
 import { registerClientProjects } from './api/client-projects.js';
 import { registerDashboard } from './web/dashboard.js';
 import { registerIdentity } from './security/identity-route.js';
@@ -7,7 +8,7 @@ import swagger from '@fastify/swagger';
 import type { Database } from 'better-sqlite3';
 import { errorSchema, installErrorHandling } from './api/errors.js';
 
-export async function buildApp(db: Database) {
+export async function buildApp(db: Database, options: {aiFetch?:typeof fetch} = {}) {
   const app = Fastify({
     logger: false, // Never automatically log request bodies, headers or raw exceptions.
     genReqId: () => randomUUID(), requestIdHeader: false,
@@ -45,6 +46,7 @@ export async function buildApp(db: Database) {
   });
   registerIdentity(app, db);
   registerClientProjects(app, db);
+  registerEstimation(app,db,options.aiFetch);
   registerDashboard(app);
   app.addHook('onClose', async () => { if (db.open) db.close(); });
   return app;

@@ -1,6 +1,6 @@
 # RoomTreasury backend foundation
 
-M1B-2B adds backend service identity to the HTTP/SQLite foundation. Only disposable test credentials can be issued; operational provisioning is blocked. There are no financial tables, human OAuth, live service records, Discord/Switch calls, seed data or workflow orchestration.
+M2A adds a synthetic financial domain to the HTTP/SQLite foundation and service identity. Only disposable test credentials can be issued; operational provisioning is blocked. There are no financial HTTP routes, human OAuth, live service records, Discord/Switch calls, persistent seed data or workflow orchestration. See [M2A verification](../docs/m2a-financial-engine-report.md).
 
 ## Runtime and commands
 
@@ -33,7 +33,7 @@ The application reads exported environment values, not `.env` files automaticall
 
 - `src/config.ts`: AJV-validated mode, explicit database path, loopback host and port.
 - `src/db/connection.ts`: path safety, SQLite open, enforced foreign keys, 1000ms busy timeout, migrations and verified WAL.
-- `src/db/migrations.ts`: ordered SQL migrations and transactional migration history. Version 1 is unchanged; version 2 adds service identity tables and constraints.
+- `src/db/migrations.ts`: ordered SQL migrations and transactional migration history. Versions 1 and 2 are unchanged; version 3 adds synthetic financial tables and constraints.
 - `src/db/migrate.ts`: migration CLI with safe errors and nonzero failure exit.
 - `src/app.ts`: Fastify factory, strict route schemas and generated OpenAPI; app close owns database close.
 - `src/api/errors.ts`: consistent error envelope; no raw exceptions or request input in responses.
@@ -66,7 +66,7 @@ Unknown routes return 404 with `NOT_FOUND`; unexpected failures return 500 with 
 | `ROOMTREASURY_DB_PATH` | Always required; no implicit path in any mode. Must end with `.sqlite`, `.sqlite3` or `.db`. |
 | test storage | Must be within an OS temporary directory whose first child is named `roomtreasury-test-*`; tests create it with `mkdtemp` and remove it after closing handles. |
 | demo storage | Must be inside `<project root>/var/demo/`. |
-| real storage | Must be inside `<project root>/var/real/`. Only foundation metadata/health is supported; no real financial workflow exists. |
+| real storage | Must be inside `<project root>/var/real/`. Financial domain writes fail closed in real mode; no real financial workflow exists. |
 | `ROOMTREASURY_HOST` | Defaults to `127.0.0.1`; only that address or `::1` is accepted. |
 | `ROOMTREASURY_PORT` | Defaults to 3000; otherwise an integer from 1 through 65535. |
 
@@ -80,7 +80,7 @@ Migrations are in an ordered typed array, numbered contiguously from 1. Each rec
 
 The runner obtains `BEGIN IMMEDIATE` through the driver's synchronous transaction helper. All pending migrations and their history rows commit together, or all pending DDL/writes/history roll back. Previously committed migrations survive failures. First-bootstrap failure also rolls back metadata creation. Reopening/re-running validates and skips applied versions. Foreign-key enforcement and violations are checked before commit. The runner supplies no automatic down migration.
 
-Migrations create `schema_migrations`, `service_principals`, `service_scopes`, `service_credentials` and append-only `service_auth_events`; startup never seeds identities or credentials. Test-only smoke tables and failing SQL exist solely in temporary test databases.
+Migrations create metadata, service identity and synthetic financial tables; startup never seeds financial data, identities or credentials. Migration 3 uses STRICT tables, relational bindings, immutable history and guarded transitions. It leaves service-identity authorization namespaces unchanged; financial operations validate their project binding in the domain service. Test-only smoke tables and failing SQL exist solely in temporary test databases.
 
 CLI entry points set restrictive umask 077; newly created storage directories use mode 0700. Existing file permissions are not silently changed. Ignore rules exclude environment secrets, DB files/sidecars, runtime storage, logs, builds and local credential/token files; `.env.example` remains shareable.
 
@@ -88,7 +88,7 @@ CLI entry points set restrictive umask 077; newly created storage directories us
 
 See [M1B-1 completion report](../docs/m1b-1-foundation-report.md) for exact versions, executed commands and outcomes. The test suite covers native SQLite FK enforcement, transaction commit/rollback, migration atomicity/replay/drift rejection, independent files, write-lock timeout, environment/path isolation, CLI behavior, a real HTTP health request, error envelopes and OpenAPI validation.
 
-Human auth, operational service provisioning, financial invariants and live Switch interoperability remain future work. See [service identity completion report](../docs/m1b-2b-completion-report.md) for the implemented backend-only auth boundary. A passing foundation test does not verify any specialist host's backend access.
+Human auth, operational service provisioning and live Switch interoperability remain future work. M2A financial invariants are exercised against temporary SQLite databases, with synthetic trusted human actors only. See [service identity completion report](../docs/m1b-2b-completion-report.md) for the implemented backend-only auth boundary. A passing foundation test does not verify any specialist host's backend access.
 
 ## Service identity safety boundary
 
@@ -97,3 +97,11 @@ Migration 2 uses STRICT tables and integer UTC epoch milliseconds for timestamps
 No operational issuer or public provisioning endpoint exists. `security/test-fixtures.ts` rejects non-test execution, requires a test-mode database and validates its OS temporary path. It returns disposable raw tokens only to in-memory test callers. Future secure operator delivery needs separate review and implementation. All agent contexts are service-kind and are denied owner decisions. The Coordinator role has no Treasury authority. Fixed-role and task-assignment guards are tested directly; there are no task-result or settlement endpoints.
 
 Authentication accepts exactly one bounded canonical Authorization bearer token, derives immutable principal identity server-side and does not cache success. Tokens use independent random selector/secret bytes, domain-separated SHA-256 digest storage and timing-safe comparison. It is not human-password hashing, OS isolation or proof of which local agent process possesses a token. Same-host trust limitations remain.
+
+## Synthetic financial domain (M2A)
+
+`src/domain/financial-engine.ts` contains the project/recipient, commitment, immutable request revision, policy evaluation, exact-revision approval/reservation and simulated settlement operations. All mutations use immediate transactions. Money is positive integer USD cents, capped at 1,000,000,000 cents per project; confirmed commitments, active reservations and spend remain within that budget. Balances are computed from SQLite records, never caller snapshots.
+
+This is a library boundary, not an authentication implementation. Human/operator actors must come from trusted backend code; tests construct synthetic actors. Never construct them from HTTP input, agent messages or claimed owner fields. There is no public financial route or operational seed command. Settlement accepts a previously authenticated service context and rechecks its credential, principal, Treasury role and project scope inside the transaction. Human authentication and task orchestration must be implemented separately before exposing financial actions.
+
+Approval plus hold and spend plus receipt are transactionally paired. Revising releases an unused hold and requires a fresh approval. Settlement consumes its own hold; it does not compare that amount to remaining availability. Same-key and different-key retries return the original receipt after authorization and exact binding checks. Real-mode financial writes are blocked. Existing same-host trust limitations apply.

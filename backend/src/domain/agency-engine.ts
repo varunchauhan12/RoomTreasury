@@ -1,3 +1,4 @@
+import { isVerifiedEstimate, type Estimate, type Intake } from '../ai/estimate.js';
 import { randomUUID } from 'node:crypto';
 import type { Database } from 'better-sqlite3';
 import { AuthError, denyServiceOwner } from '../security/service-auth.js';
@@ -60,13 +61,22 @@ export class AgencyEngine {
       this.human(actor, id);
       if (!validText(id) || !validText(clientName) || !validText(brief)) throw new FinancialError('INVALID_INPUT');
       amount(revenueCents);
-      this.db.prepare("INSERT INTO client_projects VALUES (?,?,?,?,'USD','draft',NULL)").run(id, clientName, brief, revenueCents);
+      this.insertClient(id,clientName,brief,revenueCents);
     });
+  }
+
+  private insertClient(id:string,clientName:string,brief:string,revenueCents:number): void {
+      this.db.prepare("INSERT INTO client_projects VALUES (?,?,?,?,'USD','draft',NULL)").run(id, clientName, brief, revenueCents);
   }
 
   createProposal(actor: FinancialActor, clientId: string, input: ProposalInput): Readonly<{ proposalId: string; allocationIds: readonly string[] }> {
     return this.write(() => {
       this.human(actor, clientId);
+      return this.insertProposal(clientId,input);
+    });
+  }
+
+  private insertProposal(clientId:string,input:ProposalInput,estimate?:Estimate) {
       if (this.client(clientId).status !== 'draft') throw new FinancialError('CONFLICT');
       amount(input.budgetCents);
       if (!validText(input.explanation) || (input.provenance !== undefined && !['manual', 'ai'].includes(input.provenance)) ||
@@ -79,16 +89,27 @@ export class AgencyEngine {
       }
       if (total > input.budgetCents) throw new FinancialError('INVALID_INPUT');
       const proposalId = randomUUID();
-      // No verified AI estimator/result adapter exists. A caller's 'ai' label is not evidence.
-      // All estimates entered through this current boundary are recorded as manual.
-      this.db.prepare("INSERT INTO delivery_proposals VALUES (?,?,?,?, 'manual','pending',NULL,NULL)")
-        .run(proposalId, clientId, input.budgetCents, input.explanation);
+      if(estimate && !isVerifiedEstimate(estimate)) throw new FinancialError('FORBIDDEN');
+      this.db.prepare("INSERT INTO delivery_proposals VALUES (?,?,?,?,?,'pending',NULL,NULL)")
+        .run(proposalId, clientId, input.budgetCents, input.explanation,estimate?'ai':'manual');
+      if(estimate)this.db.prepare('INSERT INTO proposal_ai_results VALUES (?,?,?,?,?,?)').run(proposalId,estimate.provider,estimate.model,estimate.responseId,JSON.stringify(estimate.assumptions),JSON.stringify(estimate.risks));
       const allocationIds = input.allocations.map(allocation => {
         const id = randomUUID();
         this.db.prepare('INSERT INTO workstream_allocations VALUES (?,?,?,?,NULL)').run(id, proposalId, allocation.name, allocation.limitCents);
         return id;
       });
       return Object.freeze({ proposalId, allocationIds: Object.freeze(allocationIds) });
+  }
+
+  createEstimatedProject(input:Intake,estimate:Estimate) {
+    return this.write(()=>{
+      if(!isVerifiedEstimate(estimate))throw new FinancialError('FORBIDDEN');
+      if(!validText(input.clientName)||!validText(input.brief))throw new FinancialError('INVALID_INPUT');
+      amount(input.revenueCents);
+      const clientId=randomUUID();
+      this.insertClient(clientId,input.clientName,input.brief,input.revenueCents);
+      const proposal=this.insertProposal(clientId,estimate,estimate);
+      return {clientId,...proposal};
     });
   }
 
@@ -133,6 +154,7 @@ export class AgencyEngine {
       const allocations = this.db.prepare('SELECT id,name FROM workstream_allocations WHERE proposal_id=? ORDER BY rowid')
         .all(proposalId) as { id: string; name: string }[];
       return Object.freeze({ client: Object.freeze(client), proposal: Object.freeze(proposal),
+        ai: this.db.prepare('SELECT * FROM proposal_ai_results WHERE proposal_id=?').get(proposalId) ?? null,
         projectedGrossMarginCents: client.revenue_cents - proposal.budget_cents,
         delivery: proposal.status === 'approved' ? new FinancialEngine(this.db).balance(client.financial_project_id!) : null,
         allocations: Object.freeze(allocations.map(a => Object.freeze({ name: a.name, ...this.allocationBalance(a.id) }))) });
