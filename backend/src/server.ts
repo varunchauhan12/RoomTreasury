@@ -10,7 +10,7 @@ let stopWorker:(()=>Promise<void>)|undefined;
 try {
   const config = readConfig();
   const db = openDatabase(config);
-  try { app = await buildApp(db); }
+  try { app = await buildApp(db,{localWorkspace:config.mode==='demo'}); }
   catch { db.close(); throw new Error(); }
   await app.listen({ host: config.host, port: config.port });
   if(['test','demo'].includes(config.mode)&&process.env.NODE_ENV!=='production'&&!commercialDemo(db))stopWorker=startMockWorker(db);

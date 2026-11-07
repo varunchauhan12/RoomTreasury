@@ -23,12 +23,55 @@ async function onboarding(data:Awaited<ReturnType<typeof fixture>>){const payloa
 
 test('workspace pages and dashboard expose the unified owner flow, safe assets and responsive sections',async t=>{
  const {app}=await fixture(t);
- const page=await app.inject('/projects/new');assert.equal(page.statusCode,200);for(const field of ['clientName','projectName','description','requirements','deliverables','price','deadline','notes'])assert.ok(page.body.includes('name="'+field+'"'));
- assert.match(page.headers['content-security-policy'] as string,/form-action 'self'/);
+ const page=await app.inject('/projects/new');assert.equal(page.statusCode,302);assert.equal(page.headers.location,'/#projects/new');
+ const rootForPaths=await app.inject('/');assert.match(rootForPaths.body,/href="#projects\/new"[^>]*>\+ New Project/);assert.ok(!rootForPaths.body.includes('/#projects/board?new=1'));
+ const appScript=await app.inject('/app.js');assert.match(appScript.body,/#projects\/new/);assert.match(appScript.body,/Back to All Projects/);assert.match(appScript.body,/#projects\/all/);assert.ok(!appScript.body.includes('projects/board?new=1'));
+ assert.match(appScript.body,/rt-new-project-close/);assert.match(appScript.body,/Close and go to All Projects/);
+ const uiBundle=await app.inject('/ui/components.js');assert.match(uiBundle.body,/rt-intake-close/);assert.match(uiBundle.body,/Close and go to All Projects/);assert.match(uiBundle.body,/pw-upload-field/);
  const workspace=await app.inject('/projects/project-id');for(const id of ['pw-analysis','pw-results','pw-events','pw-start','pw-cancel'])assert.ok(workspace.body.includes(id));
+ assert.match(workspace.body,/<details id="pw-submitted-intake" class="pw-card pw-intake-details">/);assert.ok(!/<details id="pw-submitted-intake"[^>]*\sopen/.test(workspace.body));
+ assert.match(workspace.body,/class="pw-intake-summary"/);assert.match(workspace.body,/pw-send-btn/);assert.match(workspace.body,/pw-send-note/);assert.match(workspace.body,/id="pw-start-label">Send to Agents/);
+ assert.ok(!workspace.body.includes('pw-start-mock'));assert.ok(!workspace.body.includes('Start mock'));
+ const stage1Css=await app.inject('/project-workspace.css');assert.match(stage1Css.body,/\.pw-send-btn\{width:100%/);assert.match(stage1Css.body,/\.pw-intake-section \.pw-prose/);assert.match(stage1Css.body,/\.pw-facts\{display:grid/);
+ assert.match(workspace.body,/id="pw-authorize-intake"[^>]*>Authorize Project Brief/);assert.match(workspace.body,/id="pw-intake-auth-note"/);
+ assert.ok(!workspace.body.includes('pw-stages'));assert.ok(!workspace.body.includes('Processing stages'));assert.match(workspace.body,/<details id="pw-discord-details" class="pw-card pw-discord-details">/);assert.ok(!/<details id="pw-discord-details"[^>]*\sopen/.test(workspace.body));
+ assert.match(workspace.body,/Discord Collaboration/);assert.match(workspace.body,/id="pw-discord-count"/);assert.match(workspace.body,/class="pw-agent-grid"/);assert.match(workspace.body,/class="pw-job-row"/);
+ assert.match(workspace.body,/class="pw-upload-field"/);assert.match(workspace.body,/id="pw-preview" type="submit">Validate package/);
+ assert.match(stage1Css.body,/\.pw-agent-grid\{display:grid;grid-template-columns:repeat\(auto-fit,minmax\(min\(100%,205px\),1fr\)\)/);assert.match(stage1Css.body,/\.pw-artifact-row\{display:flex/);assert.match(stage1Css.body,/\.pw-structured-section/);assert.match(stage1Css.body,/\.pw-upload-form\{margin:14px 0 0;display:grid;grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);assert.match(stage1Css.body,/#pw-upload-form \.rt-upload-native\{display:none!important\}/);assert.equal((workspace.body.match(/pw-upload-hint/g)??[]).length,3);assert.match(workspace.body,/What to upload: the proposal\.json/);
+ assert.match(workspace.body,/<section id="pw-section-results" class="pw-lifecycle-card" hidden>/);assert.match(workspace.body,/<section id="pw-section-review" class="pw-lifecycle-card" hidden>/);
+ const appearanceCss=await app.inject('/appearance.css');assert.match(appearanceCss.body,/\.pw-header\{[^}]*width:min\(1180px,calc\(100% - 32px\)\)/);assert.ok(!appearanceCss.body.includes('max-width:1150px'));
+ const workspaceScript=await app.inject('/project-workspace.js');assert.ok(!workspaceScript.body.includes('Open proposal review'));assert.ok(!workspaceScript.body.includes('renderStages'));assert.match(workspaceScript.body,/pw-structured-section/);assert.match(workspaceScript.body,/pw-artifact-row/);
+ assert.match(workspace.body,/id="pw-stage3-tab-review"/);assert.match(workspace.body,/id="pw-stage3-tab-revision"/);assert.match(workspace.body,/Request Revision/);
+ assert.equal((workspace.body.match(/id="pw-approve-project"/g)??[]).length,1);assert.match(workspace.body,/>Approve the Project</);assert.match(workspace.body,/id="pw-send-revision"/);assert.match(workspace.body,/Send to Agents for Revision/);
+ assert.equal((workspace.body.match(/data-revision-category=/g)??[]).length,6);
+ assert.ok(!workspace.body.includes('Approval Governance Workflow'));assert.ok(!workspace.body.includes('Decision history'));assert.ok(!workspace.body.includes('Regenerate current report'));assert.ok(!workspace.body.includes('Approve &amp; Activate Project'));assert.ok(!workspace.body.includes('Client Finance &amp; Commercial Terms'));
+ assert.ok(!workspaceScript.body.includes('pw-approval-details'));assert.ok(!workspaceScript.body.includes('Versioned approval reports'));
+ const workspaceTabs=workspace.body.match(/<nav[^>]+id="pw-section-nav"[^>]*>(.*?)<\/nav>/s)![1]!;
+ assert.deepEqual([...workspaceTabs.matchAll(/<a [^>]+>(.*?)<\/a>/g)].map(match=>match[1]),[
+  'Draft','Agent Results','Review & Approve'
+ ]);
  const root=await app.inject('/');assert.match(root.body,/owner-projects/);assert.match(root.body,/Create client project/);assert.match(root.body,/Optional direct AI estimate/);
  for(const path of ['/workspace-model.js','/project-workspace.js']){const script=await app.inject(path);new Script(script.body);assert.ok(!script.body.includes('innerHTML'));assert.ok(!script.body.includes('eval('));assert.ok(!script.body.includes('/v1/client-projects/estimate'));}
  assert.match((await app.inject('/project-workspace.css')).body,/@media/);
+});
+test('Stage 1 intake authorization enables Send to Agents to create a real Discord job',async t=>{
+ const data=await fixture(t);
+ const onboard=await data.app.inject({method:'POST',url:'/v1/client-projects/onboard',headers:data.headers,payload:model().intake(fields)});
+ assert.equal(onboard.statusCode,201);const binding=onboard.json().binding,projectId=binding.client_project_id;
+ const jobPath='/v1/client-projects/'+projectId+'/processing-jobs';
+ const denied=await data.app.inject({method:'POST',url:jobPath,headers:{...data.headers,'idempotency-key':'pre-authorization-job'},payload:{transport:'discord'}});
+ assert.equal(denied.statusCode,409);assert.equal(denied.json().error.code,'INTAKE_AUTHORIZATION_REQUIRED');
+ const snapshot=(await data.app.inject({url:'/v1/client-projects/'+projectId+'/approval-workflow',headers:data.headers})).json();
+ const gate=snapshot.gates.find((g:any)=>g.id==='intake');assert.ok(gate);assert.notEqual(gate.status,'approved');
+ const authorized=await data.app.inject({method:'POST',url:'/v1/client-projects/'+projectId+'/approval-workflow/decisions',
+  headers:{...data.headers,'idempotency-key':'stage1-authorize-intake'},
+  payload:{gate:'intake',subjectHash:gate.subjectHash,decision:'approve',reason:'Owner authorized the project brief from Stage 1.',evidence:['Owner reviewed the project brief in Stage 1'],checks:[...gate.checks]}});
+ assert.equal(authorized.statusCode,200,authorized.body);assert.equal(authorized.json().gates.find((g:any)=>g.id==='intake').status,'approved');
+ const created=await data.app.inject({method:'POST',url:jobPath,headers:{...data.headers,'idempotency-key':'post-authorization-job'},payload:{transport:'discord'}});
+ assert.equal(created.statusCode,201,created.body);assert.equal(created.json().job.transport,'discord');assert.equal(created.json().job.state,'queued');
+ assert.equal(data.db.prepare("SELECT count(*) FROM processing_jobs WHERE transport='discord'").pluck().get(),1);
+ const script=(await data.app.inject('/project-workspace.js')).body;
+ assert.match(script,/pw-authorize-intake/);assert.match(script,/Authorize the project brief/);assert.match(script,/approval-workflow\/decisions/);assert.match(script,/gate:'intake'/);
 });
 test('intake helpers preserve all fields in the existing brief and validate cents and size',()=>{
  const M=model(),input=M.intake(fields);assert.equal(input.revenueCents,100001);const detail=M.parseBrief(input.brief);assert.equal(detail.name,fields.projectName);assert.equal(detail.description,fields.description);assert.equal(detail.deadline,fields.deadline);assert.equal(detail.notes,fields.notes);
@@ -109,7 +152,7 @@ test('unlinked legacy imports remain readable but are not presented as project-l
  const bundle={proposal:{name:'proposal.json',content:JSON.stringify(proposal)}};const imported=importBundle(data.db,bundle,validateBundle(bundle).fingerprint);
  const snapshot=(await data.app.inject({url:'/v1/client-projects/'+binding.client_project_id,headers:data.headers})).json();assert.equal(snapshot.workspace.imports.length,0);
  const record=(await data.app.inject('/v1/proposal-imports/'+imported.id)).json();const sections=model().proposalSections(record);assert.ok(JSON.stringify(sections).includes(proposal.project.name));assert.ok(JSON.stringify(sections).includes('141000'));assert.ok(!JSON.stringify(sections).includes('DEMONSTRATION ONLY'));
- const script=(await data.app.inject('/project-workspace.js')).body;assert.match(script,/\/proposal-imports\?id=/);assert.match(script,/not generated or imported by the mock job/);assert.match(script,/SYNTHETIC DEMONSTRATION/);assert.ok(!script.includes("'/approve'"));
+ const script=(await data.app.inject('/project-workspace.js')).body;assert.match(script,/\/proposal-imports\?id=/);assert.match(script,/No proposal package imported for this project/);assert.ok(!script.includes('M.demoSections('));assert.ok(!script.includes("'/approve'"));
  const review=await data.app.inject({url:'/v1/proposal-imports/'+imported.id+'/review',headers:data.headers});assert.equal(review.statusCode,200);assert.ok(review.json().blockers.length>0);
  assert.equal((await data.app.inject({method:'POST',url:'/v1/proposal-imports/'+imported.id+'/review/approve',headers:data.headers,payload:{revisionId:imported.id,fingerprint:validateBundle(bundle).proposalFingerprint,confirmation:'APPROVE_EXACT_REVISION'}})).statusCode,409);
  assert.equal(data.db.prepare('SELECT count(*) FROM projects').pluck().get(),0);
@@ -187,7 +230,7 @@ test('transport labels and lifecycle descriptions use the persisted transport, i
 
 test('workspace serves external styles with strict CSP and no inline styling or style injection', async t => {
   const { app } = await fixture(t);
-  for (const url of ['/projects/new', '/projects/project-id']) {
+  for (const url of ['/projects/project-id']) {
     const response = await app.inject(url);
     assert.match(String(response.headers['content-security-policy']), /style-src 'self'/);
     assert.ok(!String(response.headers['content-security-policy']).includes('unsafe-inline'));
@@ -233,9 +276,9 @@ test('workspace rendering synchronizes both retry buttons and explains exhausted
   assert.ok(script.includes(ending));
   runInNewContext(script.replace(ending, 'globalThis.harness={renderJob,setSubmitting(value){jobSubmitting=value;}};})();'), context);
   const job = { id: 'synthetic-failed-job', state: 'failed', transport: 'discord', attempt: 1, created_at: 0, updated_at: 0 };
+  assert.ok(!script.includes('pw-start-mock'));
   const check = (disabled: boolean) => {
     assert.equal(document.getElementById('pw-start').disabled, disabled);
-    assert.equal(document.getElementById('pw-start-mock').disabled, disabled);
     assert.equal(document.getElementById('pw-refresh').disabled, false);
   };
   context.harness.renderJob(job); check(false);
@@ -245,6 +288,47 @@ test('workspace rendering synchronizes both retry buttons and explains exhausted
   context.harness.renderJob({ ...job, attempt: 3 }); check(true);
   assert.match(document.getElementById('pw-poll-note').textContent, /Three-attempt limit/);
   assert.match(document.getElementById('pw-start').title, /Discord and mock share/);
+});
+
+test('Stage 3 one-click approval approves every gate in order and revision dispatches through reanalyze', async t => {
+  const { app } = await fixture(t);
+  const script = (await app.inject('/project-workspace.js')).body;
+  const ending = "addEventListener('pagehide',()=>watcher?.stop());void init();})();";
+  assert.ok(script.includes(ending));
+  const nodes = new Map<string, any>();
+  const makeNode = (): any => { const n: any = { children: [], dataset: {}, listeners: {}, disabled: false, hidden: false, textContent: '', value: '', append(...items: any[]) { n.children.push(...items); }, replaceChildren(...items: any[]) { n.children = items; }, setAttribute(k: string, v: string) { n[k] = v; }, addEventListener(type: string, fn: any) { (n.listeners[type] ??= []).push(fn); }, querySelectorAll() { return []; }, querySelector() { return null; }, remove() {}, scrollIntoView() {} }; return n; };
+  const checked = [{ dataset: { revisionCategory: 'price' } }, { dataset: { revisionCategory: 'timeline' } }];
+  const documentStub: any = { hidden: false, activeElement: null, getElementById(id: string) { if (!nodes.has(id)) nodes.set(id, makeNode()); return nodes.get(id); }, createElement: () => makeNode(), createTextNode: (text: string) => ({ textContent: text }), querySelectorAll: (selector: string) => selector.includes('data-revision-category') ? checked : [] };
+  const order = ['intake', 'proposal', 'commercial', 'financial', 'activation'];
+  const approved = new Set<string>(); let active = false; const calls: any[] = [];
+  const proposal = { client: { name: 'Client' }, project: { name: 'Project', brief: 'Brief', agreedRevenueCents: 1000, proposedRevenueCents: 1000 }, proposal: { budgetCents: 500, explanation: 'Fixture', allocations: [] }, statementOfWork: { deliverables: [], milestones: [], scope: [], acceptanceCriteria: [] }, riskRegister: [], executionPlan: {}, financialSummary: {}, ownerDecisionRecommendation: {} };
+  const snapshot = () => ({ active, project: { client_name: 'Client', brief: 'Brief', revenue_cents: 1000 }, review: { revision: { id: 'rev1', fingerprint: 'fp1', import_id: 'imp1', proposal } }, gates: order.map(id => ({ id, status: approved.has(id) ? 'approved' : 'awaiting_owner', subjectHash: 'a'.repeat(64), blockers: [], actions: ['approve', 'changes'], checks: ['check'] })) });
+  const projectRecord = { client: { id: 'project-1', client_name: 'Client', brief: 'Brief', status: 'active', revenue_cents: 1000 }, workspace: { taskId: 'task', imports: [], createdAt: 0, bindingSource: 'owner_onboarding', latestJob: null, demoPreviewAvailable: false }, proposals: [], history: [], allocations: [], receipts: [], delivery: null, approvedDeliveryBudgetCents: null, projectedGrossMarginCents: null };
+  const fetchStub = async (url: string, options: any = {}) => {
+    const respond = (data: any) => ({ ok: true, status: 200, json: async () => data });
+    if (url.includes('/approval-workflow/decisions')) { const body = JSON.parse(options.body); calls.push(body); if (body.decision === 'approve') { approved.add(body.gate); if (body.gate === 'activation') active = true; } return respond(snapshot()); }
+    if (url.includes('/approval-workflow/reanalyze')) { calls.push({ reanalyze: true }); return respond({ job: { id: 'job-2' } }); }
+    if (url.includes('/approval-workflow')) return respond(snapshot());
+    if (url.includes('/proposal-imports/imp1')) return respond({ evidence: { source: 'fixture' } });
+    if (url.endsWith('/v1/client-projects/project-1')) return respond(projectRecord);
+    return respond({});
+  };
+  let uuid = 0;
+  const context: Record<string, any> = { RoomTreasuryWorkspace: model(), document: documentStub, fetch: fetchStub, setInterval: () => 1, clearInterval: () => {}, addEventListener: () => {}, crypto: { randomUUID: () => 'key-' + (++uuid) }, navigator: {}, BroadcastChannel: undefined };
+  runInNewContext(script.replace(ending, 'globalThis.harness={approvalWorkspace};})();'), context);
+  const flush = async () => { for (let i = 0; i < 60; i++) await new Promise(resolve => setTimeout(resolve, 0)); };
+  context.harness.approvalWorkspace('project-1'); await flush();
+  documentStub.getElementById('pw-approve-project').listeners.click[0](); await flush();
+  assert.deepEqual(calls.filter(call => call.decision === 'approve').map(call => call.gate), order);
+  assert.equal(documentStub.getElementById('pw-approve-feedback').textContent, 'Project approved and activated.');
+  assert.equal(documentStub.getElementById('pw-approve-project').textContent, 'Project Approved');
+  documentStub.getElementById('pw-revision-instructions').value = 'Please lower the price and move the deadline.';
+  await documentStub.getElementById('pw-revision-form').listeners.submit[0]({ preventDefault() {} }); await flush();
+  const change = calls.find(call => call.decision === 'changes');
+  assert.ok(change); assert.deepEqual(change.sections, ['costs', 'commercial', 'capacity']);
+  assert.match(change.reason, /Revision categories: Price, Timeline/); assert.match(change.reason, /lower the price/);
+  assert.ok(calls.some(call => call.reanalyze));
+  assert.match(documentStub.getElementById('pw-revision-feedback').textContent, /Revision dispatched/);
 });
 
 test('failed Discord jobs retry with fresh job IDs and keys; active duplicates and exhausted attempts are rejected', async t => {
@@ -289,4 +373,32 @@ test('failed Discord jobs retry with fresh job IDs and keys; active duplicates a
   assert.equal(fourth.statusCode, 409);
   assert.equal(fourth.json().error.code, 'JOB_ATTEMPT_LIMIT');
   assert.equal(jobs.list(data.session, binding.client_project_id).length, 3);
+});
+
+test('project intake renews missing demo access through the local page and leaves production sign-in in place', async () => {
+  const requested: string[] = [];
+  const replies = [
+    new Response(null, { status: 401 }),
+    new Response('Demo page'),
+    Response.json({ demoAccess: true, csrfToken: 'synthetic-token' })
+  ];
+  const context: Record<string, any> = {
+    fetch: async (path: string) => {
+      requested.push(path);
+      return replies.shift();
+    }
+  };
+  runInNewContext(workspaceModel, context);
+  const model = context.RoomTreasuryWorkspace;
+  assert.equal((await model.intakeSession(true)).csrfToken, 'synthetic-token');
+  assert.deepEqual(requested, ['/v1/owner-auth/session', '/', '/v1/owner-auth/session']);
+
+  requested.length = 0;
+  replies.push(new Response(null, { status: 401 }));
+  await assert.rejects(() => model.intakeSession(false), /Sign in as an owner/);
+  assert.deepEqual(requested, ['/v1/owner-auth/session']);
+
+  replies.push(new Response(null, { status: 403 }));
+  await assert.rejects(() => model.intakeSession(true), /Could not check project access \(HTTP 403\)/);
+  assert.equal(replies.length, 0);
 });

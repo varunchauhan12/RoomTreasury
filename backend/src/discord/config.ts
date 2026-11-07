@@ -1,3 +1,12 @@
+// Live Switch agent IDs are distinct from Discord role IDs and display names.
+export const switchAgentIds = Object.freeze({
+  'make-proposal-agent': '0607807b-3519-4e68-9524-48a897f9f5da',
+  'req-agent': '795ac58b-a32d-4969-89ec-00e846c4ad72',
+  'challenge-agent': '654d5455-f0bb-4f21-b933-399f06ba96c4',
+  'commitment-intelligence-agent': '1a4316d8-b778-418a-b2de-c1d9c7cb8c9d',
+  'treasury-ops-agent': '927f5e28-2d1b-43bb-a77c-23a676561106',
+});
+
 export interface DiscordConfig {
   readonly botToken: string;
   readonly guildId: string;
@@ -56,7 +65,7 @@ export function readDiscordConfig(env: NodeJS.ProcessEnv = process.env): Discord
     throw new DiscordConfigurationError('DISCORD_CHANNEL_ID must be a valid Discord snowflake ID (17-21 digits).');
   }
 
-  const coordinatorMention = env.DISCORD_COORDINATOR_MENTION?.trim() || (guildId === '1567957507656384543' ? '<@&1568256403179569252>' : '@make-proposal-agent');
+  const coordinatorMention = env.DISCORD_COORDINATOR_MENTION?.trim() || (guildId === '1567957507656384543' ? '<@&1568667302910501097>' : '@make-proposal-agent');
   const apiBaseUrl = (env.DISCORD_API_BASE_URL?.trim() || 'https://discord.com/api/v10').replace(/\/+$/, '');
   const gatewayUrl = env.DISCORD_GATEWAY_URL?.trim() || 'wss://gateway.discord.gg/?v=10&encoding=json';
   const rawTimeout = env.DISCORD_JOB_TIMEOUT_MS?.trim();

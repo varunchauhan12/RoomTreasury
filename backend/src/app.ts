@@ -1,3 +1,4 @@
+import {registerLocalWorkspace} from './security/local-workspace.js';
 import {registerAppearance} from './web/appearance.js';
 import {registerDemoAccess} from './security/demo-access.js';
 import {registerDiscordReads} from './discord/read-routes.js';
@@ -24,7 +25,7 @@ import swagger from '@fastify/swagger';
 import type { Database } from 'better-sqlite3';
 import { errorSchema, installErrorHandling } from './api/errors.js';
 
-export async function buildApp(db: Database, options: {aiFetch?:typeof fetch} = {}) {
+export async function buildApp(db: Database, options: {aiFetch?:typeof fetch;localWorkspace?:boolean} = {}) {
   const app = Fastify({
     logger: false, // Never automatically log request bodies, headers or raw exceptions.
     genReqId: () => randomUUID(), requestIdHeader: false,
@@ -32,8 +33,9 @@ export async function buildApp(db: Database, options: {aiFetch?:typeof fetch} = 
     ajv: { customOptions: { removeAdditional: false, coerceTypes: false, useDefaults: false } }
   });
   installErrorHandling(app);
-  const ownerSettings=authSettings(db);
-  registerDemoAccess(app,db,ownerSettings);
+  const ownerSettings=options.localWorkspace?{origin:'http://127.0.0.1',secure:false,cookieName:'rt_demo_owner',localWorkspace:true}:authSettings(db);
+  if(options.localWorkspace)registerLocalWorkspace(app,db);
+  else registerDemoAccess(app,db,ownerSettings);
   registerAppearance(app);
   await app.register(swagger, {
     openapi: {
@@ -63,7 +65,7 @@ export async function buildApp(db: Database, options: {aiFetch?:typeof fetch} = 
     }
     return { status: 'ok' };
   });
-  registerIdentity(app, db);
+  if(!options.localWorkspace)registerIdentity(app, db);
   registerClientProjects(app, db,ownerSettings);
   if(!commercialDemo(db))registerEstimation(app,db,options.aiFetch);
   registerDashboard(app);
@@ -71,9 +73,11 @@ export async function buildApp(db: Database, options: {aiFetch?:typeof fetch} = 
   registerImports(app,db,ownerSettings);
   registerProjectImports(app,db,ownerSettings);
   registerImportWorkspace(app);
-  registerOwnerAuth(app,db,ownerSettings);
-  const modes=db.prepare('SELECT DISTINCT mode FROM schema_migrations').all() as {mode:string}[];
-  registerLoginPage(app,process.env.NODE_ENV!=='production' && modes.length===1 && modes[0]?.mode==='demo');
+  if(!options.localWorkspace){
+    registerOwnerAuth(app,db,ownerSettings);
+    const modes=db.prepare('SELECT DISTINCT mode FROM schema_migrations').all() as {mode:string}[];
+    registerLoginPage(app,process.env.NODE_ENV!=='production' && modes.length===1 && modes[0]?.mode==='demo');
+  }
   registerReview(app,db,ownerSettings);
   registerReviewWidget(app);
   registerJobs(app,db,ownerSettings);

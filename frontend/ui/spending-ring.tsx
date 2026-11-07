@@ -49,6 +49,7 @@ export interface SpendingCategory {
 export interface SpendingRingProps {
   title?: string;
   categories?: SpendingCategory[];
+  animateUpdates?: boolean;
   currency?: string;
   className?: string;
 }
@@ -141,6 +142,7 @@ function springStep(
 export default function SpendingRing({
   title = "October spending",
   categories = DEFAULT_CATEGORIES,
+  animateUpdates = false,
   currency = "USD",
   className,
 }: SpendingRingProps) {
@@ -274,13 +276,14 @@ export default function SpendingRing({
     [paint, spans, tick, track]
   );
 
-  // New data keeps the same slice under the marker. A re-render with the same
-  // numbers in a fresh array leaves a spin or drag in progress alone.
+  // Align the marker with the selected slice when the data changes.
   useEffect(() => {
     const s = sim.current;
     const index = Math.max(0, Math.min(selectedRef.current, spans.length - 1));
     const goal = -(spans[index]?.mid ?? 0);
-    if (Math.abs(wrap(goal - s.target)) < 0.001) {
+    if (index === selectedRef.current && Math.abs(wrap(goal - s.target)) < 0.001) return;
+    if (animateUpdates) {
+      turnTo(index);
       return;
     }
     s.a = goal;
@@ -289,7 +292,7 @@ export default function SpendingRing({
     selectedRef.current = index;
     setSelected(index);
     paint();
-  }, [spans, paint]);
+  }, [animateUpdates, spans, paint, turnTo]);
 
   useEffect(() => () => cancelAnimationFrame(sim.current.raf), []);
 
@@ -448,6 +451,7 @@ export default function SpendingRing({
             {spans.map((span, i) => {
               const category = categories[i];
               const on = i === selected;
+              const gap = Math.min(GAP, (span.to - span.from) * 0.4);
               return (
                 <path
                   className={cn(
@@ -455,7 +459,7 @@ export default function SpendingRing({
                     category.stroke,
                     !on && "opacity-40 dark:opacity-50"
                   )}
-                  d={arc(span.from + GAP / 2, span.to - GAP / 2)}
+                  d={arc(span.from + gap / 2, span.to - gap / 2)}
                   fill="none"
                   key={category.name}
                   strokeWidth={on ? STROKE + 8 : STROKE}
@@ -507,10 +511,10 @@ export default function SpendingRing({
             <button
               aria-pressed={i === selected}
               className={cn(
-                "flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-xs outline-none transition-colors duration-150 ease-out focus-visible:ring-2 focus-visible:ring-zinc-400",
+                "flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs outline-none transition-colors duration-150 ease-out focus-visible:ring-2 focus-visible:ring-zinc-400",
                 i === selected
-                  ? "bg-zinc-100 dark:bg-zinc-900"
-                  : "text-zinc-500 hover:bg-zinc-50 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-900/60 dark:hover:text-zinc-100"
+                  ? "bg-zinc-100 text-zinc-900 font-semibold dark:bg-zinc-800 dark:text-zinc-100"
+                  : "text-zinc-500 hover:bg-zinc-50 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800/60 dark:hover:text-zinc-100"
               )}
               onClick={() => turnTo(i)}
               type="button"

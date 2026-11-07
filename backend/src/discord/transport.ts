@@ -1,10 +1,11 @@
+import {switchAgentIds} from './config.js';
 import type { Database } from 'better-sqlite3';
 import type { DispatchRequest, JobTransport, TransportEvent } from '../jobs/transport.js';
 import { DispatchFailure } from '../jobs/transport.js';
 import { DiscordConfig } from './config.js';
 import { DiscordRestClient, DiscordMessage, DiscordApiError, dispatchDiagnostic } from './client.js';
 import { DiscordGateway } from './gateway.js';
-import { DiscordMessageCollector, classifySender } from './collector.js';
+import { DiscordMessageCollector, classifySender, type CollectedArtifacts } from './collector.js';
 import { importDiscordPackage } from '../imports/project-linked.js';
 import { ImportError } from '../imports/service.js';
 
@@ -53,6 +54,10 @@ export class DiscordTransport implements JobTransport {
     const intakeRevision = request.intakeRevision ?? 1;
     const specialists=request.specialists?.length?request.specialists.join(', '):'Request Agent, Challenge Agent, Commitment Intelligence Agent, Treasury Operations Agent';
 
+    const roster = this.config.guildId === '1567957507656384543'
+      ? Object.entries(switchAgentIds).map(([name, id]) => name + '=' + id).join('; ')
+      : null;
+
     const messageLines = [
       `${mention}`,
       '',
@@ -85,6 +90,10 @@ export class DiscordTransport implements JobTransport {
        'Return a complete new bound artifact package preserving the original project brief. Keep agreed revenue null for fresh owner verification. Identify retained historical findings as historical evidence; do not claim those specialists reran. Do not reuse previous approval.'
       ]:[]),
       '**Specialist Coordination Instructions:**',
+      ...(roster ? [
+        'Switch room roster (internal IDs): ' + roster,
+        'Before delegating, use list_participants to verify each specialist ID. Use its matched name with send_targeted_message. Report missing IDs; do not substitute.',
+      ] : []),
       '1. Coordinate '+(request.specialists?.length?'the listed specialists for the affected sections':'all four specialists to gather requirements, identify risks, estimate capacity and commitments, and analyze economics')+'.',
       '2. Consolidate their findings into the final proposal package (`proposal.json`, `evidence.json`, `summary.md`).',
       '3. Both JSON files must include projectId, taskId, processingJobId, correlationId, intakeRevision and intakeSha256. Repeat those identifiers in summary.md with an Intake revision line. Keep agreed revenue null. Upload all three files, then post:',
@@ -97,9 +106,9 @@ export class DiscordTransport implements JobTransport {
     const attachment = fullContent.length > 2000 ? { filename: 'roomtreasury-intake.txt', content: fullContent } : undefined;
     const content = attachment
       ? [mention,'','**[ROOMTREASURY INTAKE DISPATCH]**',...messageLines.slice(5,14),
-          'Read the complete original brief in the attached roomtreasury-intake.txt before coordinating.',
+          'Read the complete original brief and Switch routing instructions in roomtreasury-intake.txt before coordinating.',
           `ROOMTREASURY_RESULT_READY job=${request.jobId} correlation=${request.correlationId}`,
-          'Do NOT approve, spend, reserve, settle or deploy funds.'].join('\n')
+          'Do NOT approve, spend, reserve, settle or deploy funds. All spending is simulated and requires explicit human owner review in RoomTreasury.'].join('\n')
       : fullContent;
 
     let accepted = false;
@@ -120,9 +129,10 @@ export class DiscordTransport implements JobTransport {
     const startTime = Date.now();
     let isRunning = false;
     let isCollecting = false;
-    let isValidating = false;
+    let completionAuthorId: string | null = null;
+    let artifacts: CollectedArtifacts | undefined;
     const seenSpecialists = new Set<string>();
-    const correlatedMessages: DiscordMessage[] = [];
+    const recorded = new Set<string>();
 
     // Gateway subscription
     const liveMessages: DiscordMessage[] = [];
@@ -172,7 +182,8 @@ export class DiscordTransport implements JobTransport {
           if(!await this.collector.correlateMessage(msg,jobId,correlationId,taskId))continue;
           const classified = this.collector.recordMessage(msg, jobId);
           if (!classified) continue;
-          correlatedMessages.push(msg);
+          if(recorded.has(msg.id))continue;
+          recorded.add(msg.id);
 
           if (!isRunning && (classified.isCoordinatorAck || classified.role === 'coordinator' || classified.isSpecialistProgress)) {
             isRunning = true;
@@ -182,7 +193,7 @@ export class DiscordTransport implements JobTransport {
           if (classified.role === 'specialist' && classified.agentName) {
             if (!seenSpecialists.has(classified.agentName)) {
               seenSpecialists.add(classified.agentName);
-              yield { key: `discord-specialist-${classified.agentName}`, state: 'running' };
+              yield { key: `discord-specialist-${classified.agentName}`, state: isCollecting?'collecting':'running' };
             }
           }
 
@@ -197,42 +208,40 @@ export class DiscordTransport implements JobTransport {
               isCollecting = true;
               yield { key: 'discord-collecting', state: 'collecting' };
             }
-            isValidating = true;
-            yield { key: 'discord-validating', state: 'validating' };
-            break;
+            completionAuthorId ??= msg.author.id;
           }
         }
 
-        if (isValidating) {
-          break;
+        if(completionAuthorId){
+          const stored=this.db.prepare("SELECT raw_json FROM discord_messages WHERE job_id=? AND author_id=? AND agent_role='coordinator' ORDER BY occurred_at,id")
+            .all(jobId,completionAuthorId) as {raw_json:string}[];
+          const messages=stored.map(row=>JSON.parse(row.raw_json) as DiscordMessage);
+          try {
+            artifacts=await this.collector.retrieveAttachmentsForJob(jobId,messages);
+            break;
+          } catch {
+            // Completion and attachment events can arrive out of order.
+            // Continue REST and Gateway collection until the configured timeout.
+          }
         }
 
-        await new Promise((resolve) => setTimeout(resolve, this.pollIntervalMs));
+        await new Promise(resolve=>setTimeout(resolve,this.pollIntervalMs));
       }
 
-      if (!isValidating) {
-        yield { key: 'discord-timeout', state: 'needs_attention', code: 'discord_timeout' };
+      if(!artifacts){
+        yield completionAuthorId
+          ? {key:'discord-missing-attachments',state:'needs_attention',code:'discord_missing_attachments',
+            diagnostic:'Missing required coordinator attachments before the collection deadline.'}
+          : {key:'discord-timeout',state:'needs_attention',code:'discord_timeout'};
         return;
       }
 
-      // One final chronological backfill includes attachment-only messages before the completion marker.
-      const finalBackfill=await this.collector.backfillHistory(jobId,correlationId,taskId);
-      correlatedMessages.push(...finalBackfill.map(item=>item.message));
-      const stored=this.db.prepare('SELECT raw_json FROM discord_messages WHERE job_id=? ORDER BY occurred_at,id').all(jobId) as {raw_json:string}[];
-      correlatedMessages.push(...stored.map(row=>JSON.parse(row.raw_json) as DiscordMessage));
-      // Validating phase: retrieve attachments
-      let artifacts;
+      yield {key:'discord-validating',state:'validating'};
+      // Ensure worker lease remains active during validation and ingestion
       try {
-        artifacts = await this.collector.retrieveAttachmentsForJob(jobId, correlatedMessages);
-      } catch (err: any) {
-        yield {
-          key: 'discord-missing-attachments',
-          state: 'needs_attention',
-          code: 'discord_missing_attachments',
-          diagnostic: err.message?.slice(0, 200),
-        };
-        return;
-      }
+        this.db.prepare('UPDATE processing_jobs SET lease_until=? WHERE id=? AND completed_at IS NULL')
+          .run(Date.now() + 120000, jobId);
+      } catch {}
 
       const bundle = {
         proposal: { name: artifacts.proposal.filename, content: artifacts.proposal.contentText },

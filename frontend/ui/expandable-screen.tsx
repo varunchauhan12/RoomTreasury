@@ -71,11 +71,10 @@ export function ExpandableScreen({
 
   useEffect(() => {
     if (lockScroll) {
-      if (isExpanded) {
-        document.body.style.overflow = "hidden"
-      } else {
-        document.body.style.overflow = "unset"
-      }
+      if (!isExpanded) return
+      const previous = document.body.style.overflow
+      document.body.style.overflow = "hidden"
+      return () => { document.body.style.overflow = previous }
     }
   }, [isExpanded, lockScroll])
 
@@ -145,6 +144,8 @@ interface ExpandableScreenContentProps {
   className?: string
   showCloseButton?: boolean
   closeButtonClassName?: string
+  overlayClassName?: string
+  onExitComplete?: () => void
 }
 
 export function ExpandableScreenContent({
@@ -152,14 +153,20 @@ export function ExpandableScreenContent({
   className = "",
   showCloseButton = true,
   closeButtonClassName = "",
+  overlayClassName = "",
+  onExitComplete,
 }: ExpandableScreenContentProps) {
   const { isExpanded, collapse, layoutId, contentRadius, animationDuration } =
     useExpandableScreen()
 
   return (
-    <AnimatePresence initial={false}>
+    <AnimatePresence initial={false} onExitComplete={onExitComplete}>
       {isExpanded && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-2">
+        <motion.div
+          className={`fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-2 ${overlayClassName}`}
+          exit={{ opacity: 0 }}
+          transition={{ duration: animationDuration }}
+        >
           {/* Morphing background with shared layoutId */}
           <motion.div
             layoutId={layoutId}
@@ -173,7 +180,7 @@ export function ExpandableScreenContent({
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.15, duration: 0.4 }}
+              transition={{ delay: animationDuration * 0.15, duration: animationDuration * 0.65 }}
               className="relative z-20 w-full"
             >
               {children}
@@ -192,7 +199,7 @@ export function ExpandableScreenContent({
               </motion.button>
             )}
           </motion.div>
-        </div>
+        </motion.div>
       )}
     </AnimatePresence>
   )

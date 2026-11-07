@@ -1,3 +1,4 @@
+import {isLocalAuditContext} from '../security/local-workspace.js';
 import {createHash,randomUUID} from 'node:crypto';
 import type {Database} from 'better-sqlite3';
 import {AgencyEngine} from '../domain/agency-engine.js';
@@ -13,6 +14,7 @@ export function mockMode(db:Database):void {
  if(modes.length!==1||!['test','demo'].includes(modes[0] as string)||process.env.NODE_ENV==='production')throw new AuthError(403,'MOCK_MODE_DISABLED');
 }
 export function activeSession(db:Database,session:OwnerSession):void {
+ if(isLocalAuditContext(db,session))return;
  const now=Date.now();
  if(!db.prepare(`SELECT 1 FROM human_sessions s JOIN human_owners o ON o.id=s.owner_id
  WHERE s.digest=? AND s.owner_id=? AND s.revoked_at IS NULL AND o.disabled_at IS NULL AND s.expires_at>? AND s.last_seen>?`).get(session.digest,session.ownerId,now,now-900000))throw new AuthError(401,'OWNER_LOGIN_REQUIRED');
@@ -39,7 +41,9 @@ export function onboardProject(db:Database,session:OwnerSession,intake:ProjectIn
   }else new AgencyEngine(db).createClientProject(Object.freeze({kind:'human',role:'owner',id:session.ownerId,projectId}),projectId,intake.clientName,intake.brief,intake.revenueCents);
   db.prepare('INSERT INTO human_owner_scopes VALUES (?,?,?,NULL)').run(session.ownerId,taskId,now);
   db.prepare("INSERT INTO project_task_bindings VALUES (?,?,?,?,'owner_onboarding',?,?,?)").run(id,projectId,taskId,session.ownerId,idempotencyKey,requestHash,now);
-  db.prepare("INSERT INTO binding_audit_events(binding_id,actor_kind,actor_id,session_digest,verification_ref,occurred_at) VALUES (?,'owner_session',?,?,NULL,?)").run(id,session.ownerId,session.digest,now);
+  const local=isLocalAuditContext(db,session);
+  db.prepare('INSERT INTO binding_audit_events(binding_id,actor_kind,actor_id,session_digest,verification_ref,occurred_at) VALUES (?,?,?,?,?,?)')
+    .run(id,local?'local_operator':'owner_session',session.ownerId,local?null:session.digest,local?'local-workspace':null,now);
   return bindingAuthorized(db,session.ownerId,id);
  }).immediate();
 }

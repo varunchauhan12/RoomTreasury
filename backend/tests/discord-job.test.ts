@@ -153,6 +153,15 @@ test('Discord transport end-to-end: dispatch, specialist progress, completion ma
     },
   ];
 
+  // Discord may deliver the marker before three file-only message events.
+  const completion = conversationHistory.at(-1)!;
+  const splitFiles: DiscordMessage[] = completion.attachments.map((attachment,index)=>({
+    ...completion,id:'msg-package-'+index,content:'',attachments:[attachment]
+  }));
+  completion.attachments=[];
+  let historyReads=0;
+  const downloads=new Map<string,number>();
+
   const mockFetch: typeof fetch = async (input, init) => {
     const urlStr = String(input);
     if (init?.method === 'POST') {
@@ -169,12 +178,14 @@ test('Discord transport end-to-end: dispatch, specialist progress, completion ma
     }
 
     if (urlStr.includes('/messages')) {
-      return new Response(JSON.stringify(conversationHistory), {
+      historyReads++;
+      return new Response(JSON.stringify([...conversationHistory,...splitFiles.slice(0,historyReads-1)]), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
       });
     }
 
+    downloads.set(urlStr,(downloads.get(urlStr)??0)+1);
     if (urlStr.endsWith('proposal.json')) return new Response(bundle.proposal.content, { status: 200 });
     if (urlStr.endsWith('evidence.json')) return new Response(bundle.evidence!.content, { status: 200 });
     if (urlStr.endsWith('summary.md')) return new Response(bundle.summary!.content, { status: 200 });
@@ -196,8 +207,10 @@ test('Discord transport end-to-end: dispatch, specialist progress, completion ma
 
   // Verify dispatch message content
   assert.equal(sentMessages.length, 1);
+  assert.equal(historyReads>=4,true);
+  assert.deepEqual([...downloads.values()],[1,1,1]);
   const sent = sentMessages[0]!.content;
-  assert.match(sent, /<@&1568256403179569252>|@make-proposal-agent/);
+  assert.match(sent, /<@&1568667302910501097>|@make-proposal-agent/);
   assert.match(sent, new RegExp(`Project ID: \`${data.binding.client_project_id}\``));
   assert.match(sent, new RegExp(`Task ID: \`${data.binding.task_id}\``));
   assert.match(sent, new RegExp(`Processing Job ID: \`${job.id}\``));

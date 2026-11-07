@@ -1,3 +1,4 @@
+import {localAuditContext} from '../security/local-workspace.js';
 import {ownerSession,authSettings,type OwnerSession,type AuthSettings} from '../security/owner-auth.js';
 import {bindingAuthorized} from '../jobs/bindings.js';
 import {AuthError} from '../security/service-auth.js';
@@ -31,10 +32,15 @@ export function projectSnapshot(db: Database, id: string) {
 export function registerClientProjects(app: FastifyInstance, db: Database,settings:AuthSettings=authSettings(db)): void {
   const real=Boolean(db.prepare("SELECT 1 FROM schema_migrations WHERE version=1 AND mode='real'").get());
   function authenticated(request:FastifyRequest):OwnerSession|null {
+    if(settings.localWorkspace)return ownerSession(db,request,settings);
     if(!request.headers.cookie)return null;
     try{return ownerSession(db,request,settings);}catch(error){if(error instanceof AuthError)return null;throw error;}
   }
-  function snapshot(id:string,owner:OwnerSession|null){
+  function snapshot(id:string,owner:OwnerSession|null,request:FastifyRequest){
+    if(settings.localWorkspace){
+      const ownerId=db.prepare('SELECT owner_id FROM project_task_bindings WHERE client_project_id=?').pluck().get(id) as string|undefined;
+      if(ownerId)owner=localAuditContext(db,request,ownerId);
+    }
     const project=projectSnapshot(db,id);
     if(!owner)return project;
     const binding=db.prepare('SELECT id FROM project_task_bindings WHERE client_project_id=? AND owner_id=?').get(id,owner.ownerId) as {id:string}|undefined;
@@ -58,7 +64,7 @@ export function registerClientProjects(app: FastifyInstance, db: Database,settin
      const owner=authenticated(request);
      if(real&&!owner)throw new AuthError(401,'OWNER_LOGIN_REQUIRED');
      return db.transaction(() => ({projects:(db.prepare('SELECT id FROM client_projects ORDER BY rowid').all() as {id:string}[])
-       .map(p=>snapshot(p.id,owner)).filter(p=>!real||'workspace' in p)}))();
+       .map(p=>snapshot(p.id,owner,request)).filter(p=>!real||'workspace' in p)}))();
     }
     catch(error) { if(error instanceof AuthError)throw error;throw Object.assign(new Error('Unavailable'),{statusCode:503}); }
   });
@@ -68,7 +74,7 @@ export function registerClientProjects(app: FastifyInstance, db: Database,settin
     try {
      const owner=authenticated(request);
      if(real&&!owner)throw new AuthError(401,'OWNER_LOGIN_REQUIRED');
-     const value=db.transaction(()=>snapshot(request.params.projectId,owner))();
+     const value=db.transaction(()=>snapshot(request.params.projectId,owner,request))();
      if(real&&!('workspace' in value))throw new AuthError(403,'BOUND_OWNER_SCOPE_REQUIRED');
      return value;
     }

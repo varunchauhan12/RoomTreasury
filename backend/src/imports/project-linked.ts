@@ -23,7 +23,9 @@ function context(db:Database,session:OwnerSession,projectId:string){
  if(!row)throw new AuthError(403,'BOUND_OWNER_SCOPE_REQUIRED');
  const binding=bindingAuthorized(db,session.ownerId,row.id);
  const job=db.prepare('SELECT * FROM processing_jobs WHERE binding_id=? ORDER BY intake_revision DESC,attempt DESC LIMIT 1').get(binding.id) as Job|undefined;
- if(!job||!(job.state==='imported'||job.state==='needs_attention'&&(job.error_code==='artifact_import_deferred'||job.error_code==='artifact_validation_failed'||job.transport==='discord'&&job.error_code==='discord_missing_attachments')))throw new ImportError(['This project needs an eligible completed processing record awaiting artifact recovery. Running, uncertain, failed or cancelled jobs cannot accept results.'],409);
+ const discordEligible=job?.transport==='discord'&&(job.state==='running'||job.state==='collecting'||(job.state==='needs_attention'&&(job.error_code==='discord_missing_attachments'||job.error_code==='discord_timeout')));
+ const eligible=Boolean(job&&(job.state==='imported'||(job.state==='needs_attention'&&(job.error_code==='artifact_import_deferred'||job.error_code==='artifact_validation_failed'))||discordEligible));
+ if(!job||!eligible)throw new ImportError(['This project needs an eligible completed processing record awaiting artifact recovery. Running, uncertain, failed or cancelled jobs cannot accept results.'],409);
  if(job.submitting_owner_id!==binding.owner_id||hash(job.intake_snapshot)!==job.intake_hash)throw new ImportError(['The persisted processing context is inconsistent.'],409);
  const intake=JSON.parse(job.intake_snapshot);
  if(intake.projectId!==projectId||intake.taskId!==binding.task_id||intake.intakeRevision!==job.intake_revision)throw new ImportError(['The processing intake does not match the project binding.'],409);
@@ -61,7 +63,7 @@ export function confirmProjectImport(db:Database,session:OwnerSession,projectId:
   db.prepare("INSERT INTO project_import_links VALUES (?,?,?,?,?,?,?,?,'authenticated_project_upload',?)").run(imported.id,job.id,binding.id,job.intake_revision,job.intake_hash,validated.fingerprint,session.ownerId,session.digest,Date.now());
   const now=Date.now();
   db.prepare("UPDATE processing_jobs SET state='imported',result_import_id=?,updated_at=?,completed_at=?,error_code=NULL,diagnostic=NULL,lease_owner=NULL,lease_until=NULL WHERE id=?").run(imported.id,now,now,job.id);
-  db.prepare("INSERT INTO processing_job_events(job_id,event_key,from_state,to_state,code,occurred_at,actor_kind,actor_id) VALUES (?,'owner-artifact-import','needs_attention','imported','manual_project_upload',?,'owner',?)").run(job.id,now,session.ownerId);
+  db.prepare("INSERT INTO processing_job_events(job_id,event_key,from_state,to_state,code,occurred_at,actor_kind,actor_id) VALUES (?,'owner-artifact-import',?,'imported','manual_project_upload',?,'owner',?)").run(job.id,job.state,now,session.ownerId);
   recordImportedReport(db,imported.id);
   return {id:imported.id,jobId:job.id,duplicate:false};
  }).immediate();

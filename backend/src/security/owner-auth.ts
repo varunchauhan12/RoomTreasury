@@ -1,9 +1,10 @@
+import {localAuditContext} from './local-workspace.js';
 import {randomBytes,randomUUID,createHash,createHmac,scrypt,timingSafeEqual} from 'node:crypto';
 import type {Database} from 'better-sqlite3';
 import type {FastifyRequest} from 'fastify';
 import {AuthError} from './service-auth.js';
 export interface OwnerSession {readonly ownerId:string;readonly digest:string;readonly csrf:string;readonly createdAt:number}
-export interface AuthSettings {readonly origin:string;readonly secure:boolean;readonly cookieName:string}
+export interface AuthSettings {readonly origin:string;readonly secure:boolean;readonly cookieName:string;readonly localWorkspace?:boolean}
 export function authSettings(db:Database,env:NodeJS.ProcessEnv=process.env):AuthSettings {
  const mode=db.prepare('SELECT mode FROM schema_migrations LIMIT 1').pluck().get();const production=mode==='real'||env.NODE_ENV==='production';
  const raw=env.ROOMTREASURY_AUTH_ORIGIN??(!production?'http://127.0.0.1:3000':undefined);
@@ -24,6 +25,7 @@ function tokenFrom(request:FastifyRequest,settings:AuthSettings):string {
  if(!/^[A-Za-z0-9_-]{43}$/.test(token))throw new AuthError(401,'OWNER_LOGIN_REQUIRED');return token;
 }
 export function ownerSession(db:Database,request:FastifyRequest,settings:AuthSettings,mutation=false):OwnerSession {
+ if(settings.localWorkspace)return localAuditContext(db,request);
  const token=tokenFrom(request,settings),now=Date.now();
  const row=db.prepare(`SELECT s.*,o.disabled_at FROM human_sessions s JOIN human_owners o ON o.id=s.owner_id WHERE s.digest=?`).get(digest(token)) as any;
  if(!row||row.revoked_at!==null||row.disabled_at!==null||row.expires_at<=now||row.last_seen+900000<=now)throw new AuthError(401,'OWNER_LOGIN_REQUIRED');

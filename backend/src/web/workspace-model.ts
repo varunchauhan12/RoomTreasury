@@ -19,9 +19,7 @@ function revenue(value){if(!/^\d+(\.\d{1,2})?$/.test(value))throw Error('Enter a
 function intake(fields){
  const clientName=fields.clientName.trim(),name=fields.projectName.trim(),description=fields.description.trim(),requirements=fields.requirements.trim(),deliverables=fields.deliverables.trim();
  if(!clientName||!name||!description||!requirements||!deliverables)throw Error('Enter the client, project name, description, scope and deliverables.');
- const contactNote=fields.clientContact?.trim()?'Client contact: '+fields.clientContact.trim():'';
- const notesText=[contactNote,fields.notes?.trim()].filter(Boolean).join('; ');
- const brief=['RoomTreasury project intake','Project name: '+name,'Description: '+description,'Requirements and scope: '+requirements,'Deliverables: '+deliverables,'Desired deadline: '+(fields.deadline||'Not specified'),'Additional notes: '+(notesText||'None supplied')].join('\n');
+ const brief=['RoomTreasury project intake','Project name: '+name,'Description: '+description,'Requirements and scope: '+requirements,'Deliverables: '+deliverables,'Desired deadline: '+(fields.deadline||'Not specified'),'Additional notes: '+(fields.notes.trim()||'None supplied')].join('\n');
  if(clientName.length>300||brief.length>4000)throw Error('Keep the complete project brief within 4,000 characters.');
  return {clientName,brief,revenueCents:revenue(fields.price)};
 }
@@ -31,6 +29,23 @@ function parseBrief(brief){
  for(let i=0;i<labels.length;i++){const start=brief.indexOf('\n'+labels[i]+': '),end=i+1<labels.length?brief.indexOf('\n'+labels[i+1]+': ',start+1):brief.length;if(start>=0)fields[labels[i]]=brief.slice(start+labels[i].length+3,end<0?brief.length:end);}
  return {name:fields['Project name'],description:fields.Description,requirements:fields['Requirements and scope'],deliverables:fields.Deliverables,deadline:fields['Desired deadline'],notes:fields['Additional notes']};
 }
+async function intakeSession(demo){
+ if(typeof document!=='undefined'&&document.querySelector('[data-local-workspace]'))return {ownerId:'local-workspace',demoAccess:true};
+ const read=()=>fetch('/v1/owner-auth/session',{cache:'no-store',credentials:'same-origin'});
+ let response=await read();
+ if(demo&&response.status===401){
+  // A same-origin page request renews the shared session through the existing
+  // server policy. The onboarding POST still needs the matching CSRF token.
+  const page=await fetch('/',{cache:'no-store',credentials:'same-origin',redirect:'error'});
+  if(!page.ok)throw Error('Could not renew local demo access (HTTP '+page.status+').');
+  response=await read();
+ }
+ if(!response.ok){
+  if(response.status===401)throw Error(demo?'Local demo access could not be established. Open the configured local address and retry.':'Sign in as an owner to continue.');
+  throw Error('Could not check project access (HTTP '+response.status+').');
+ }
+ return response.json();
+}
 function submission(send,makeKey){let busy=false,key=null,signature=null;return {async run(payload){if(busy)return null;const current=JSON.stringify(payload);if(current!==signature){key=makeKey();signature=current;}busy=true;try{return await send(payload,key);}finally{busy=false;}},get busy(){return busy;}};}
 async function importedSnapshot(job,project,read){
  if(job.state!=='imported'||!job.result_import_id||project.workspace.imports.some(item=>item.id===job.result_import_id&&item.jobId===job.id))return null;
@@ -38,7 +53,7 @@ async function importedSnapshot(job,project,read){
  if(latest.client.id!==project.client.id||latest.workspace?.taskId!==project.workspace.taskId||!latest.workspace.imports.some(item=>item.id===job.result_import_id&&item.jobId===job.id))throw Error('The imported result is not yet available for this project.');
  return latest;
 }
-function poller({read,render,onError,schedule=setTimeout,clear=clearTimeout,pause=()=>false}){let stopped=false,timer=null;async function tick(){if(stopped)return;if(pause()){timer=schedule(tick,2000);return;}try{const job=await read();if(stopped)return;render(job);if(shouldPoll(job))timer=schedule(tick,2000);}catch(error){if(!stopped)onError(error);}}return {start:tick,stop(){stopped=true;if(timer!==null)clear(timer);}};}
+function poller({read,render,onError,schedule=setTimeout,clear=clearTimeout,pause=()=>false,retryErrors=false}){let stopped=false,timer=null;async function tick(){if(stopped)return;if(pause()){timer=schedule(tick,2000);return;}try{const job=await read();if(stopped)return;render(job);if(shouldPoll(job))timer=schedule(tick,2000);}catch(error){if(!stopped){onError(error);if(retryErrors)timer=schedule(tick,5000);}}}return {start:tick,stop(){stopped=true;if(timer!==null)clear(timer);}};}
 function demoSections(project){const detail=parseBrief(project.client.brief);return [
  ['Project overview',{client:project.client.client_name,project:detail.name,originalBrief:project.client.brief,proposedPriceCents:project.client.revenue_cents,deadline:detail.deadline,scope:detail.requirements}],
  ['Requirements analysis',{confirmedRequirements:'None independently verified.',scopeFromOwnerBrief:detail.requirements,exampleClarificationQuestions:['What counts as acceptance?','Which assets and integrations will the client supply?'],acceptanceCriteria:'Unknown until client confirmation.'}],
@@ -55,4 +70,4 @@ function proposalSections(record){const p=record.proposal;return [
  ['Financial analysis',{proposal:p.proposal,financialSummary:p.financialSummary,reconciliation:p.reconciliation,notice:'Proposed allocations are limits, not expenses. Agreed revenue is not received cash; projected margin is not final profit.'}],
  ['Final recommendation',{status:p.status,readiness:p.readinessExplanation,recommendation:p.ownerDecisionRecommendation,blockingReviews:p.blockingReviews,unresolvedQuestions:p.unresolvedQuestions,authority:p.authorityStatement}]
 ];}
-globalThis.RoomTreasuryWorkspace=Object.freeze({states,status,transportLabel,shouldPoll,retryEligibility,money,intake,parseBrief,submission,poller,importedSnapshot,demoSections,proposalSections});})();`;
+globalThis.RoomTreasuryWorkspace=Object.freeze({states,status,transportLabel,shouldPoll,retryEligibility,money,intake,parseBrief,intakeSession,submission,poller,importedSnapshot,demoSections,proposalSections});})();`;

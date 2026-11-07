@@ -36,7 +36,7 @@ const SPECIALIST_DISPLAY_NAMES: Record<string, string> = {
 
 export function classifySender(authorUsername: string, isBot: boolean): { role: AgentRole; agentName: string | null } {
   const normalized = authorUsername.toLowerCase().trim();
-  if (normalized.includes('make-proposal-agent') || normalized === 'coordinator') {
+  if (normalized.includes('make-proposal-agent') || normalized === 'make proposal agent' || normalized === 'coordinator') {
     return { role: 'coordinator', agentName: 'make-proposal-agent' };
   }
   for (const name of SPECIALIST_NAMES) {
@@ -81,23 +81,31 @@ export class DiscordMessageCollector {
     if (!job || job.correlation_id !== correlationId) return false;
     const intake = JSON.parse(job.intake_snapshot);
     if (taskId && intake.taskId !== taskId) return false;
+    let matched = false;
     for (const attachment of message.attachments) {
-      const limit = {'proposal.json':262144,'evidence.json':524288,'summary.md':65536}[attachment.filename];
+      const name = attachment.filename.toLowerCase();
+      let limit = 0;
+      let isSummary = false;
+      if (name === 'proposal.json' || name.endsWith('proposal.json')) limit = 262144;
+      else if (name === 'evidence.json' || name.endsWith('evidence.json') || name.endsWith('specialist-evidence.json')) limit = 524288;
+      else if (name === 'summary.md' || name.endsWith('summary.md')) { limit = 65536; isSummary = true; }
       if (!limit) continue;
       try {
-        const file = this.verifiedFiles.get(attachment.id) ?? await this.client.fetchAttachment(attachment,limit);
-        if (attachment.filename === 'summary.md') {
-          if (![intake.projectId,intake.taskId,jobId,correlationId,job.intake_hash].every(value=>file.contentText.includes(value))
-            || !new RegExp('(?:intake\\s+)?revision\\s*[:=]?\\s*`?'+job.intake_revision+'\\b','i').test(file.contentText)) continue;
+        const file = this.verifiedFiles.get(attachment.id) ?? await this.client.fetchAttachment(attachment, limit);
+        if (isSummary) {
+          if (![intake.projectId, intake.taskId, jobId, correlationId, job.intake_hash].every(value => file.contentText.includes(value))
+            || !new RegExp('(?:intake\\s+)?revision\\s*[:=]?\\s*`?' + job.intake_revision + '\\b', 'i').test(file.contentText)) continue;
         } else {
-          const data=JSON.parse(file.contentText);
-          if(data.projectId!==intake.projectId||data.taskId!==intake.taskId||data.processingJobId!==jobId||data.correlationId!==correlationId||data.intakeRevision!==job.intake_revision||data.intakeSha256!==job.intake_hash)continue;
+          const data = JSON.parse(file.contentText);
+          if (data.projectId !== intake.projectId || data.taskId !== intake.taskId ||
+              data.processingJobId !== jobId || data.correlationId !== correlationId ||
+              data.intakeRevision !== job.intake_revision || data.intakeSha256 !== job.intake_hash) continue;
         }
-        this.verifiedFiles.set(attachment.id,file);
-        return true;
+        this.verifiedFiles.set(attachment.id, file);
+        matched = true;
       } catch { /* Unverified files are never attached to a job by proximity or filename. */ }
     }
-    return false;
+    return matched;
   }
 
   recordMessage(message: DiscordMessage, jobId: string): ClassifiedMessage | null {
@@ -199,10 +207,17 @@ export class DiscordMessageCollector {
   }
 
   async retrieveAttachmentsForJob(jobId: string, messagesWithAttachments: DiscordMessage[]): Promise<CollectedArtifacts> {
-    // Find attachments across correlated messages
+    const job = this.db.prepare('SELECT correlation_id,intake_snapshot FROM processing_jobs WHERE id=?')
+      .get(jobId) as {correlation_id:string;intake_snapshot:string}|undefined;
+    if (!job) throw new Error('Processing job does not exist.');
+    const correlationId = job.correlation_id;
+    const {taskId} = JSON.parse(job.intake_snapshot);
+    // File-only messages enter the package only if each file was bound by its contents.
     const allAttachments = messagesWithAttachments
       .filter(m => this.filterMessage(m) && classifySender(m.author.username, !!m.author.bot).role === 'coordinator')
-      .flatMap(m => m.attachments.map(attachment => ({ attachment, messageId: m.id })));
+      .flatMap(m => m.attachments
+        .filter(attachment => this.isCorrelated(m,jobId,correlationId,taskId) || this.verifiedFiles.has(attachment.id))
+        .map(attachment => ({ attachment, messageId: m.id })));
 
     let proposalMeta: { attachment: typeof allAttachments[0]['attachment']; messageId: string } | null = null;
     let evidenceMeta: { attachment: typeof allAttachments[0]['attachment']; messageId: string } | null = null;
@@ -229,9 +244,16 @@ export class DiscordMessageCollector {
 
     // Download attachments within their strict size limits:
     // proposal <= 256 KiB, evidence <= 512 KiB, summary <= 64 KiB
-    const proposal = this.verifiedFiles.get(proposalMeta.attachment.id) ?? await this.client.fetchAttachment(proposalMeta.attachment, 256 * 1024);
-    const evidence = this.verifiedFiles.get(evidenceMeta.attachment.id) ?? await this.client.fetchAttachment(evidenceMeta.attachment, 512 * 1024);
-    const summary = this.verifiedFiles.get(summaryMeta.attachment.id) ?? await this.client.fetchAttachment(summaryMeta.attachment, 64 * 1024);
+    const download = async (meta: typeof allAttachments[number], limit: number) => {
+      const cached = this.verifiedFiles.get(meta.attachment.id);
+      if (cached) return cached;
+      const file = await this.client.fetchAttachment(meta.attachment, limit);
+      this.verifiedFiles.set(file.id, file);
+      return file;
+    };
+    const proposal = await download(proposalMeta, 256 * 1024);
+    const evidence = await download(evidenceMeta, 512 * 1024);
+    const summary = await download(summaryMeta, 64 * 1024);
 
     const now = Date.now();
     for (const [meta, fetched] of [

@@ -18,7 +18,7 @@ test('shared appearance initializes before page styles, persists across pages, a
 
 test('theme assets and switch bootstrap are available on existing application pages without new API routes',async t=>{
  const {db}=testDatabase(t),app=await buildApp(db);t.after(()=>app.close());
- for(const page of ['/','/projects/new','/proposal-imports','/owner-login']){
+ for(const page of ['/','/projects/project-id','/proposal-imports','/owner-login']){
   const response=await app.inject(page);assert.equal(response.statusCode,200);assert.match(response.body,/<head><script src="\/appearance.js"><\/script>/);assert.match(response.body,/<link rel="stylesheet" href="\/appearance.css"><\/head>/);
  }
  assert.equal((await app.inject('/appearance.js')).statusCode,200);assert.match((await app.inject('/appearance.css')).body,/\[data-theme=dark\]/);

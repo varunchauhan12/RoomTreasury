@@ -9,6 +9,7 @@ const aliases={agency:['projects','board'],agents:['operations','fleet'],workspa
   audit:['operations','audit'],reviews:['operations','proposals']};
 const tabAliases={finance:{ledger:'budgets'},operations:{projects:'all',pipeline:'board',agents:'fleet'},reviews:{history:'approvals',import:'proposals'}};
 function resolveSection(route,sub){
+  if(route==='projects'&&sub==='new')return {section:'projects',tab:'new'};
   if(route==='operations'&&['projects','pipeline'].includes(sub))return {section:'projects',tab:tabAliases.operations[sub]};
   const section=aliases[route]?.[0]||route;
   const requested=route==='projects'&&!sub?'all':tabAliases[route]?.[sub]||sub;
@@ -16,9 +17,6 @@ function resolveSection(route,sub){
   return {section,tab:tabs.some(([id])=>id===requested)?requested:aliases[route]?.[1]||tabs[0]?.[0]};
 }
 const sectionNames={operations:'Operations',finance:'Finance',projects:'Projects'};
-const sectionDescriptions={projects:'Follow client work from intake through delivery.',
-  operations:'Monitor agent runs, review proposals, and follow owner decisions.',
-  finance:'Track approved budgets, commitments, and simulated settlements.'};
 const sectionPath=(section,tab)=>'#'+section+'/'+tab;
 const textStatus=value=>value?String(value).replaceAll('_',' ').toLowerCase().replace(/^./,c=>c.toUpperCase()):'Not recorded';
 const displayDate=value=>value==null?'Not recorded':new Intl.DateTimeFormat(undefined,{dateStyle:'medium',timeStyle:'short'}).format(new Date(value));
@@ -55,13 +53,10 @@ function termsFor(p,reviews){
   return {proposed:commercial?.proposedCents??terms?.proposedRevenueCents??null,agreed:commercial?.agreedCents??null};
 }
 function stages(p,reviews){
-  const comm=commercialFor(p.client.id);
-  if(comm?.stage==='completed'||p.client.status==='completed')return 'Completed';
-  const saved=typeof localStorage!=='undefined'?localStorage.getItem('rt_stage_'+p.client.id):null;
-  if(saved&&['Brief Intake','AI Analysis','Proposal Review','Approved / Ready','Active Delivery','Completed'].includes(saved))return saved;
   const job=snapshotJob(p), review=reviewFor(p,reviews);
   const record=p.workspace?.imports?.[0];
-  if(p.delivery||comm?.stage==='delivery')return 'Active Delivery';
+  if(p.client.status==='completed')return 'Completed';
+  if(p.delivery)return 'Active Delivery';
   if(activeOverviewJobs.has(job?.state))return 'AI Analysis';
   if(review?.status==='APPROVED_SYNTHETIC_DELIVERY')return 'Approved / Ready';
   if(record)return 'Proposal Review';
@@ -85,12 +80,19 @@ function table(headers, rows){
   node.append(head,body);wrapper.append(node);return wrapper;
 }
 function searchControls(label,filters,draw){
-  const controls=el('div','rt-data-controls'), input=el('input');
-  input.type='search';input.placeholder=label;input.setAttribute('aria-label',label);controls.append(input);
+  const controls=el('div','rt-data-controls rt-filter-bar'),input=el('input');
+  const search=el('div','rt-filter-search');
+  input.type='search';input.placeholder=label;input.setAttribute('aria-label',label);
+  search.append(icon('search',16),input);
+  controls.append(search);
   const selections=filters.map(([title,values])=>{
-    const label=el('label',null,title),select=el('select');
+    const label=el('label','rt-filter-label'),select=el('select');
+    label.append(el('span',null,title));
+    select.setAttribute('aria-label',title);
     for(const [value,text] of values){const option=el('option',null,text);option.value=value;select.append(option);}
-    label.append(select);controls.append(label);return select;
+    const field=el('span','rt-filter-select');
+    field.append(select,icon('chevron',13));
+    label.append(field);controls.append(label);return select;
   });
   const update=()=>draw(input.value.trim().toLowerCase(),...selections.map(s=>s.value));
   input.addEventListener('input',update);
@@ -109,101 +111,41 @@ function projectsPanel(reviews){
   ],(q,stage,client,sort)=>{
     const visible=projects.filter(p=>matches(q,projectTitle(p),p.client.client_name)&&(!stage||stages(p,reviews)===stage)&&(!client||p.client.client_name===client))
       .sort((a,b)=>sort==='name'?projectTitle(a).localeCompare(projectTitle(b)):sort==='status'?stages(a,reviews).localeCompare(stages(b,reviews)):projectUpdated(b)-projectUpdated(a));
-    results.replaceChildren(visible.length?table(['Project','Client','Project status','Processing','Owner review','Revenue','Deadline','Last recorded activity',''],visible.map(p=>{
-      const {proposed,agreed}=termsFor(p,reviews);
-      return [projectTitle(p),p.client.client_name,textStatus(p.client.status),overviewStates[snapshotJob(p)?.state]||'No job',
-        reviewLabel(reviewFor(p,reviews)?.status),proposed!=null?money(proposed)+' proposed':agreed!=null?money(agreed)+' agreed':!p.delivery?money(p.client.revenue_cents)+' intake target':'Not set',
-        deadline(p),displayDate(projectUpdated(p)||null),linkAction('Open workspace',projectHref(p))];
-    })):empty(projects.length?'No projects match these filters.':'No client projects yet. Create a project to get started.'));
+    results.replaceChildren(compactRecords(visible.map(project=>({
+      title:projectTitle(project),subtitle:project.client.client_name,
+      value:stages(project,reviews),href:projectHref(project)
+    })),projects.length?'No projects match these filters.':'No client projects yet.'));
   }),results);
   return panel;
 }
 function pipelinePanel(reviews){
-  const board=el('div','rt-pipeline');board.setAttribute('aria-label','Project pipeline');board.tabIndex=0;
-  for(const stage of ['Brief Intake','AI Analysis','Proposal Review','Approved / Ready','Active Delivery','Completed']){
-    const list=state.projects.filter(p=>stages(p,reviews)===stage);
-    const column=el('section','rt-pipeline-column'),title=el('div','rt-pipeline-heading');
-    title.append(el('h2',null,stage),overviewBadge(String(list.length),stage==='Active Delivery'?'green':'neutral'));column.append(title);
-    for(const p of list){
-      const card=el('article','rt-pipeline-card'),job=snapshotJob(p),review=reviewFor(p,reviews);
-      const {proposed,agreed}=termsFor(p,reviews);
-      const attention=attentionOverviewJobs.has(job?.state)||review?.status==='BLOCKED';
-      const brief=globalThis.RoomTreasuryWorkspace?.parseBrief(p.client.brief);
-      const flags=el('div','rt-card-flags');
-      flags.append(overviewBadge(textStatus(p.client.status),p.delivery?'green':'neutral'));
-      if(attention)flags.append(overviewBadge('Needs attention','amber'));
-      card.append(flags,el('p','rt-data-muted',p.client.client_name),el('h3',null,projectTitle(p)),
-        el('p','rt-project-excerpt',brief?.description||p.client.brief),
-        descriptionList([['Processing',overviewStates[job?.state]||'No job'],
-          ['Owner review',reviewLabel(review?.status)],['Proposed revenue',money(proposed??(!p.delivery?p.client.revenue_cents:null))],
-          ['Agreed revenue',money(agreed)],['Due',deadline(p)],['Updated',displayDate(projectUpdated(p)||null)]]),
-        linkAction('Open project',projectHref(p)));
-      column.append(card);
-    }
-    if(!list.length)column.append(empty('No projects at this stage.'));
-    board.append(column);
-  }
+  const panel=el('div','rt-pipeline-panel');
+  const board=el('div','rt-pipeline');
+  board.setAttribute('aria-label','Project pipeline');
+  board.tabIndex=0;
+  const names=['Brief Intake','AI Analysis','Proposal Review','Approved / Ready','Active Delivery','Completed'];
+  const kinds=['todo','in-progress','in-progress','in-progress','in-progress','done'];
+  const columns=names.map((stage,index)=>({
+    id:'stage-'+index,status:kinds[index],title:stage,
+    cards:state.projects.filter(p=>stages(p,reviews)===stage).map(p=>({
+      id:p.client.id,title:projectTitle(p),href:projectHref(p),
+      tags:[{label:p.client.client_name,variant:'feature'}],stage,date:deadline(p)
+    }))
+  }));
   if(globalThis.RoomTreasuryUI?.kanban){
-    const names=['Brief Intake','AI Analysis','Proposal Review','Approved / Ready','Active Delivery','Completed'];
-    const kinds=['backlog','todo','in-progress','review','review','done'];
-    const columns=names.map((stage,index)=>({
-      id:'stage-'+index,
-      status:kinds[index],
-      title:stage,
-      cards:state.projects.filter(p=>stages(p,reviews)===stage).map(p=>({
-        id:p.client.id,
-        title:projectTitle(p),
-        href:projectHref(p),
-        tags:[{label:p.client.client_name,variant:stages(p,reviews)==='Completed'?'done':'feature'}],
-        date:deadline(p)
-      }))
-    }));
-
-    const onMove = async (cardId, fromColId, toColId) => {
-      const toIndex = parseInt(toColId.replace('stage-',''),10);
-      const targetStage = names[toIndex];
-      const project = state.projects.find(p=>p.client.id===cardId);
-      if(!project)return false;
-
-      if(targetStage==='Completed'){
-        try {
-          await api('/v1/client-projects/'+encodeURIComponent(cardId)+'/commercial',{
-            action:'complete',
-            reference:'Marked completed from project board'
-          },{key:crypto.randomUUID()});
-          if(typeof localStorage!=='undefined')localStorage.removeItem('rt_stage_'+cardId);
-          await loadDashboardData();
-          return true;
-        } catch(error) {
-          alert('Cannot move to Completed: '+error.message);
-          throw error;
-        }
-      } else if(targetStage==='Active Delivery'){
-        try {
-          await api('/v1/client-projects/'+encodeURIComponent(cardId)+'/commercial',{
-            action:'delivery_start',
-            reference:'Delivery started from project board'
-          },{key:crypto.randomUUID()});
-          if(typeof localStorage!=='undefined')localStorage.removeItem('rt_stage_'+cardId);
-          await loadDashboardData();
-          return true;
-        } catch(error) {
-          alert('Cannot move to Active Delivery: '+error.message);
-          throw error;
-        }
-      } else {
-        if(typeof localStorage!=='undefined'){
-          localStorage.setItem('rt_stage_'+cardId,targetStage);
-        }
-        await loadDashboardData();
-        return true;
-      }
-    };
-
-    board.replaceChildren();
-    globalThis.RoomTreasuryUI.kanban(board,columns,onMove);
+    panel.append(el('p','rt-board-note','Drag cards or use Move to organize this board on this browser. The project stage is shown on each card.'));
+    globalThis.RoomTreasuryUI.kanban(board,columns,state.session?.ownerId||'local');
+  }else{
+    for(const column of columns){
+      const lane=el('section','rt-pipeline-column');
+      lane.append(el('h2',null,column.title),compactRecords(column.cards.map(card=>({
+        title:card.title,subtitle:card.tags[0].label,href:card.href
+      })),'No projects'));
+      board.append(lane);
+    }
   }
-  return board;
+  panel.append(board);
+  return panel;
 }
 
 async function jobReports(holder,project,job,imported){
@@ -302,45 +244,30 @@ function metric(label,value,description){
   globalThis.RoomTreasuryUI?.metric(host,{label,value,description});
   return host;
 }
-function financeOverview(reviews){
-  const view=el('div','rt-finance-overview'),grid=el('div','rt-finance-grid');
-  const delivery=state.projects.filter(p=>p.delivery);
-  const sum=key=>delivery.reduce((n,p)=>n+p.delivery[key],0);
-  const agreed=state.projects.map(p=>termsFor(p,reviews).agreed).filter(n=>n!=null);
-  const commercial=state.commercial?.totals;
-  const scoped=key=>commercial?money(commercial[key]):'Sign in to view';
-  for(const [label,value,description] of [
-    ['Contracted revenue',scoped('contractedCents'),'Owner-recorded signed agreements'],
-    ['Cash received',scoped('cashCents'),state.commercial?.demo?'Synthetic receipts · no real cash':'Owner-recorded receipts · no bank feed'],
-    ['Accounts receivable',scoped('receivableCents'),'Outstanding issued invoices'],
-    ['Overdue invoices',commercial?String(commercial.overdueCount):'Sign in to view','Unpaid invoices past their due date'],
-    ['Approved delivery budgets',delivery.length?money(sum('budget')):'Not set','Authorized delivery budget'],
-    ['Available delivery capacity',delivery.length?money(sum('available')):'Not set','Remaining approved internal budget'],
-    ['Confirmed commitments',delivery.length?money(sum('committed')):'Not set','Confirmed delivery obligations'],
-    ['Recorded expenses',scoped('expenseCents'),'Owner-recorded costs, separate from simulation']
-  ])grid.append(metric(label,value,description));
-  if(delivery.some(p=>p.client.client_name.includes('[SYNTHETIC DEMO]')))view.append(el('p','rt-data-muted','Financial totals include records marked [SYNTHETIC DEMO].'));
-  view.append(grid);
-  const buckets=[['Available','emerald','available'],['Committed','amber','committed'],['Reserved','sky','reserved'],['Simulated spending','violet','spent']];
-  const colors={emerald:['stroke-emerald-600','bg-emerald-600'],amber:['stroke-amber-500','bg-amber-500'],
-    sky:['stroke-sky-600','bg-sky-600'],violet:['stroke-violet-500','bg-violet-500']};
-  const categories=buckets.filter(([, ,key])=>sum(key)>0).map(([name,color,key])=>({name,amount:sum(key)/100,stroke:colors[color][0],dot:colors[color][1]}));
-  const lower=el('div','rt-finance-lower'),breakdown=el('section','rt-data-panel'),activity=el('section','rt-data-panel');
-  breakdown.append(el('h2',null,'Delivery budget breakdown'));
-  if(categories.length&&globalThis.RoomTreasuryUI){const host=el('div');breakdown.append(host);globalThis.RoomTreasuryUI.ring(host,categories);}
-  else if(categories.length)breakdown.append(descriptionList(categories.map(c=>[c.name,money(c.amount*100)])));
-  else breakdown.append(empty('No approved delivery budgets to chart.'));
-  activity.append(el('h2',null,'Recent financial activity'));
-  const latest=state.projects.flatMap(p=>p.history.map(e=>({p,e}))).sort((a,b)=>b.e.occurred_at-a.e.occurred_at).slice(0,6);
-  activity.append(latest.length?table(['Event','Project','Date'],latest.map(({p,e})=>[textStatus(e.action),projectTitle(p),displayDate(e.occurred_at)])):empty('No financial activity has been recorded.'));
-  activity.append(el('p','rt-data-muted','Cash-flow and income trends require recorded cash receipts.'));
-  lower.append(breakdown,activity);
-  const projects=el('section','rt-data-panel');projects.append(el('h2',null,'Project financial breakdown'));
-  projects.append(delivery.length?table(['Project','Approved budget','Committed','Spent (simulated)','Recorded expenses','Available'],
-    delivery.map(p=>[overviewLink(projectTitle(p),projectHref(p)),money(p.delivery.budget),money(p.delivery.committed),money(p.delivery.spent),money(commercialFor(p.client.id)?.expenseCents),money(p.delivery.available)]))
-    :empty('No approved project budgets to compare.'));
-  const cashCharts=el('div','rt-finance-lower');cashCharts.append(commercialChart(),invoiceChart());
-  view.append(lower,cashCharts,projects);return view;
+function financeOverview(){
+  const view=el('div','rt-finance-overview');
+  const totals=state.commercial?.totals;
+  const delivery=state.projects.filter(project=>project.delivery);
+  const sum=key=>delivery.reduce((total,project)=>total+project.delivery[key],0);
+  const summary=el('section','rt-data-panel');
+  summary.append(el('h2',null,'Financial position'),descriptionList([
+    ['Contracted revenue',money(totals?.contractedCents)],
+    ['Cash received',money(totals?.cashCents)],
+    ['Outstanding receivables',money(totals?.receivableCents)],
+    ['Recorded expenses',money(totals?.expenseCents)],
+    ['Approved delivery budget',money(delivery.length?sum('budget'):null)],
+    ['Available delivery budget',money(delivery.length?sum('available'):null)]
+  ]));
+  if(state.commercial?.demo)summary.append(el('p','rt-data-muted','Synthetic records'));
+  const records=el('section','rt-data-panel');
+  records.append(el('h2',null,'Recent transactions'),compactRecords(
+    commercialRecords('entries').slice().sort((a,b)=>b.record.paid_on.localeCompare(a.record.paid_on)).slice(0,5)
+      .map(({id,record})=>({title:commercialProjectName(id),subtitle:record.kind==='receipt'?'Receipt recorded':'Expense recorded',
+        value:money(record.amount_cents),href:'/projects/'+encodeURIComponent(id)+'#cash-'+encodeURIComponent(record.id)})),
+    'No receipts or expenses recorded yet.'
+  ),overviewLink('View transactions','#finance/transactions'));
+  view.append(summary,records);
+  return view;
 }
 function ledgerPanel(reviews){
   const panel=el('div'),results=el('div','rt-data-panel');
@@ -411,15 +338,12 @@ function queuePanel(reviews){
   const entries=[...list.values()].sort((a,b)=>b.importedAt-a.importedAt);
   const statuses=[...new Set(entries.map(i=>reviews.get(i.id)?.status).filter(Boolean))];
   panel.append(searchControls('Search proposal queue',[['Owner review',[['','All statuses'],...statuses.map(s=>[s,reviewLabel(s)])]]],(q,status)=>{
-    const rows=entries.filter(i=>matches(q,i.client,i.project,i.id)&&(!status||reviews.get(i.id)?.status===status)).map(i=>{
-      const r=reviews.get(i.id),job=i.p&&snapshotJob(i.p),blockers=el('ul','rt-blocker-list');
-      for(const blocker of r?.blockers||[])blockers.append(el('li',null,blockerLabel(blocker)));
-      return [i.project,i.client,'Rev '+i.revision,displayDate(i.importedAt),money(r?.revision?.proposal?.project?.proposedRevenueCents),
-        reviewLabel(r?.status),r?(blockers.children.length?blockers:'None recorded'):'Unavailable',overviewStates[job?.state]||'Not recorded',
-        linkAction('Inspect proposal','#operations/proposals/'+encodeURIComponent(i.id))];
-    });
-    results.replaceChildren(rows.length?table(['Project','Client','Revision','Imported','Proposed revenue','Owner review','Blockers','Latest processing',''],rows)
-      :empty(state.session?'No matching proposal imports.':'Sign in to see owner-scoped reviews.'));
+    const visible=entries.filter(i=>matches(q,i.client,i.project,i.id)&&(!status||reviews.get(i.id)?.status===status));
+    results.replaceChildren(compactRecords(visible.map(item=>({
+      title:item.project,subtitle:item.client+' · Revision '+item.revision,
+      value:reviewLabel(reviews.get(item.id)?.status),
+      href:'#operations/proposals/'+encodeURIComponent(item.id)
+    })),state.session?'No matching proposal imports.':'Sign in to see owner-scoped reviews.'));
   }),results);return panel;
 }
 function importPanel(){
@@ -614,32 +538,58 @@ async function auditPanel(reviews){
   return panel;
 }
 
-async function renderSection(section,tab,selectedImport){
-  const view=el('div','rt-section-view'),header=el('header','rt-section-heading'),copy=el('div');
-  copy.append(el('p','rt-section-kicker','RoomTreasury workspace'),el('h1',null,sectionNames[section]),el('p','rt-data-muted',sectionDescriptions[section]));
+function sectionFrame(section){
+  const view=el('div','rt-section-view'),header=el('header','rt-section-heading');
+  const copy=el('div');
+  copy.append(el('h1',null,sectionNames[section]));
   header.append(copy);
-  const refresh=el('button','rt-btn rt-btn-secondary','Refresh');refresh.prepend(icon('refresh',15));
-  refresh.addEventListener('click',async()=>{refresh.disabled=true;try{await loadDashboardData();if(refresh.isConnected)await renderRoute();}
-    catch{refresh.textContent='Refresh failed · retry';refresh.disabled=false;}});
-  header.append(refresh);view.append(header);
+  if(section==='projects'){
+    const action=el('div','rt-intake-entry');
+    header.append(action);
+    if(state.session||localDemo()){
+      const create=el('a','rt-btn rt-btn-primary','New Project');
+      create.href='#projects/new';
+      action.append(create);
+    }else action.append(linkAction('Owner sign-in','/owner-login'));
+  }
+  const tabs=el('div','rt-section-tabs');
+  const panel=el('section','rt-section-panel');
+  panel.setAttribute('role','tabpanel');
+  panel.tabIndex=0;
+  view.append(header,tabs,panel);
+  return {section,view,tabs,panel};
+}
+function selectSectionTab(frame,tab){
+  const {section,tabs,panel}=frame;
+  const items=sectionTabs[section].map(([id,label])=>({id,label}));
+  panel.id=tab;
+  panel.setAttribute('aria-labelledby',tab+'-tab');
+  if(globalThis.RoomTreasuryUI?.tabs){
+    globalThis.RoomTreasuryUI.tabs(tabs,items,tab,undefined,id=>{location.hash=sectionPath(section,id).slice(1);});
+    return;
+  }
+  const fallback=el('nav','rt-tab-fallback');
+  fallback.setAttribute('aria-label',sectionNames[section]+' sections');
+  for(const {id,label} of items){
+    const link=overviewLink(label,sectionPath(section,id));
+    if(id===tab)link.setAttribute('aria-current','page');
+    fallback.append(link);
+  }
+  tabs.replaceChildren(fallback);
+}
+async function sectionPanel(section,tab,selectedImport){
   const needsReviews=!['discord','fleet','transactions','commitments'].includes(tab);
   const reviews=needsReviews?await reviewSnapshots():new Map();
-  let panel;
-  if(section==='projects')panel=tab==='board'?pipelinePanel(reviews):projectsPanel(reviews);
+  if(section==='projects')return tab==='board'?pipelinePanel(reviews):projectsPanel(reviews);
   if(section==='finance'){
-    if(tab==='transactions'){panel=el('div','rt-data-stack');panel.append(cashPanel(),transactionsPanel());}
-    else panel=tab==='commitments'?commitmentsPanel():tab==='budgets'?projectBudgets(reviews):tab==='invoices'?invoicesPanel():financeOverview(reviews);
+    if(tab==='transactions'){
+      const panel=el('div','rt-data-stack');
+      panel.append(cashPanel(),transactionsPanel());
+      return panel;
+    }
+    return tab==='commitments'?commitmentsPanel():tab==='budgets'?projectBudgets(reviews):tab==='invoices'?invoicesPanel():financeOverview();
   }
-  if(section==='operations')panel=tab==='discord'?await discordConsole():tab==='fleet'?await agentsPanel():tab==='proposals'?await proposalPanel(reviews,selectedImport):tab==='approvals'?await approvalCentre(reviews):await auditPanel(reviews);
-  const host=el('div','rt-section-tabs'),fallback=el('nav','rt-tab-fallback');
-  fallback.setAttribute('aria-label',sectionNames[section]+' sections');
-  const crumb=el('div','rt-breadcrumb');view.prepend(crumb);globalThis.RoomTreasuryUI?.breadcrumb(crumb,[{label:'Workspace',href:'/'},{label:sectionNames[section]}]);
-  const items=sectionTabs[section].map(([id,label])=>{
-    const link=overviewLink(label,sectionPath(section,id));if(id===tab)link.setAttribute('aria-current','page');fallback.append(link);return {id,label};
-  });
-  host.append(fallback,panel);view.append(host);
-  globalThis.RoomTreasuryUI?.tabs(host,items,tab,panel,id=>{location.hash=sectionPath(section,id).slice(1);});
-  return view;
+  return tab==='discord'?discordConsole():tab==='fleet'?agentsPanel():tab==='proposals'?proposalPanel(reviews,selectedImport):tab==='approvals'?approvalCentre(reviews):auditPanel(reviews);
 }
 function legacyProjectView(id){
   const p=state.projects.find(p=>p.client.id===id),view=el('div','rt-section-view'),panel=el('section','rt-data-panel');

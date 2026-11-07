@@ -26,7 +26,7 @@ async function fixture(t: TestContext) {
     DISCORD_BOT_TOKEN: 'secret-test-bot-token-123456789',
     DISCORD_GUILD_ID: '1567957507656384543',
     DISCORD_CHANNEL_ID: '1567957508985847880',
-    DISCORD_COORDINATOR_MENTION: '<@&1568256403179569252>',
+    DISCORD_COORDINATOR_MENTION: '<@&1568667302910501097>',
   });
   return { ...data, ...login, ownerId, binding, jobs, config };
 }
@@ -37,7 +37,8 @@ test('Dispatch message uses verified coordinator role mention and proposed reven
 
   let dispatchedContent = '';
   const mockFetch: typeof fetch = async (input, init) => {
-    const body = JSON.parse(String(init?.body || '{}'));
+    const payload = init?.body instanceof FormData ? init.body.get('payload_json') : init?.body;
+    const body = JSON.parse(String(payload ?? '{}'));
     dispatchedContent = body.content || '';
     return new Response(JSON.stringify({
       id: 'msg-dispatch-1',
@@ -72,7 +73,7 @@ test('Dispatch message uses verified coordinator role mention and proposed reven
 
   assert.equal(ack.correlationId, job.correlation_id);
   // Priority 2: Genuine mention of make-proposal-agent role
-  assert.match(dispatchedContent, /<@&1568256403179569252>/);
+  assert.match(dispatchedContent, /<@&1568667302910501097>/);
   // Revenue labeled as proposed estimate, distinct from agreed/received cash
   assert.match(dispatchedContent, /PROPOSED ESTIMATE — NOT AGREED OR RECEIVED REVENUE/);
   assert.match(dispatchedContent, /All spending is simulated and requires explicit human owner review in RoomTreasury/);

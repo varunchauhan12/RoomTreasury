@@ -41,3 +41,51 @@
 .rt-discord-sidebar [data-participants]{border-top:1px solid #e2e8f0;padding-top:12px;margin-top:12px}.rt-discord-sidebar [data-participants] h3{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#64748b}.rt-discord-sidebar [data-participants] p{margin:8px 0;font-size:12px}
 
 .rt-demo-access-banner{position:fixed;bottom:8px;right:12px;z-index:200;max-width:calc(100vw - 24px);box-sizing:border-box;border:1px solid #d6e7df;border-radius:8px;background:#edf7f0;color:#285a43;padding:7px 10px;font:11px/1.5 system-ui,sans-serif;pointer-events:none;box-shadow:0 2px 12px #132c1810}
+
+/* Full-screen project intake uses the shared layout surface from Expandable Screen. */
+.rt-section-heading > .rt-intake-entry { flex: 0 0 auto; margin-left: auto; }
+.rt-intake-trigger {
+  position: relative;
+  padding: 10px 17px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--a-accent);
+  color: var(--a-on-accent);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 650;
+  cursor: pointer;
+}
+.rt-intake-overlay { z-index: 220; background: #100d0bbd; }
+.rt-project-intake-surface {
+  background: var(--a-panel);
+  border: 1px solid var(--a-line);
+  color: var(--a-ink);
+  scrollbar-gutter: stable;
+  overscroll-behavior: contain;
+}
+.rt-intake-screen { width: min(100%, 760px); margin-inline: auto; padding: clamp(22px, 4vw, 36px) clamp(16px, 4vw, 38px); box-sizing: border-box; }
+.rt-intake-screen header { display: block; max-width: none; margin: 0 0 22px; padding: 0; border: 0; }
+.rt-intake-screen h1 { font-size: clamp(32px, 5vw, 51px); margin: 8px 0; }
+.rt-intake-screen p { margin: 8px 0; }
+.rt-intake-screen fieldset { display: grid; gap: 10px; min-width: 0; padding: 8px 0 14px; margin: 0 0 14px; border: 0; border-bottom: 1px solid var(--a-line); }
+.rt-intake-screen legend { font-size: 15px; font-weight: 700; padding: 0; }
+.rt-intake-screen label { display: block; min-width: 0; font-size: 13px; font-weight: 600; }
+.rt-intake-screen label span, .rt-intake-screen fieldset p, .rt-intake-demo { color: var(--a-muted); font-size: 12px; font-weight: 400; }
+.rt-intake-screen :is(input, textarea) { display: block; width: 100%; box-sizing: border-box; padding: 10px 12px; margin: 5px 0 0; border: 1px solid var(--a-line); font: inherit; font-weight: 400; }
+.rt-intake-screen textarea { min-height: 0; resize: vertical; }
+.rt-intake-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 14px; }
+.rt-intake-actions { display: flex; gap: 10px; justify-content: flex-end; align-items: center; }
+.rt-intake-cancel { background: var(--a-raised); border: 1px solid var(--a-line); color: var(--a-ink); border-radius: 999px; padding: 11px 18px; cursor: pointer; }
+.rt-intake-screen { position: relative; }
+.rt-intake-close { position: absolute; top: 18px; right: 18px; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: 1px solid var(--a-line); border-radius: 999px; background: var(--a-raised); color: var(--a-ink); font-size: 22px; line-height: 1; cursor: pointer; }
+.rt-intake-close:hover { background: var(--a-line); }
+.rt-intake-close:disabled { opacity: .55; cursor: not-allowed; }
+.rt-new-project-view { position: relative; }
+.rt-new-project-close { position: absolute; top: 0; right: 0; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: 1px solid var(--a-line); border-radius: 999px; background: var(--a-raised); color: var(--a-ink); font-size: 22px; line-height: 1; text-decoration: none; }
+.rt-new-project-close:hover { background: var(--a-line); }
+.rt-intake-back { background: transparent; border: 0; color: var(--a-accent); font: inherit; font-size: 13px; font-weight: 650; padding: 0 0 10px; cursor: pointer; }
+.rt-intake-back:hover { text-decoration: underline; text-underline-offset: 4px; }
+.rt-intake-screen .rt-intake-error { color: var(--a-bad); background: var(--a-bad-bg); padding: 10px 12px; border-radius: 10px; }
+.rt-intake-feedback:empty { display: none; }
+@media (max-width: 550px) { .rt-intake-grid { grid-template-columns: minmax(0,1fr); } }

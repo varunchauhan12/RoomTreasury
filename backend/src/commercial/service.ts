@@ -1,3 +1,4 @@
+import {isLocalAuditContext} from '../security/local-workspace.js';
 import type { Database } from 'better-sqlite3';
 import { randomUUID } from 'node:crypto';
 import { activeSession, bindingAuthorized, hash, key } from '../jobs/bindings.js';
@@ -81,11 +82,14 @@ export class CommercialLedger {
   return this.db.transaction(()=>{
    activeSession(this.db,session);
    const now=this.clock();
+   const local=isLocalAuditContext(this.db,session);
+   const scope=local?[]:[session.ownerId];
    const ids=this.db.prepare(`SELECT b.client_project_id AS id FROM project_task_bindings b
     JOIN human_owner_scopes s ON s.owner_id=b.owner_id AND s.task_id=b.task_id
-    WHERE b.owner_id=? AND s.revoked_at IS NULL ORDER BY b.client_project_id`).all(session.ownerId) as {id:string}[];
+    WHERE s.revoked_at IS NULL ${local?'':'AND b.owner_id=?'} ORDER BY b.client_project_id`).all(...scope) as {id:string}[];
    const projects=ids.map(({id})=>this.read(id,now));
-   const reviewVersion=this.db.prepare(`SELECT coalesce(max(e.id),0) FROM authenticated_review_events e JOIN proposal_imports p ON p.id=e.import_id
+   const reviewVersion=local?this.db.prepare('SELECT coalesce(max(id),0) FROM authenticated_review_events').pluck().get():
+    this.db.prepare(`SELECT coalesce(max(e.id),0) FROM authenticated_review_events e JOIN proposal_imports p ON p.id=e.import_id
     JOIN human_owner_scopes s ON s.task_id=p.task_id AND s.owner_id=? AND s.revoked_at IS NULL
     LEFT JOIN project_import_links l ON l.import_id=p.id LEFT JOIN project_task_bindings b ON b.id=l.binding_id
     WHERE l.import_id IS NULL OR b.owner_id=s.owner_id`).pluck().get(session.ownerId);
@@ -95,7 +99,7 @@ export class CommercialLedger {
     expenseCents:sum.expenseCents+p.expenseCents
    }),{contractedCents:0,cashCents:0,receivableCents:0,overdueCount:0,expenseCents:0});
    const approvalVersion=this.db.prepare(`SELECT coalesce(max(d.rowid),0) FROM approval_decisions d JOIN project_task_bindings b ON b.id=d.binding_id
-    JOIN human_owner_scopes s ON s.owner_id=b.owner_id AND s.task_id=b.task_id WHERE b.owner_id=? AND s.revoked_at IS NULL`).pluck().get(session.ownerId);
+    JOIN human_owner_scopes s ON s.owner_id=b.owner_id AND s.task_id=b.task_id WHERE s.revoked_at IS NULL ${local?'':'AND b.owner_id=?'}`).pluck().get(...scope);
    return {projects,totals,reviewVersion,approvalVersion,demo:commercialDemo(this.db)};
   })();
  }

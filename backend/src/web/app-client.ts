@@ -78,7 +78,8 @@ async function api(path,options={}){
   const res=await fetch(path,{cache:'no-store',headers,...options});
   const data=await res.json();
   if(!res.ok){
-    const err=Error(data.error?.message||data.error?.code||'Request failed');
+    const message=data.error?.message;
+    const err=Error(message&&message!=='Request rejected.'?message:(data.error?.code||'Request failed')+' (HTTP '+res.status+').');
     err.code=data.error?.code;
     throw err;
   }
@@ -117,6 +118,10 @@ function renderSettingsView(){
   header.append(titles);
   view.append(header);
 
+  if(document.querySelector('[data-local-workspace]')){
+    titles.replaceChildren(el('h1',null,'Settings'),el('p',null,'RoomTreasury runs as a shared workspace on this computer.'));
+    return view;
+  }
   const card=el('div','rt-card');
   card.append(el('h3','rt-card-title','Authenticated Session'));
   const dl=el('dl','rt-meta-list');
@@ -127,6 +132,7 @@ function renderSettingsView(){
   card.append(dl);
 
   const outBtn=el('a','rt-btn rt-btn-secondary','Go to Owner Sign-In');
+  outBtn.hidden=!!state.session?.demoAccess;
   outBtn.href='/owner-login';
   card.append(outBtn);
 
@@ -135,48 +141,149 @@ function renderSettingsView(){
 }
 
 let renderVersion=0;
+let projectIntakeOpen=false;
+let activeSectionFrame=null;
+let overviewFrame=null;
+const localDemo=()=>!!document.querySelector('.rt-demo-access-banner');
+
+const NEW_PROJECT_HASH='#projects/new';
+const ALL_PROJECTS_HASH='#projects/all';
+function mountProjectIntake(host){
+  const model=globalThis.RoomTreasuryWorkspace;
+  const submission=model.submission(async(payload,key)=>{
+    state.session=await model.intakeSession(localDemo());
+    return api('/v1/client-projects/onboard',{method:'POST',body:JSON.stringify(payload),key});
+  },()=>crypto.randomUUID());
+  const initiallyOpen=location.hash.split('?')[0]===NEW_PROJECT_HASH;
+  if(initiallyOpen)projectIntakeOpen=true;
+  globalThis.RoomTreasuryUI.projectIntake(host,{
+    initiallyOpen,
+    demo:localDemo(),
+    submit:fields=>submission.run(model.intake(fields)),
+    onOpenChange:open=>{projectIntakeOpen=open;},
+    onBack:()=>{
+      projectIntakeOpen=false;
+      if(location.hash!==ALL_PROJECTS_HASH)location.hash=ALL_PROJECTS_HASH.slice(1);
+      else void renderRoute();
+    },
+    onCreated:async id=>{
+      const href='/projects/'+encodeURIComponent(id);
+      try{await loadDashboardData();}
+      catch{/* The project already exists. Its workspace loads independently. */}
+      location.assign(href);
+    }
+  });
+}
+
+let newProjectFrame=null;
+function newProjectView(){
+  const view=el('div','rt-view-container rt-new-project-view');
+  const back=el('a','rt-btn rt-btn-secondary','\u2190 Back to All Projects');
+  back.href=ALL_PROJECTS_HASH;
+  back.setAttribute('data-back-to-all-projects','');
+  const header=el('div','rt-page-header');
+  const titles=el('div','rt-page-title-group');
+  titles.append(el('h1',null,'New Project'),el('p',null,'Create a new client project.'));
+  header.append(titles);
+  const cross=el('a','rt-new-project-close','\u00d7');
+  cross.href=ALL_PROJECTS_HASH;
+  cross.setAttribute('aria-label','Close and go to All Projects');
+  cross.title='Close \u2014 All Projects';
+  view.append(cross,back,header);
+  if(state.session||localDemo()){
+    const host=el('div','rt-intake-entry');
+    view.append(host);
+    if(globalThis.RoomTreasuryUI?.projectIntake)mountProjectIntake(host);
+    else view.append(el('p',null,'Project intake is unavailable.'));
+  }else view.append(linkAction('Owner sign-in','/owner-login'));
+  return view;
+}
+
 
 // Main Router
 async function renderRoute(){
   const content=$('rt-content');
   if(!content)return;
-  const loading=el('div','rt-route-loading');loading.setAttribute('role','status');loading.append(el('span','sr-only','Loading persisted records…'),el('div','rt-skeleton'),el('div','rt-skeleton'));content.replaceChildren(loading);globalThis.RoomTreasuryUI?.skeleton(loading);
-
-  const version=++renderVersion;
   const [route='overview',sub,selection]=location.hash.slice(1).split('?')[0].split('/');
+  if(route==='projects'&&sub==='new'){
+    if(newProjectFrame?.view.isConnected&&projectIntakeOpen)return;
+    if(!newProjectFrame?.view.isConnected){
+      activeSectionFrame=null;
+      newProjectFrame={view:newProjectView()};
+      content.replaceChildren(newProjectFrame.view);
+    }
+    return;
+  }
+  newProjectFrame=null;
+  if(projectIntakeOpen)projectIntakeOpen=false;
+  const version=++renderVersion;
   const {section,tab}=resolveSection(route,sub);
-  let viewNode;
+  let frame=null;
   try{
     const id=sub?decodeURIComponent(sub):null;
-    if((route==='projects'||route==='workspace')&&id&&!sectionTabs.projects.some(([key])=>key===id))viewNode=legacyProjectView(id);
-    else if(tab&&Object.hasOwn(sectionTabs,section))viewNode=await renderSection(section,tab,
-      route==='proposals'?id:selection?decodeURIComponent(selection):null);
-    else if(route==='settings')viewNode=renderSettingsView();
-    else viewNode=await renderOverviewView();
+    const legacy=(route==='projects'||route==='workspace')&&id&&!sectionTabs.projects.some(([key])=>key===id);
+    if(!legacy&&tab&&Object.hasOwn(sectionTabs,section)){
+      if(activeSectionFrame?.section!==section||!activeSectionFrame.view.isConnected){
+        activeSectionFrame=sectionFrame(section);
+        content.replaceChildren(activeSectionFrame.view);
+      }
+      frame=activeSectionFrame;
+      selectSectionTab(frame,tab);
+      frame.panel.setAttribute('aria-busy','true');
+      const panel=await sectionPanel(section,tab,route==='proposals'?id:selection?decodeURIComponent(selection):null);
+      if(version===renderVersion){
+        frame.panel.replaceChildren(panel);
+        frame.panel.removeAttribute('aria-busy');
+      }
+      return;
+    }
+    activeSectionFrame=null;
+    if(!legacy&&route!=='settings'){
+      if(!overviewFrame?.view.isConnected){
+        overviewFrame=createOverviewView();
+        content.replaceChildren(overviewFrame.view);
+      }
+      overviewFrame.update();
+      return;
+    }
+    const viewNode=legacy?legacyProjectView(id):renderSettingsView();
+    if(version===renderVersion)content.replaceChildren(viewNode);
   }catch{
-    viewNode=el('section','rt-data-panel');
-    viewNode.append(el('h1',null,'Workspace unavailable'),el('p',null,'This view could not load. Refresh the workspace to try again.'),linkAction('Return to Overview','/'));
+    if(version!==renderVersion)return;
+    const message=el('section','rt-data-panel');
+    message.append(el('h2',null,'Workspace unavailable'),el('p',null,'This view could not load. Use Refresh to try again.'));
+    if(frame){
+      frame.panel.replaceChildren(message);
+      frame.panel.removeAttribute('aria-busy');
+    }else content.replaceChildren(message);
   }
-
-  if(version===renderVersion)content.replaceChildren(viewNode);
 }
 
 async function loadDashboardData(passive=false){
   const options=passive?{headers:{'X-RoomTreasury-Passive':'1'}}:{};
-  const sessionRes=await fetch('/v1/owner-auth/session',{cache:'no-store',...options});
-  if(!sessionRes.ok&&sessionRes.status!==401)throw Error('Owner session unavailable');
-  const session=sessionRes.ok?await sessionRes.json():null;
+  let session;
+  if(document.querySelector('[data-local-workspace]'))session={ownerId:'local-workspace',demoAccess:true};
+  else{
+    const response=await fetch('/v1/owner-auth/session',{cache:'no-store',...options});
+    if(!response.ok&&response.status!==401)throw Error('Owner session unavailable');
+    session=response.ok?await response.json():localDemo()?await globalThis.RoomTreasuryWorkspace.intakeSession(true):null;
+  }
   if(!session&&state.session){
     state.session=null;state.commercial=null;state.projects=[];state.imports=[];
-    $('rt-content').replaceChildren(overviewLink('Owner sign-in','/owner-login'));
+    if(!localDemo()&&!projectIntakeOpen)$('rt-content').replaceChildren(overviewLink('Owner sign-in','/owner-login'));
   }
   const [projects,imports,commercial]=await Promise.all([
     api('/v1/client-projects/',options).catch(error=>{if(!session&&error.code==='OWNER_LOGIN_REQUIRED')return {projects:[]};throw error;}),
     api('/v1/proposal-imports/',options),session?api('/v1/commercial',options):null
   ]);
   Object.assign(state,{session,projects:projects.projects||[],imports:imports.imports||[],commercial});
-  $('rt-owner-name').textContent=session?.ownerId?'Owner · '+session.ownerId:session?'Owner workspace':'Owner account';
-  $('rt-owner-role').textContent=session?'Active Session':'Sign in';
+  updateNavCounters();
+}
+function updateNavCounters(){
+  const pCount=$('nav-project-count');
+  if(pCount)pCount.textContent=String(state.projects.length);
+  const impCount=$('nav-proposal-count');
+  if(impCount)impCount.textContent=String(state.imports.length);
 }
 function watchDashboard(){
   const signature=()=>JSON.stringify([state.session?.ownerId,state.projects,state.imports,state.commercial]);
@@ -185,24 +292,34 @@ function watchDashboard(){
   const channel=typeof BroadcastChannel==='function'?new BroadcastChannel('roomtreasury-commercial'):null;
   const show=()=>{status.textContent=busy?'Syncing…':failed?'Reconnecting · last update '+new Date(last).toLocaleTimeString()
     :'Updated '+Math.floor((Date.now()-last)/1000)+'s ago';status.title='Last successful update '+new Date(last).toLocaleString();};
-  async function refresh(){
+  async function refresh(force=false){
     const content=$('rt-content');
-    if(busy||document.hidden||content.querySelector('input:focus,select:focus,details[open]'))return;
+    if(busy||projectIntakeOpen||(document.hidden&&force!==true)||content.querySelector('input:focus,select:focus,details[open]'))return;
     busy=true;show();
     try{
       await loadDashboardData(true);
       last=Date.now();failed=false;
       const next=signature();
-      if(next!==displayed&&!content.querySelector('input:focus,select:focus,details[open]')){
+      if(next!==displayed&&!projectIntakeOpen&&!content.querySelector('input:focus,select:focus,details[open]')){
         displayed=next;await renderRoute();
       }
     }catch{failed=true;}
     finally{busy=false;show();}
   }
+  $('rt-refresh-view')?.addEventListener('click', async event=>{
+    const button=event.currentTarget;
+    if(busy||projectIntakeOpen)return;
+    busy=true;
+    button.disabled=true;
+    show();
+    try{await loadDashboardData();last=Date.now();failed=false;displayed=signature();await renderRoute();}
+    catch{failed=true;}
+    finally{busy=false;button.disabled=false;show();}
+  });
   const timer=setInterval(()=>{if(!document.hidden){show();void refresh();}},6000);
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)void refresh();});
   window.addEventListener('focus',refresh);
-  channel?.addEventListener('message',refresh);
+  channel?.addEventListener('message',()=>void refresh(true));
   window.addEventListener('pagehide',event=>{if(!event.persisted){clearInterval(timer);channel?.close();}});
   show();
 }
@@ -265,20 +382,7 @@ async function init(){
   setupSidebar();
   try{
     await loadDashboardData();
-
-    // Update nav counters
-    const pCount=$('nav-project-count');
-    if(pCount)pCount.textContent=String(state.projects.length);
-    const impCount=$('nav-proposal-count');
-    if(impCount)impCount.textContent=String(state.imports.length);
-
-    const topRefresh=$('rt-topbar-refresh');
-    if(topRefresh){
-      topRefresh.addEventListener('click',async()=>{
-        topRefresh.disabled=true;
-        try{await loadDashboardData();await renderRoute();}finally{topRefresh.disabled=false;}
-      });
-    }
+    updateNavCounters();
 
     // Initial route
     window.addEventListener('hashchange',()=>{

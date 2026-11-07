@@ -94,8 +94,9 @@ function commercialWorkspace(id){
  const label=s=>s.replaceAll('_',' ');
  function row(name,value){const item=el('li');item.append(el('strong',name+' · '),document.createTextNode(value));return item;}
  function render(s){
+  setWorkspaceCommercial(s);
   host.replaceChildren();
-  const stats=el('dl');stats.className='pw-grid';
+  const stats=el('dl');stats.className='pw-grid pw-finance-metrics';
   for(const [name,value] of [['Client stage',label(s.stage)],['Proposed revenue',s.proposedCents==null?'Not set':M.money(s.proposedCents)],
    ['Agreed contract amount',s.agreedCents==null?'Not set':M.money(s.agreedCents)],['Issued invoices',M.money(s.invoicedCents)],
    ['Cash receipts recorded',M.money(s.cashCents)],['Receivables',M.money(s.receivableCents)],
@@ -111,6 +112,8 @@ function commercialWorkspace(id){
    }
    host.append(el('h3','Submitted proposals'),list);
   }
+  const invoices=tagged('article','pw-card');invoices.append(el('h3','Invoices'));
+  if(!s.invoices.length)invoices.append(empty('No invoices have been recorded.'));
   for(const invoice of s.invoices){
    const card=el('details');card.id='invoice-'+invoice.id;
    card.append(el('summary',invoice.number+' · '+label(invoice.status)+' · '+M.money(invoice.outstandingCents)+' outstanding'),
@@ -119,15 +122,17 @@ function commercialWorkspace(id){
    if(invoice.status==='draft')card.append(actionForm('Issue invoice','invoice_issue',[['date','Issue date','date']],{invoiceId:invoice.id}));
    if(invoice.outstandingCents>0)card.append(actionForm('Record invoice receipt','receipt',cashFields(),{invoiceId:invoice.id}));
    if(invoice.status!=='cancelled'&&!invoice.paidCents)card.append(actionForm('Cancel invoice','invoice_cancel',[['reference','Reason or evidence']],{invoiceId:invoice.id}));
-   host.append(card);
+   invoices.append(card);
   }
-  if(s.entries.length){
-   const list=el('ul');
-   for(const entry of s.entries){
-    const item=row(entry.kind==='receipt'?'Receipt':'Expense',M.money(entry.amount_cents)+' · '+entry.paid_on+' · '+entry.method+' · '+entry.reference);
-    item.id='cash-'+entry.id;list.append(item);
+  host.append(invoices);
+  for(const [kind,title] of [['receipt','Receipt history'],['expense','Expenses']]){
+   const card=tagged('article','pw-card'),list=tagged('ul','pw-list');
+   card.append(el('h3',title));host.append(card);
+   for(const entry of s.entries.filter(entry=>entry.kind===kind)){
+    const item=row(M.money(entry.amount_cents),entry.paid_on+' · '+entry.method+' · '+entry.reference);
+    item.className='pw-list-row';item.id='cash-'+entry.id;list.append(item);
    }
-   host.append(el('h3','Recorded cash and expenses'),list);
+   card.append(list.children.length?list:empty('No '+(kind==='receipt'?'receipts':'expenses')+' recorded.'));
   }
   if(['inquiry','revision_requested','agreement_confirmed'].includes(s.stage)){
    host.append(actionForm('Record proposal submission','submit',[['amountCents','Proposed amount (USD)','number'],['reference','Proposal document or submission reference']]));
@@ -193,7 +198,7 @@ function commercialWorkspace(id){
   busy=true;status.textContent='Syncing…';
   try{
    const [snapshot,next]=await Promise.all([api(path,undefined,undefined,!force),api(projectPath,undefined,undefined,!force)]);
-   if(!next.workspace)throw Error('Owner access expired.');
+   if(!next.workspace)throw Error('Project binding is unavailable.');
    $('pw-workspace').hidden=false;
    const signature=JSON.stringify(next);
    if(signature!==knownProject){knownProject=signature;await loadProject(id,next);}
@@ -210,7 +215,6 @@ function commercialWorkspace(id){
    }
    last=new Date().toLocaleTimeString();status.textContent='Updated '+last;
   }catch(error){
-   if(/OWNER_LOGIN_REQUIRED|BOUND_OWNER_SCOPE_REQUIRED|Owner access expired/.test(error.message)){$('pw-workspace').hidden=true;notice('Owner access is required to view this workspace.',true);$('pw-notice').append(document.createTextNode(' '),link('Owner sign-in','/owner-login'));host.replaceChildren();latest=null;}
    status.textContent=last?'Reconnecting · last update '+last:'Offline · unable to refresh';
   }finally{busy=false;}
  }

@@ -38,7 +38,7 @@ test('Discord configuration validates token, snowflakes and provides safe defaul
   assert.equal(config.botToken, 'sample-valid-bot-token-1234567890');
   assert.equal(config.guildId, '1567957507656384543');
   assert.equal(config.channelId, '1567957508985847880');
-  assert.equal(config.coordinatorMention, '<@&1568256403179569252>');
+  assert.equal(config.coordinatorMention, '<@&1568667302910501097>');
   assert.equal(config.apiBaseUrl, 'https://discord.com/api/v10');
 });
 
@@ -282,4 +282,112 @@ test('Message collector filters channels, correlates jobs, tracks specialists an
   // Verify attachments are persisted in discord_attachments
   const rows = db.prepare('SELECT filename, byte_size FROM discord_attachments WHERE job_id=?').all(job.id) as { filename: string; byte_size: number }[];
   assert.equal(rows.length, 3);
+});
+
+test('retrieveAttachmentsForJob aggregates coordinator attachments across separate messages with empty content and handles history backfill', async (t) => {
+  const { db } = testDatabase(t);
+
+  const config = readDiscordConfig({
+    DISCORD_BOT_TOKEN: 'secret-test-bot-token-123456789',
+    DISCORD_GUILD_ID: '1567957507656384543',
+    DISCORD_CHANNEL_ID: '1567957508985847880',
+  });
+
+  await provisionOwner(db, 'test-owner-split', 'Synthetic test password', 'PREEXISTING');
+  const login = await loginOwner(db, 'test-owner-split', 'Synthetic test password', 'fixture');
+  const binding = onboardProject(db, login.session, { clientName: 'Split Client', brief: 'Brief', revenueCents: 100000 }, 'bind-split');
+  const jobs = new ProcessingJobs(db);
+  const job = jobs.create(login.session, binding.id, 'job-split-key', 'discord');
+
+  const filesMap: Record<string, string> = {
+    'att-p': JSON.stringify({ projectId: binding.client_project_id, taskId: binding.task_id, processingJobId: job.id, correlationId: job.correlation_id, intakeRevision: 1, intakeSha256: job.intake_hash, title: 'Proposal' }),
+    'att-e': JSON.stringify({ projectId: binding.client_project_id, taskId: binding.task_id, processingJobId: job.id, correlationId: job.correlation_id, intakeRevision: 1, intakeSha256: job.intake_hash, threads: [] }),
+    'att-s': `# Summary decision\nTask ID: ${binding.task_id}\nProject ID: ${binding.client_project_id}\nProcessing Job ID: ${job.id}\nCorrelation ID: ${job.correlation_id}\nIntake Revision: 1\nSupplied Intake SHA-256: ${job.intake_hash}`,
+  };
+
+  const channelMessages: DiscordMessage[] = [
+    {
+      id: '200000000000000001',
+      channel_id: '1567957508985847880',
+      guild_id: '1567957507656384543',
+      author: { id: 'coord-1', username: 'make-proposal-agent', bot: true },
+      content: `I am reading brief for ${job.id}`,
+      timestamp: new Date(Date.now() - 4000).toISOString(),
+      attachments: [],
+    },
+    {
+      id: '200000000000000002',
+      channel_id: '1567957508985847880',
+      guild_id: '1567957507656384543',
+      author: { id: 'coord-1', username: 'make-proposal-agent', bot: true },
+      content: `Proposal package for ${job.id}`,
+      timestamp: new Date(Date.now() - 3000).toISOString(),
+      attachments: [{ id: 'att-p', filename: 'proposal.json', size: Buffer.byteLength(filesMap['att-p']!), url: 'https://cdn.discordapp.com/attachments/1/2/att-p' }],
+    },
+    {
+      id: '200000000000000003',
+      channel_id: '1567957508985847880',
+      guild_id: '1567957507656384543',
+      author: { id: 'coord-1', username: 'make-proposal-agent', bot: true },
+      content: '', // EMPTY CONTENT BODY
+      timestamp: new Date(Date.now() - 2000).toISOString(),
+      attachments: [{ id: 'att-e', filename: 'evidence.json', size: Buffer.byteLength(filesMap['att-e']!), url: 'https://cdn.discordapp.com/attachments/1/2/att-e' }],
+    },
+    {
+      id: '200000000000000004',
+      channel_id: '1567957508985847880',
+      guild_id: '1567957507656384543',
+      author: { id: 'coord-1', username: 'make-proposal-agent', bot: true },
+      content: '', // EMPTY CONTENT BODY
+      timestamp: new Date(Date.now() - 1000).toISOString(),
+      attachments: [{ id: 'att-s', filename: 'summary.md', size: Buffer.byteLength(filesMap['att-s']!), url: 'https://cdn.discordapp.com/attachments/1/2/att-s' }],
+    },
+    {
+      id: '200000000000000005',
+      channel_id: '1567957508985847880',
+      guild_id: '1567957507656384543',
+      author: { id: 'coord-1', username: 'make-proposal-agent', bot: true },
+      content: `ROOMTREASURY_RESULT_READY job=${job.id} correlation=${job.correlation_id}`,
+      timestamp: new Date().toISOString(),
+      attachments: [], // NO ATTACHMENTS ON COMPLETION MARKER
+    },
+  ];
+
+  const mockFetch: typeof fetch = async (url) => {
+    const urlStr = String(url);
+    if (urlStr.includes('/messages')) {
+      return new Response(JSON.stringify(channelMessages), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    }
+    const key = urlStr.split('/').pop()!;
+    if (filesMap[key]) {
+      return new Response(filesMap[key], { status: 200 });
+    }
+    return new Response('Not found', { status: 404 });
+  };
+
+  const client = new DiscordRestClient({ config, fetchFn: mockFetch });
+  const collector = new DiscordMessageCollector(db, config, client);
+
+  const backfilled = await collector.backfillHistory(job.id,job.correlation_id,binding.task_id);
+  assert.equal(backfilled.filter(message=>message.isCompletionMarker).length,1);
+  const artifacts = await collector.retrieveAttachmentsForJob(job.id,backfilled.map(item=>item.message));
+
+  assert.equal(artifacts.proposal.filename, 'proposal.json');
+  assert.equal(artifacts.evidence.filename, 'evidence.json');
+  assert.equal(artifacts.summary.filename, 'summary.md');
+
+  // Verify all 3 attachments are persisted into discord_attachments
+  const rows = db.prepare('SELECT filename, byte_size, message_id FROM discord_attachments WHERE job_id=? ORDER BY filename').all(job.id) as { filename: string; byte_size: number; message_id: string }[];
+  assert.equal(rows.length, 3);
+  assert.equal(rows[0]?.filename, 'evidence.json');
+  assert.equal(rows[0]?.message_id, '200000000000000003');
+  assert.equal(rows[1]?.filename, 'proposal.json');
+  assert.equal(rows[1]?.message_id, '200000000000000002');
+  assert.equal(rows[2]?.filename, 'summary.md');
+  assert.equal(rows[2]?.message_id, '200000000000000004');
+
+  // Verify empty-content messages were safely recorded into discord_messages
+  const msgRows = db.prepare('SELECT id, content FROM discord_messages WHERE job_id=? ORDER BY id').all(job.id) as { id: string; content: string }[];
+  assert.ok(msgRows.some(m => m.id === '200000000000000003' && m.content === ''));
+  assert.ok(msgRows.some(m => m.id === '200000000000000004' && m.content === ''));
 });
