@@ -1,12 +1,13 @@
+import {onboardAuthorizedProject as onboardProject} from './helpers.js';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test, type TestContext } from 'node:test';
 import { testDatabase } from './helpers.js';
 import { provisionOwner, loginOwner } from '../src/security/owner-auth.js';
-import { onboardProject } from '../src/jobs/bindings.js';
+
 import { ProcessingJobs } from '../src/jobs/service.js';
 import { validateBundle, type ImportBundle, ImportError } from '../src/imports/service.js';
-import { importDiscordPackage } from '../src/imports/project-linked.js';
+import { confirmProjectImport, importDiscordPackage, previewProjectImport } from '../src/imports/project-linked.js';
 import { OwnerReview } from '../src/reviews/service.js';
 
 const test004Intake = {
@@ -97,8 +98,11 @@ test('TEST-004 imports into project workspace with strict delivery approval bloc
   data.jobs.apply(claimed.id, claimed.lease_owner!, 'discord-collecting', 'collecting');
   data.jobs.apply(claimed.id, claimed.lease_owner!, 'discord-validating', 'validating');
 
-  // Import package
-  const result = importDiscordPackage(data.db, job.id, bundle);
+  assert.throws(() => importDiscordPackage(data.db, job.id, bundle), error=>error instanceof ImportError&&error.issues.some(i=>i.includes('require exact project, job and intake binding')));
+  assert.equal(data.db.prepare('SELECT count(*) FROM proposal_imports').pluck().get(),0);
+  data.jobs.apply(claimed.id, claimed.lease_owner!, 'needs-attention', 'needs_attention','artifact_validation_failed');
+  const preview=previewProjectImport(data.db,data.session,data.binding.client_project_id,bundle);
+  const result=confirmProjectImport(data.db,data.session,data.binding.client_project_id,bundle,preview);
   assert.ok(result.id);
   assert.equal(result.duplicate, false);
 

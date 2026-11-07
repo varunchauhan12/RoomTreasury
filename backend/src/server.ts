@@ -1,3 +1,4 @@
+import {commercialDemo} from './commercial/service.js';
 import { startMockWorker } from './jobs/worker.js';
 import { buildApp } from './app.js';
 import { readConfig } from './config.js';
@@ -12,7 +13,7 @@ try {
   try { app = await buildApp(db); }
   catch { db.close(); throw new Error(); }
   await app.listen({ host: config.host, port: config.port });
-  if(['test','demo'].includes(config.mode)&&process.env.NODE_ENV!=='production')stopWorker=startMockWorker(db);
+  if(['test','demo'].includes(config.mode)&&process.env.NODE_ENV!=='production'&&!commercialDemo(db))stopWorker=startMockWorker(db);
   console.info('RoomTreasury foundation listening on loopback.');
   const shutdown = async () => { await stopWorker?.(); await app?.close(); };
   process.once('SIGINT', () => { void shutdown(); });

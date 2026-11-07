@@ -1,3 +1,4 @@
+import {openDemoAccess} from './demo-access.js';
 import type {FastifyInstance} from 'fastify';
 import type {Database} from 'better-sqlite3';
 import {authSettings,checkOrigin,loginOwner,ownerSession,sessionCookie,type AuthSettings} from './owner-auth.js';
@@ -9,6 +10,6 @@ export function registerOwnerAuth(app:FastifyInstance,db:Database,settings:AuthS
  checkOrigin(request,settings);if(logins>=2){const {AuthError}=await import('./service-auth.js');throw new AuthError(429,'LOGIN_RATE_LIMITED');}logins++;
  try{const result=await loginOwner(db,request.body.username,request.body.password,request.ip);reply.header('Cache-Control','no-store').header('Set-Cookie',sessionCookie(settings,result.token));return {ownerId:result.session.ownerId,csrfToken:result.session.csrf,sessionExpiresInSeconds:14400};}finally{logins--;}
  });
- app.get('/v1/owner-auth/session',{schema:{operationId:'ownerSession',response:responses}},(request,reply)=>{const session=ownerSession(db,request,settings);reply.header('Cache-Control','no-store');return {ownerId:session.ownerId,csrfToken:session.csrf};});
+ app.get('/v1/owner-auth/session',{schema:{operationId:'ownerSession',response:responses}},(request,reply)=>{const session=ownerSession(db,request,settings);reply.header('Cache-Control','no-store');return {ownerId:session.ownerId,csrfToken:session.csrf,demoAccess:openDemoAccess(db)};});
  app.post('/v1/owner-auth/logout',{schema:{operationId:'ownerLogout',response:responses}},(request,reply)=>{db.transaction(()=>{const session=ownerSession(db,request,settings,true);db.prepare('UPDATE human_sessions SET revoked_at=? WHERE digest=? AND revoked_at IS NULL').run(Date.now(),session.digest);}).immediate();reply.header('Cache-Control','no-store').header('Set-Cookie',sessionCookie(settings,'',true));return {loggedOut:true};});
 }

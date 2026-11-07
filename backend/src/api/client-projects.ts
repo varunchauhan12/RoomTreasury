@@ -29,6 +29,7 @@ export function projectSnapshot(db: Database, id: string) {
   })();
 }
 export function registerClientProjects(app: FastifyInstance, db: Database,settings:AuthSettings=authSettings(db)): void {
+  const real=Boolean(db.prepare("SELECT 1 FROM schema_migrations WHERE version=1 AND mode='real'").get());
   function authenticated(request:FastifyRequest):OwnerSession|null {
     if(!request.headers.cookie)return null;
     try{return ownerSession(db,request,settings);}catch(error){if(error instanceof AuthError)return null;throw error;}
@@ -43,23 +44,34 @@ export function registerClientProjects(app: FastifyInstance, db: Database,settin
     const jobs=new ProcessingJobs(db).list(owner,id);
     const imports=db.prepare('SELECT p.id,p.revision,p.imported_at,p.proposal_json,l.job_id,l.intake_revision FROM proposal_imports p JOIN project_import_links l ON l.import_id=p.id WHERE l.binding_id=? AND p.task_id=? ORDER BY p.revision DESC').all(bound.id,bound.task_id) as {id:string;revision:number;imported_at:number;proposal_json:string;job_id:string;intake_revision:number}[];
     const mode=db.prepare('SELECT mode FROM schema_migrations LIMIT 1').pluck().get();
-    return {...project,workspace:{bindingId:bound.id,taskId:bound.task_id,latestJob:jobs.length?jobView(jobs.reduce((latest,job)=>job.attempt>latest.attempt?job:latest)):null,
+    return {...project,workspace:{bindingId:bound.id,taskId:bound.task_id,createdAt:bound.created_at,bindingSource:bound.source,latestJob:jobs.length?jobView(jobs.reduce((latest,job)=>job.attempt>latest.attempt?job:latest)):null,
       demoPreviewAvailable:['demo','test'].includes(mode as string)&&process.env.NODE_ENV!=='production',
       imports:imports.map(row=>({id:row.id,revision:row.revision,jobId:row.job_id,intakeRevision:row.intake_revision,validation:'project_intake_validated',importedAt:row.imported_at,status:JSON.parse(row.proposal_json).status}))}};
   }
   const querystring = { type:'object', properties:{}, additionalProperties:false };
   const snapshotSchema = { type:'object', additionalProperties:true }; // Read model includes immutable domain records.
-  const responses = {400:errorSchema,404:errorSchema,500:errorSchema,503:errorSchema};
+  const responses = {400:errorSchema,401:errorSchema,403:errorSchema,404:errorSchema,500:errorSchema,503:errorSchema};
   const noStore = async (_request: unknown, reply: {header:(name:string,value:string)=>unknown}) => { reply.header('Cache-Control','no-store'); };
   app.get('/v1/client-projects/', {onRequest:noStore,schema:{operationId:'listClientProjects',querystring,
     response:{200:{type:'object',required:['projects'],properties:{projects:{type:'array',items:snapshotSchema}}},...responses}}}, request => {
-    try { const owner=authenticated(request);return db.transaction(() => ({projects:(db.prepare('SELECT id FROM client_projects ORDER BY rowid').all() as {id:string}[]).map(p=>snapshot(p.id,owner))}))(); }
-    catch { throw Object.assign(new Error('Unavailable'),{statusCode:503}); }
+    try {
+     const owner=authenticated(request);
+     if(real&&!owner)throw new AuthError(401,'OWNER_LOGIN_REQUIRED');
+     return db.transaction(() => ({projects:(db.prepare('SELECT id FROM client_projects ORDER BY rowid').all() as {id:string}[])
+       .map(p=>snapshot(p.id,owner)).filter(p=>!real||'workspace' in p)}))();
+    }
+    catch(error) { if(error instanceof AuthError)throw error;throw Object.assign(new Error('Unavailable'),{statusCode:503}); }
   });
   app.get<{Params:{projectId:string}}>('/v1/client-projects/:projectId', {onRequest:noStore,schema:{operationId:'getClientProject',querystring,
     params:{type:'object',required:['projectId'],additionalProperties:false,properties:{projectId:{type:'string',minLength:1,maxLength:4096}}},
     response:{200:snapshotSchema,...responses}}}, request => {
-    try { const owner=authenticated(request);return db.transaction(()=>snapshot(request.params.projectId,owner))(); }
-    catch(error) { throw Object.assign(new Error('Unavailable'),{statusCode:error instanceof FinancialError && error.code==='NOT_FOUND'?404:503}); }
+    try {
+     const owner=authenticated(request);
+     if(real&&!owner)throw new AuthError(401,'OWNER_LOGIN_REQUIRED');
+     const value=db.transaction(()=>snapshot(request.params.projectId,owner))();
+     if(real&&!('workspace' in value))throw new AuthError(403,'BOUND_OWNER_SCOPE_REQUIRED');
+     return value;
+    }
+    catch(error) { if(error instanceof AuthError)throw error;throw Object.assign(new Error('Unavailable'),{statusCode:error instanceof FinancialError && error.code==='NOT_FOUND'?404:503}); }
   });
 }

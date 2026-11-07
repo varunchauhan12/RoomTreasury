@@ -1,3 +1,4 @@
+import {onboardAuthorizedProject as onboardProject} from './helpers.js';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { EventEmitter } from 'node:events';
@@ -9,7 +10,7 @@ import { DispatchFailure } from '../src/jobs/transport.js';
 import { ProcessingJobs, jobView } from '../src/jobs/service.js';
 import { testDatabase } from './helpers.js';
 import { provisionOwner, loginOwner } from '../src/security/owner-auth.js';
-import { onboardProject } from '../src/jobs/bindings.js';
+
 
 const config = readDiscordConfig({ DISCORD_BOT_TOKEN: 'disposable-audit-fixture-not-a-real-token' });
 const acknowledgement = { id: '123456789012345678', channel_id: config.channelId, attachments: [] };

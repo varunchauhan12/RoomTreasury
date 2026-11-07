@@ -71,6 +71,14 @@ test('authenticated checks bind owner, revision and fingerprint; duplicate and c
  assert.equal(data.db.prepare('SELECT count(*) FROM projects').pluck().get(),1);assert.equal(data.db.prepare('SELECT count(*) FROM owner_review_decisions').pluck().get(),1);
  const audit=data.db.prepare("SELECT * FROM authenticated_review_events WHERE action='decision'").get() as any;assert.equal(audit.owner_id,data.ownerId);assert.equal(audit.revision_id,body.revisionId);assert.equal(audit.fingerprint,body.fingerprint);assert.equal(audit.auth_basis,'authenticated_owner_session');
  assert.equal(data.db.prepare("SELECT count(*) FROM authenticated_review_events WHERE action='decision'").pluck().get(),1);
+ const history=(await data.state()).reviewActivity;
+ assert.equal(history.length,2);
+ assert.deepEqual(history.map((event:{action:string})=>event.action),['decision','revise']);
+ assert.equal(history[0].id,audit.id);
+ assert.equal(history[0].owner_id,data.ownerId);
+ assert.equal(history[0].decision,'APPROVED_SYNTHETIC_DELIVERY');
+ assert.ok(history.every((event:Record<string,unknown>)=>!Object.hasOwn(event,'session_digest')));
+
  assert.throws(()=>data.db.exec("UPDATE authenticated_review_events SET owner_id='forged'"));assert.throws(()=>data.db.exec('DELETE FROM authenticated_review_events'));
  for(const table of ['commitments','reservations','ledger_entries','payment_requests'])assert.equal(data.db.prepare(`SELECT count(*) FROM ${table}`).pluck().get(),0);
 });

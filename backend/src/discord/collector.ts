@@ -200,9 +200,9 @@ export class DiscordMessageCollector {
 
   async retrieveAttachmentsForJob(jobId: string, messagesWithAttachments: DiscordMessage[]): Promise<CollectedArtifacts> {
     // Find attachments across correlated messages
-    const allAttachments = messagesWithAttachments.flatMap((m) =>
-      m.attachments.map((att) => ({ attachment: att, messageId: m.id }))
-    );
+    const allAttachments = messagesWithAttachments
+      .filter(m => this.filterMessage(m) && classifySender(m.author.username, !!m.author.bot).role === 'coordinator')
+      .flatMap(m => m.attachments.map(attachment => ({ attachment, messageId: m.id })));
 
     let proposalMeta: { attachment: typeof allAttachments[0]['attachment']; messageId: string } | null = null;
     let evidenceMeta: { attachment: typeof allAttachments[0]['attachment']; messageId: string } | null = null;

@@ -1,3 +1,9 @@
+import {onboardProject} from '../src/jobs/bindings.js';
+import {gateChecks} from '../src/approvals/policy.js';
+import {ApprovalWorkflow} from '../src/approvals/service.js';
+import type {Database} from 'better-sqlite3';
+import type {OwnerSession} from '../src/security/owner-auth.js';
+import type {ProjectIntake} from '../src/jobs/bindings.js';
 import { assertFixtureStorageHasNoSecrets } from '../src/security/test-fixtures.js';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -24,4 +30,17 @@ export function testDatabase(t: TestContext) {
     }
   });
   return { root, config, db };
+}
+
+// Existing job fixtures explicitly pass the new owner intake gate before testing jobs.
+export function onboardAuthorizedProject(db:Database,session:OwnerSession,intake:ProjectIntake,key:string){
+ const binding=onboardProject(db,session,intake,key);
+ if(db.prepare("SELECT 1 FROM sqlite_master WHERE name='approval_decisions'").get()){
+  const workflow=new ApprovalWorkflow(db),gate=workflow.snapshot(session,binding.client_project_id).gates[0]!;
+  if(gate.status!=='approved')workflow.decide(session,binding.client_project_id,{
+   gate:'intake',subjectHash:gate.subjectHash,decision:'approve',checks:[...gateChecks.intake],reason:'Owner reviewed the synthetic fixture intake, scope, budget and timeline.',
+   evidence:['fixture:verified-intake']
+  },'fixture-intake-authorization');
+ }
+ return binding;
 }

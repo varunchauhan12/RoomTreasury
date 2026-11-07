@@ -25,12 +25,18 @@ export function bindingAuthorized(db:Database,ownerId:string,bindingId:string):B
 }
 export function onboardProject(db:Database,session:OwnerSession,intake:ProjectIntake,idempotencyKey:string):Binding {
  return db.transaction(()=>{
-  mockMode(db);activeSession(db,session);key(idempotencyKey);
+  const real=db.prepare("SELECT 1 FROM schema_migrations WHERE version=1 AND mode='real'").get();
+  if(!real)mockMode(db);
+  activeSession(db,session);key(idempotencyKey);
   const requestHash=hash(JSON.stringify({clientName:intake.clientName,brief:intake.brief,revenueCents:intake.revenueCents}));
   const previous=db.prepare('SELECT * FROM project_task_bindings WHERE owner_id=? AND idempotency_key=?').get(session.ownerId,idempotencyKey) as Binding|undefined;
   if(previous){if(previous.source!=='owner_onboarding'||previous.request_hash!==requestHash)throw new AuthError(409,'IDEMPOTENCY_CONFLICT');return bindingAuthorized(db,session.ownerId,previous.id);}
   const projectId=randomUUID(),taskId='rt-task-'+randomUUID(),id=randomUUID(),now=Date.now();
-  new AgencyEngine(db).createClientProject(Object.freeze({kind:'human',role:'owner',id:session.ownerId,projectId}),projectId,intake.clientName,intake.brief,intake.revenueCents);
+  if(real){
+   if(!intake.clientName.trim()||!intake.brief.trim()||intake.clientName.length>300||intake.brief.length>4000||
+     !Number.isSafeInteger(intake.revenueCents)||intake.revenueCents<1||intake.revenueCents>1_000_000_000)throw new AuthError(400,'INVALID_PROJECT_INTAKE');
+   db.prepare("INSERT INTO client_projects VALUES (?,?,?,?,'USD','draft',NULL)").run(projectId,intake.clientName,intake.brief,intake.revenueCents);
+  }else new AgencyEngine(db).createClientProject(Object.freeze({kind:'human',role:'owner',id:session.ownerId,projectId}),projectId,intake.clientName,intake.brief,intake.revenueCents);
   db.prepare('INSERT INTO human_owner_scopes VALUES (?,?,?,NULL)').run(session.ownerId,taskId,now);
   db.prepare("INSERT INTO project_task_bindings VALUES (?,?,?,?,'owner_onboarding',?,?,?)").run(id,projectId,taskId,session.ownerId,idempotencyKey,requestHash,now);
   db.prepare("INSERT INTO binding_audit_events(binding_id,actor_kind,actor_id,session_digest,verification_ref,occurred_at) VALUES (?,'owner_session',?,?,NULL,?)").run(id,session.ownerId,session.digest,now);

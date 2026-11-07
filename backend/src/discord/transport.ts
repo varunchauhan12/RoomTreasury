@@ -51,12 +51,13 @@ export class DiscordTransport implements JobTransport {
     const mention = this.config.coordinatorMention;
     const brief = request.brief ?? 'No project brief provided.';
     const intakeRevision = request.intakeRevision ?? 1;
+    const specialists=request.specialists?.length?request.specialists.join(', '):'Request Agent, Challenge Agent, Commitment Intelligence Agent, Treasury Operations Agent';
 
     const messageLines = [
       `${mention}`,
       '',
       '**[ROOMTREASURY INTAKE DISPATCH]**',
-      'Please coordinate the specialist agents (Request Agent, Challenge Agent, Commitment Intelligence Agent, Treasury Operations Agent) to analyze this project brief and produce a final proposal package (`proposal.json`, `evidence.json`, `summary.md`).',
+      'Please coordinate the specialist agents ('+specialists+') to analyze this project brief and produce a final proposal package (`proposal.json`, `evidence.json`, `summary.md`).',
       '',
       '**Authoritative Task Binding:**',
       `- Project ID: \`${request.projectId ?? 'unknown'}\``,
@@ -73,10 +74,20 @@ export class DiscordTransport implements JobTransport {
       brief,
       '```',
       '',
+      ...(request.changeInstructions?[
+       '**Owner-authorized change request:**',request.changeInstructions,
+       'Affected sections: '+request.affectedSections?.join(', '),
+       'Specialists requested: '+request.specialists?.join(', '),
+       'Previous proposal revision: '+request.sourceRevisionId,
+       'Previous proposal fingerprint: '+request.sourceFingerprint,
+       '**Previous proposal content (reference only; prior approvals do not transfer):**',
+       request.sourceProposal??'No previous proposal package exists.',
+       'Return a complete new bound artifact package preserving the original project brief. Keep agreed revenue null for fresh owner verification. Identify retained historical findings as historical evidence; do not claim those specialists reran. Do not reuse previous approval.'
+      ]:[]),
       '**Specialist Coordination Instructions:**',
-      '1. Coordinate all four specialists to gather requirements, identify risks, estimate capacity and commitments, and analyze economics.',
+      '1. Coordinate '+(request.specialists?.length?'the listed specialists for the affected sections':'all four specialists to gather requirements, identify risks, estimate capacity and commitments, and analyze economics')+'.',
       '2. Consolidate their findings into the final proposal package (`proposal.json`, `evidence.json`, `summary.md`).',
-      '3. When complete, upload all three artifact files as attachments and post the completion marker:',
+      '3. Both JSON files must include projectId, taskId, processingJobId, correlationId, intakeRevision and intakeSha256. Repeat those identifiers in summary.md with an Intake revision line. Keep agreed revenue null. Upload all three files, then post:',
       `   \`ROOMTREASURY_RESULT_READY job=${request.jobId} correlation=${request.correlationId}\``,
       '4. IMPORTANT: Do NOT approve, spend, reserve, settle or deploy funds. All spending is simulated and requires explicit human owner review in RoomTreasury.',
     ];
@@ -85,7 +96,10 @@ export class DiscordTransport implements JobTransport {
     // One atomic Discord message, rather than activating the coordinator with a partial brief.
     const attachment = fullContent.length > 2000 ? { filename: 'roomtreasury-intake.txt', content: fullContent } : undefined;
     const content = attachment
-      ? messageLines.map((line, index) => index === messageLines.indexOf(brief) ? 'Read the complete original brief in the attached roomtreasury-intake.txt before coordinating.' : line).join('\n')
+      ? [mention,'','**[ROOMTREASURY INTAKE DISPATCH]**',...messageLines.slice(5,14),
+          'Read the complete original brief in the attached roomtreasury-intake.txt before coordinating.',
+          `ROOMTREASURY_RESULT_READY job=${request.jobId} correlation=${request.correlationId}`,
+          'Do NOT approve, spend, reserve, settle or deploy funds.'].join('\n')
       : fullContent;
 
     let accepted = false;

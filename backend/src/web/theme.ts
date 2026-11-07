@@ -1,18 +1,18 @@
 // RoomTreasury Premium Design System & Theme Tokens
-// Visual Reference: BizLink (Warm off-white #F6F7ED, Surface #FFFFFF, Accent Emerald #10B981, General Sans/Inter typography)
+// Cool neutral surfaces with emerald accents and slate metadata.
 
 export const themeCss = String.raw`
 :root {
-  --rt-bg: #F6F7ED;
+  --rt-bg: #F5F7FA;
   --rt-surface: #FFFFFF;
-  --rt-surface-subtle: #F4F5EE;
+  --rt-surface-subtle: #f1f5f9;
   --rt-surface-elevated: #FFFFFF;
-  --rt-text: #1F1F1F;
-  --rt-text-muted: #5A6660;
-  --rt-text-subtle: #8A9890;
-  --rt-border: #E2E7DE;
-  --rt-border-subtle: #EDF1EA;
-  --rt-emerald: #10B981;
+  --rt-text: #182230;
+  --rt-text-muted: #64748B;
+  --rt-text-subtle: #64748b;
+  --rt-border: #dce4ed;
+  --rt-border-subtle: #e8eef4;
+  --rt-emerald: #0D9870;
   --rt-emerald-deep: #047857;
   --rt-emerald-dark: #064E3B;
   --rt-emerald-light: #E6F7F0;

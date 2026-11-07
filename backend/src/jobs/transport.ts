@@ -1,4 +1,10 @@
 export interface DispatchRequest {
+  readonly sourceRevisionId?:string;
+  readonly sourceFingerprint?:string;
+  readonly sourceProposal?:string|undefined;
+  readonly changeInstructions?:string;
+  readonly affectedSections?:readonly string[];
+  readonly specialists?:readonly string[];
   readonly jobId: string;
   readonly correlationId: string;
   readonly intakeHash: string;

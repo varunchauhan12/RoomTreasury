@@ -231,7 +231,7 @@ test('migration 4 upgrades populated M2A databases without altering budgets or h
     assert.deepEqual(db.prepare('SELECT * FROM schema_migrations WHERE version<=3').all(),before);
     assert.deepEqual(db.prepare('SELECT * FROM projects').get(),project);
     assert.equal(db.prepare('SELECT count(*) FROM client_projects').pluck().get(),0);
-    assert.equal(db.prepare('SELECT count(*) FROM schema_migrations').pluck().get(),12);
+    assert.equal(db.prepare('SELECT count(*) FROM schema_migrations').pluck().get(),migrations.length);
     assert.deepEqual(db.pragma('foreign_key_check'),[]);
   } finally {db.close();}
 });

@@ -1,3 +1,4 @@
+import {requireIntake} from '../approvals/policy.js';
 import {randomUUID} from 'node:crypto';
 import type {Database} from 'better-sqlite3';
 import type {OwnerSession} from '../security/owner-auth.js';
@@ -26,17 +27,25 @@ export class ProcessingJobs {
    if(transport==='mock')mockMode(this.db);
    activeSession(this.db,session);key(idempotencyKey);
    const binding=bindingAuthorized(this.db,session.ownerId,bindingId);
+   if(this.db.prepare("SELECT 1 FROM sqlite_master WHERE name='commercial_demo'").get()&&this.db.prepare('SELECT 1 FROM commercial_demo WHERE id=1').get())throw new AuthError(403,'DEMO_PROCESSING_DISABLED');
    const previous=this.db.prepare('SELECT * FROM processing_jobs WHERE binding_id=? AND idempotency_key=?').get(bindingId,idempotencyKey) as Job|undefined;
    if(previous)return previous;
+   requireIntake(this.db,bindingId);
    if(this.db.prepare("SELECT 1 FROM processing_jobs WHERE binding_id=? AND completed_at IS NULL").get(bindingId))throw new AuthError(409,'JOB_ALREADY_ACTIVE');
    const attempt=(this.db.prepare('SELECT coalesce(max(attempt),0)+1 FROM processing_jobs WHERE binding_id=?').pluck().get(bindingId) as number);
    if(attempt>3)throw new AuthError(409,'JOB_ATTEMPT_LIMIT');
    const client=this.db.prepare('SELECT client_name,brief,revenue_cents,currency FROM client_projects WHERE id=?').get(binding.client_project_id) as {client_name:string;brief:string;revenue_cents:number;currency:string};
-   const snapshot=JSON.stringify({projectId:binding.client_project_id,taskId:binding.task_id,clientName:client.client_name,brief:client.brief,revenueCents:client.revenue_cents,currency:client.currency,intakeRevision:1});
+   const analysis=this.db.prepare("SELECT 1 FROM sqlite_master WHERE name='analysis_revisions'").get()?this.db.prepare('SELECT id,revision,sections,specialists,instructions,source_revision_id,source_fingerprint,original_payload FROM analysis_revisions WHERE binding_id=? ORDER BY revision DESC LIMIT 1').get(bindingId) as {id:string;revision:number;sections:string;specialists:string;instructions:string;source_revision_id:string|null;source_fingerprint:string|null;original_payload:string|null}|undefined:undefined;
+   // Intake remains unchanged. Analysis revisions have their own immutable identity.
+   const intakeRevision=1;
+   const snapshot=JSON.stringify({...(analysis?{analysisRevision:analysis.id,affectedSections:JSON.parse(analysis.sections),specialists:JSON.parse(analysis.specialists),changeInstructions:analysis.instructions,sourceRevisionId:analysis.source_revision_id,sourceFingerprint:analysis.source_fingerprint,sourceProposal:analysis.original_payload?JSON.parse(analysis.original_payload):null}:{}),projectId:binding.client_project_id,taskId:binding.task_id,clientName:client.client_name,brief:client.brief,revenueCents:client.revenue_cents,currency:client.currency,intakeRevision});
    const id=randomUUID(),now=Date.now();
    this.db.prepare(`INSERT INTO processing_jobs(id,binding_id,submitting_owner_id,intake_snapshot,intake_hash,intake_revision,attempt,transport,correlation_id,idempotency_key,state,created_at,updated_at)
-    VALUES (?,?,?,?,?,1,?,?,?,?,'queued',?,?)`).run(id,bindingId,session.ownerId,snapshot,hash(snapshot),attempt,transport,transport+'-'+id,idempotencyKey,now,now);
+    VALUES (?,?,?,?,?,?, ?,?,?,?,'queued',?,?)`).run(id,bindingId,session.ownerId,snapshot,hash(snapshot),intakeRevision,attempt,transport,transport+'-'+id,idempotencyKey,now,now);
    this.db.prepare("INSERT INTO processing_job_events(job_id,event_key,from_state,to_state,occurred_at,actor_kind,actor_id) VALUES (?,'created',NULL,'queued',?,'owner',?)").run(id,now,session.ownerId);
+   if(analysis&&!this.db.prepare('SELECT 1 FROM analysis_revision_jobs WHERE analysis_revision_id=?').get(analysis.id)){
+    this.db.prepare('INSERT INTO analysis_revision_jobs VALUES (?,?)').run(analysis.id,id);
+   }
    return this.row(id);
   }).immediate();
  }
@@ -50,7 +59,7 @@ export class ProcessingJobs {
  }
  events(session:OwnerSession,id:string,after=0,limit=50){
   if(!Number.isSafeInteger(after)||after<0||!Number.isSafeInteger(limit)||limit<1||limit>100)throw new AuthError(400,'INVALID_EVENT_PAGE');
-  return this.db.transaction(()=>{this.authorize(session,id);const events=this.db.prepare('SELECT id,from_state,to_state,code,occurred_at,actor_kind,actor_id FROM processing_job_events WHERE job_id=? AND id>? ORDER BY id LIMIT ?').all(id,after,limit) as {id:number}[];
+  return this.db.transaction(()=>{this.authorize(session,id);const events=this.db.prepare('SELECT id,event_key,from_state,to_state,code,occurred_at,actor_kind,actor_id FROM processing_job_events WHERE job_id=? AND id>? ORDER BY id LIMIT ?').all(id,after,limit) as {id:number}[];
    return {events,nextCursor:events.at(-1)?.id??after};})();
  }
  cancel(session:OwnerSession,id:string):Job {
@@ -95,6 +104,7 @@ export class ProcessingJobs {
     : (this.db.prepare("SELECT * FROM processing_jobs WHERE state='queued' ORDER BY created_at,id LIMIT 1").get() as Job|undefined);
    if(!job)return null;
    try{bindingAuthorized(this.db,job.submitting_owner_id,job.binding_id);}catch{this.transition(job,'failed','access-revoked','owner_access_revoked');return null;}
+   try{requireIntake(this.db,job.binding_id);}catch{this.transition(job,'failed','intake-authorization-required','owner_access_revoked');return null;}
    const lease=randomUUID();this.db.prepare('UPDATE processing_jobs SET lease_owner=?,lease_until=? WHERE id=?').run(lease,Date.now()+30000,job.id);
    this.transition(this.row(job.id),'dispatching','dispatch-start',null);return this.row(job.id);
   }).immediate();
@@ -108,6 +118,7 @@ export class ProcessingJobs {
    if(job.state==='imported'&&state==='imported')return job;
    if(job.lease_owner!==lease||job.lease_until===null||job.lease_until<=Date.now())throw new AuthError(409,'WORKER_LEASE_LOST');
    bindingAuthorized(this.db,job.submitting_owner_id,job.binding_id);
+   if(!['failed','needs_attention'].includes(state))requireIntake(this.db,job.binding_id);
    this.transition(job,state,eventKey,code,undefined,diagnostic);
    if(!terminal.has(state)&&state!=='dispatch_uncertain')this.db.prepare('UPDATE processing_jobs SET lease_until=? WHERE id=?').run(Date.now()+30000,id);
    return this.row(id);
@@ -116,10 +127,16 @@ export class ProcessingJobs {
  async runNext(transport?:JobTransport):Promise<boolean>{
   const type=transport?.type;
   this.recover(type);const job=this.claim(type);if(!job)return false;
-  const selectedTransport=transport??(job.transport==='discord'?new DiscordTransport({db:this.db,config:readDiscordConfig()}):new MockTransport());
   const lease=job.lease_owner!;
+  let selectedTransport:JobTransport;
+  try{
+   selectedTransport=transport??(job.transport==='discord'?new DiscordTransport({db:this.db,config:readDiscordConfig()}):new MockTransport());
+  }catch{
+   this.finishFailure(job.id,lease,'failed','discord_dispatch_failed','configuration_invalid');
+   return true;
+  }
   const snapshot=JSON.parse(job.intake_snapshot);
-  const request:DispatchRequest={jobId:job.id,correlationId:job.correlation_id,intakeHash:job.intake_hash,projectId:snapshot.projectId,taskId:snapshot.taskId,clientName:snapshot.clientName,brief:snapshot.brief,revenueCents:snapshot.revenueCents,currency:snapshot.currency,intakeRevision:job.intake_revision};
+  const request:DispatchRequest={jobId:job.id,correlationId:job.correlation_id,intakeHash:job.intake_hash,projectId:snapshot.projectId,taskId:snapshot.taskId,clientName:snapshot.clientName,brief:snapshot.brief,revenueCents:snapshot.revenueCents,currency:snapshot.currency,intakeRevision:job.intake_revision,...(snapshot.changeInstructions?{changeInstructions:snapshot.changeInstructions,affectedSections:snapshot.affectedSections,specialists:snapshot.specialists,sourceRevisionId:snapshot.sourceRevisionId,sourceFingerprint:snapshot.sourceFingerprint,sourceProposal:snapshot.sourceProposal?JSON.stringify(snapshot.sourceProposal):undefined}: {})};
   const heartbeat=setInterval(()=>{
    try{this.renewLease(job.id,lease,60000);}catch{}
   },10000);

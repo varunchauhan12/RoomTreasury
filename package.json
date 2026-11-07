@@ -3,18 +3,22 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "engines": { "node": "22.22.3", "npm": "10.9.8" },
+  "engines": {
+    "node": "22.22.3",
+    "npm": "10.9.8"
+  },
   "packageManager": "npm@10.9.8",
   "scripts": {
-    "typecheck": "tsc --noEmit -p tsconfig.test.json",
-    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit -p tsconfig.test.json && tsc -p tsconfig.ui.json",
+    "build": "tsc -p tsconfig.json && npm run build:ui",
     "start": "node dist/server.js",
     "migrate": "node dist/db/migrate.js",
     "demo:setup": "node dist/demo/cli.js",
     "owner:admin": "node dist/security/owner-cli.js",
     "binding:admin": "node dist/jobs/binding-admin.js",
     "test": "tsc -p tsconfig.test.json && NODE_ENV=test node --test .test-build/tests/*.test.js",
-    "openapi": "node dist/api/export-openapi.js"
+    "openapi": "node dist/api/export-openapi.js",
+    "build:ui": "esbuild frontend/ui/components.tsx --jsx=automatic --bundle --minify --legal-comments=inline --outfile=dist/ui/components.js && tailwindcss -i frontend/ui/components.css -o dist/ui/components.css --minify"
   },
   "dependencies": {
     "@fastify/swagger": "9.9.3",
@@ -24,8 +28,22 @@
   },
   "devDependencies": {
     "@apidevtools/swagger-parser": "13.1.0",
+    "@base-ui/react": "1.9.0",
+    "@radix-ui/react-tabs": "1.2.1",
+    "@tailwindcss/cli": "4.3.5",
     "@types/better-sqlite3": "9.6.0",
     "@types/node": "22.20.5",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "class-variance-authority": "0.7.1",
+    "clsx": "2.1.1",
+    "esbuild": "0.28.2",
+    "lucide-react": "1.70.0",
+    "motion": "14.10.1",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "tailwind-merge": "3.7.0",
+    "tailwindcss": "4.3.5",
     "typescript": "5.9.3"
   }
 }

@@ -1,14 +1,15 @@
+import {onboardAuthorizedProject as onboardProject} from './helpers.js';
 import assert from 'node:assert/strict';
 import {test,type TestContext} from 'node:test';
 import {readFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';
 import {testDatabase} from './helpers.js';
 import {provisionOwner,loginOwner} from '../src/security/owner-auth.js';
-import {onboardProject} from '../src/jobs/bindings.js';
+
 import {ProcessingJobs} from '../src/jobs/service.js';
 import {buildApp} from '../src/app.js';
 import {validateBundle,ImportError,type ImportBundle} from '../src/imports/service.js';
-import {retrieveProjectArtifacts} from '../src/imports/project-linked.js';
+import {importDiscordPackage,retrieveProjectArtifacts} from '../src/imports/project-linked.js';
 import {OwnerReview} from '../src/reviews/service.js';
 import {DiscordMessageCollector} from '../src/discord/collector.js';
 import {DiscordRestClient,type DiscordMessage} from '../src/discord/client.js';
@@ -120,6 +121,18 @@ test('bound package rejects contradictory revenue, missing scope structure and m
   const b=original(),p=JSON.parse(b.proposal.content);mutate(p);b.proposal.content=JSON.stringify(p);assert.throws(()=>validateBundle(b),ImportError);
  }
  const b=original();b.summary!.content=b.summary!.content.replaceAll('discord-e8c2e4a1-1546-45b3-b9f2-80b05000ecca','wrong-correlation');assert.throws(()=>validateBundle(b),ImportError);
+});
+
+test('automatic import rejects another job and a lost lease without writing any result',async t=>{
+ const d=await fixture(t,false),claim=d.jobs.claim('discord')!;
+ for(const state of ['dispatched','running','collecting','validating'] as const)d.jobs.apply(d.job.id,claim.lease_owner!,state,state);
+ const otherId='00000000-0000-4000-8000-000000000001';
+ const wrong=Object.fromEntries(Object.entries(d.bundle).map(([kind,file])=>[kind,{...file,content:file.content.replaceAll(d.job.id,otherId)}])) as unknown as ImportBundle;
+ assert.throws(()=>importDiscordPackage(d.db,d.job.id,wrong),error=>error instanceof ImportError&&error.issues.some(i=>i.includes('exact processing job')));
+ d.db.prepare('UPDATE processing_jobs SET lease_until=? WHERE id=?').run(Date.now()-1,d.job.id);
+ assert.throws(()=>importDiscordPackage(d.db,d.job.id,d.bundle),error=>error instanceof ImportError&&error.issues.some(i=>i.includes('no longer actively validating')));
+ assert.equal(d.db.prepare('SELECT count(*) FROM proposal_imports').pluck().get(),0);
+ assert.equal(d.db.prepare('SELECT count(*) FROM project_import_links').pluck().get(),0);
 });
 
 test('completion requires the exact coordinator job/correlation marker; active jobs cannot be manually recovered',async t=>{

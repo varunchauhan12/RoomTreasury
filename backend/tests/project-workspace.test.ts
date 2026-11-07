@@ -1,3 +1,5 @@
+import {gateChecks} from '../src/approvals/policy.js';
+import {ApprovalWorkflow} from '../src/approvals/service.js';
 import assert from 'node:assert/strict';
 import {test,type TestContext} from 'node:test';
 import {Script,runInNewContext} from 'node:vm';
@@ -12,7 +14,12 @@ import {workspaceModel} from '../src/web/workspace-model.js';
 function model(){const context:Record<string,any>={Intl,setTimeout,clearTimeout};runInNewContext(workspaceModel,context);return context.RoomTreasuryWorkspace;}
 const fields={clientName:'Synthetic client',projectName:'Analytics launch',description:'Build a landing page.',requirements:'Responsive scope.',deliverables:'One page and handoff.',price:'1000.01',deadline:'2026-12-01',notes:'Synthetic notes'};
 async function fixture(t:TestContext){const data=testDatabase(t);await provisionOwner(data.db,'workspace-owner','Synthetic workspace owner password','PREEXISTING');const login=await loginOwner(data.db,'workspace-owner','Synthetic workspace owner password','fixture');const app=await buildApp(data.db);t.after(()=>app.close());const headers={origin:'http://127.0.0.1:3000',host:'127.0.0.1:3000',cookie:'rt_demo_owner='+login.token,'x-csrf-token':login.session.csrf,'idempotency-key':'workspace-onboard'};return {...data,...login,app,headers};}
-async function onboarding(data:Awaited<ReturnType<typeof fixture>>){const payload=model().intake(fields);const result=await data.app.inject({method:'POST',url:'/v1/client-projects/onboard',headers:data.headers,payload});assert.equal(result.statusCode,201);return result.json().binding;}
+async function onboarding(data:Awaited<ReturnType<typeof fixture>>){const payload=model().intake(fields);const result=await data.app.inject({method:'POST',url:'/v1/client-projects/onboard',headers:data.headers,payload});assert.equal(result.statusCode,201);
+ const binding=result.json().binding;
+ const workflow=new ApprovalWorkflow(data.db),gate=workflow.snapshot(data.session,binding.client_project_id).gates[0]!;
+ workflow.decide(data.session,binding.client_project_id,{gate:'intake',subjectHash:gate.subjectHash,decision:'approve',checks:[...gateChecks.intake],
+  reason:'Fixture owner reviewed brief, scope, budget expectations and timeline.',evidence:['fixture:intake']},'fixture-intake');
+ return binding;}
 
 test('workspace pages and dashboard expose the unified owner flow, safe assets and responsive sections',async t=>{
  const {app}=await fixture(t);
@@ -46,6 +53,29 @@ test('polling uses actual backend states and stops at attention, terminal or unc
  let errors=0;const failed=M.poller({async read(){throw Error('offline');},render:()=>assert.fail(),onError:()=>errors++,schedule:()=>assert.fail(),clear:()=>{}});await failed.start();assert.equal(errors,1);
  let resolve!:(job:object)=>void;let renderedAfterStop=false;const stopped=M.poller({read:()=>new Promise(done=>{resolve=done;}),render:()=>{renderedAfterStop=true;},onError:()=>{},clear:()=>{}});const inFlight=stopped.start();stopped.stop();resolve({state:'running'});await inFlight;assert.equal(renderedAfterStop,false);
 });
+test('hidden workspace polling schedules a retry without an HTTP read',async()=>{
+ const M=model(),scheduled:(()=>Promise<void>)[]=[];
+ let hidden=true,reads=0;
+ const watcher=M.poller({pause:()=>hidden,read:async()=>{reads++;return {state:'imported'};},
+  render:()=>{},onError:()=>assert.fail(),schedule:(fn:()=>Promise<void>)=>{scheduled.push(fn);return scheduled.length;},clear:()=>{}});
+ await watcher.start();assert.equal(reads,0);assert.equal(scheduled.length,1);
+ hidden=false;await scheduled.shift()!();assert.equal(reads,1);assert.equal(scheduled.length,0);
+});
+
+test('workspace polling refreshes only the imported result linked to the exact job and project',async()=>{
+ const M=model(),project={client:{id:'project'},workspace:{taskId:'task',imports:[]}};
+ const job={id:'job',state:'imported',result_import_id:'import'};
+ const latest={...project,workspace:{...project.workspace,imports:[{id:'import',jobId:'job'}]}};
+ let reads=0;
+ const read=(id:string)=>{assert.equal(id,'project');reads++;return latest;};
+ assert.equal(await M.importedSnapshot({...job,state:'validating'},project,read),null);
+ assert.equal(await M.importedSnapshot(job,project,read),latest);
+ assert.equal(await M.importedSnapshot(job,latest,read),null);
+ assert.equal(reads,1);
+ await assert.rejects(()=>M.importedSnapshot(job,project,()=>({...latest,client:{id:'other'}})),/not yet available/);
+ await assert.rejects(()=>M.importedSnapshot(job,project,()=>({...latest,workspace:{...latest.workspace,imports:[{id:'import',jobId:'other'}]}})),/not yet available/);
+});
+
 test('synthetic result sections label estimates, unknowns and fixed economics without invented evidence',()=>{
  const M=model(),sections=M.demoSections({client:{client_name:'Synthetic',brief:'Brief',revenue_cents:420000}});
  assert.equal(sections.length,6);const json=JSON.stringify(sections);assert.match(json,/DEMONSTRATION ONLY/);assert.match(json,/Illustrative fixture amounts/);assert.match(json,/420000/);assert.ok(!json.includes('sourceMessageIds'));assert.ok(!json.includes('RECEIVED_AND_REVIEWED'));
@@ -58,7 +88,7 @@ test('browser intake and job API produce one project and job, show persisted eve
  const job=(await post()).json().job;assert.equal((await post()).json().job.id,job.id);
  await new ProcessingJobs(data.db).runNext();
  const snapshot=(await data.app.inject({url:'/v1/client-projects/'+binding.client_project_id,headers:data.headers})).json();
- assert.equal(snapshot.workspace.taskId,binding.task_id);assert.equal(snapshot.workspace.latestJob.state,'needs_attention');assert.equal(snapshot.workspace.demoPreviewAvailable,true);assert.equal(snapshot.workspace.imports.length,0);
+ assert.equal(snapshot.workspace.taskId,binding.task_id);assert.equal(snapshot.workspace.createdAt,binding.created_at);assert.equal(snapshot.workspace.bindingSource,'owner_onboarding');assert.equal(snapshot.workspace.latestJob.state,'needs_attention');assert.equal(snapshot.workspace.demoPreviewAvailable,true);assert.equal(snapshot.workspace.imports.length,0);
  const events=(await data.app.inject({url:'/v1/processing-jobs/'+job.id+'/events',headers:data.headers})).json().events;
  assert.equal(events.length,7);assert.equal(events.at(-1).code,'artifact_import_deferred');
  assert.equal(data.db.prepare('SELECT count(*) FROM client_projects').pluck().get(),1);assert.equal(data.db.prepare('SELECT count(*) FROM processing_jobs').pluck().get(),1);
@@ -126,6 +156,10 @@ test('regression: processing job creation validates strictly, returns safe diagn
   });
   assert.equal(onboard2.statusCode, 201);
   const binding2 = onboard2.json().binding;
+  const workflow2=new ApprovalWorkflow(data.db),gate2=workflow2.snapshot(data.session,binding2.client_project_id).gates[0]!;
+  workflow2.decide(data.session,binding2.client_project_id,{gate:'intake',subjectHash:gate2.subjectHash,decision:'approve',
+   checks:[...gateChecks.intake],reason:'Fixture owner reviewed second intake.',evidence:['fixture:intake']},'second-intake');
+
   const mockJob = await data.app.inject({
     method: 'POST',
     url: '/v1/client-projects/' + binding2.client_project_id + '/processing-jobs',

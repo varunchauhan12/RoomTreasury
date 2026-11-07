@@ -1,10 +1,11 @@
+import {onboardAuthorizedProject as onboardProject} from './helpers.js';
 import assert from 'node:assert/strict';
 import {test,type TestContext} from 'node:test';
 import {Worker} from 'node:worker_threads';
 import BetterSqlite3 from 'better-sqlite3';
 import {testDatabase} from './helpers.js';
 import {loginOwner,provisionOwner} from '../src/security/owner-auth.js';
-import {onboardProject,hash} from '../src/jobs/bindings.js';
+import {hash} from '../src/jobs/bindings.js';
 import {ProcessingJobs} from '../src/jobs/service.js';
 import {MockTransport,type JobTransport} from '../src/jobs/transport.js';
 import {openDatabase} from '../src/db/connection.js';

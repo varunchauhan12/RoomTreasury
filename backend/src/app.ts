@@ -1,3 +1,9 @@
+import {registerAppearance} from './web/appearance.js';
+import {registerDemoAccess} from './security/demo-access.js';
+import {registerDiscordReads} from './discord/read-routes.js';
+import {registerApprovalWorkflow} from './approvals/routes.js';
+import {commercialDemo} from './commercial/service.js';
+import {registerCommercial} from './commercial/routes.js';
 import {registerProjectImports} from './imports/project-routes.js';
 import {registerProjectWorkspace} from './web/project-workspace.js';
 import { registerJobs } from './jobs/routes.js';
@@ -27,6 +33,8 @@ export async function buildApp(db: Database, options: {aiFetch?:typeof fetch} = 
   });
   installErrorHandling(app);
   const ownerSettings=authSettings(db);
+  registerDemoAccess(app,db,ownerSettings);
+  registerAppearance(app);
   await app.register(swagger, {
     openapi: {
       openapi: '3.0.3', info: { title: 'RoomTreasury foundation', version: '0.1.0' },
@@ -57,17 +65,21 @@ export async function buildApp(db: Database, options: {aiFetch?:typeof fetch} = 
   });
   registerIdentity(app, db);
   registerClientProjects(app, db,ownerSettings);
-  registerEstimation(app,db,options.aiFetch);
+  if(!commercialDemo(db))registerEstimation(app,db,options.aiFetch);
   registerDashboard(app);
   registerProjectWorkspace(app);
   registerImports(app,db,ownerSettings);
   registerProjectImports(app,db,ownerSettings);
   registerImportWorkspace(app);
   registerOwnerAuth(app,db,ownerSettings);
-  registerLoginPage(app);
+  const modes=db.prepare('SELECT DISTINCT mode FROM schema_migrations').all() as {mode:string}[];
+  registerLoginPage(app,process.env.NODE_ENV!=='production' && modes.length===1 && modes[0]?.mode==='demo');
   registerReview(app,db,ownerSettings);
   registerReviewWidget(app);
   registerJobs(app,db,ownerSettings);
+  registerDiscordReads(app,db,ownerSettings);
+  registerCommercial(app,db,ownerSettings);
+  registerApprovalWorkflow(app,db,ownerSettings);
   app.addHook('onClose', async () => { if (db.open) db.close(); });
   return app;
 }

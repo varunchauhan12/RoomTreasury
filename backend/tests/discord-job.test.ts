@@ -1,9 +1,10 @@
+import {onboardAuthorizedProject as onboardProject} from './helpers.js';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test, type TestContext } from 'node:test';
 import { testDatabase } from './helpers.js';
 import { provisionOwner, loginOwner } from '../src/security/owner-auth.js';
-import { onboardProject } from '../src/jobs/bindings.js';
+
 import { ProcessingJobs } from '../src/jobs/service.js';
 import { readDiscordConfig } from '../src/discord/config.js';
 import { DiscordRestClient, type DiscordMessage } from '../src/discord/client.js';
@@ -34,11 +35,29 @@ function validBundle(taskId: string): ImportBundle {
   };
 }
 
-async function fixture(t: TestContext) {
+function boundBundle(job: ReturnType<ProcessingJobs['create']>): ImportBundle {
+  const path='backend/tests/fixtures/nova-recovery/';
+  const proposal=JSON.parse(readFileSync(path+'proposal.json','utf8'));
+  const snapshot=JSON.parse(job.intake_snapshot);
+  const replacements: Record<string,string> = {
+    [proposal.projectId]:snapshot.projectId, [proposal.taskId]:snapshot.taskId,
+    [proposal.processingJobId]:job.id, [proposal.intakeSha256]:job.intake_hash,
+    [proposal.client.name]:snapshot.clientName, [proposal.project.brief]:snapshot.brief,
+  };
+  const rebind=(text:string)=>Object.entries(replacements).reduce((result,[from,to])=>result.replaceAll(from,to),text);
+  const p=JSON.parse(rebind(JSON.stringify(proposal)));
+  p.project.brief=snapshot.brief;
+  const e=JSON.parse(rebind(readFileSync(path+'evidence.json','utf8')));
+  e.originalBrief=snapshot.brief;
+  return {proposal:{name:'proposal.json',content:JSON.stringify(p)},evidence:{name:'evidence.json',content:JSON.stringify(e)},
+    summary:{name:'summary.md',content:rebind(readFileSync(path+'summary.md','utf8'))}};
+}
+
+async function fixture(t: TestContext, revenueCents=intake.revenueCents) {
   const data = testDatabase(t);
   const ownerId = await provisionOwner(data.db, 'discord-owner', 'Synthetic discord owner password', 'PREEXISTING');
   const login = await loginOwner(data.db, 'discord-owner', 'Synthetic discord owner password', 'fixture');
-  const binding = onboardProject(data.db, login.session, intake, 'discord-onboarding');
+  const binding = onboardProject(data.db, login.session, {...intake,revenueCents}, 'discord-onboarding');
   const jobs = new ProcessingJobs(data.db);
   const config = readDiscordConfig({
     DISCORD_BOT_TOKEN: 'secret-test-bot-token-123456789',
@@ -48,13 +67,29 @@ async function fixture(t: TestContext) {
   return { ...data, ...login, ownerId, binding, jobs, config };
 }
 
+test('invalid Discord configuration records a certain failure without waiting for lease recovery', async t => {
+  const data=await fixture(t),job=data.jobs.create(data.session,data.binding.id,'invalid-config','discord');
+  const previous=process.env.DISCORD_BOT_TOKEN;
+  try{
+    process.env.DISCORD_BOT_TOKEN='invalid';
+    assert.equal(await data.jobs.runNext(),true);
+  }finally{
+    if(previous===undefined)delete process.env.DISCORD_BOT_TOKEN;else process.env.DISCORD_BOT_TOKEN=previous;
+  }
+  const failed=data.jobs.get(data.session,job.id);
+  assert.equal(failed.state,'failed');
+  assert.equal(failed.error_code,'discord_dispatch_failed');
+  assert.equal(failed.diagnostic,'configuration_invalid');
+  assert.equal(failed.lease_owner,null);
+});
+
 test('Discord transport end-to-end: dispatch, specialist progress, completion marker, attachment download and automatic import', async (t) => {
-  const data = await fixture(t);
+  const data = await fixture(t,180000);
   const job = data.jobs.create(data.session, data.binding.id, 'discord-run-1', 'discord');
   assert.equal(job.transport, 'discord');
   assert.equal(job.state, 'queued');
 
-  const bundle = validBundle(data.binding.task_id);
+  const bundle = boundBundle(job);
   const sentMessages: { channelId: string; content: string }[] = [];
 
   const conversationHistory: DiscordMessage[] = [
@@ -121,7 +156,7 @@ test('Discord transport end-to-end: dispatch, specialist progress, completion ma
   const mockFetch: typeof fetch = async (input, init) => {
     const urlStr = String(input);
     if (init?.method === 'POST') {
-      const parsedBody = JSON.parse(String(init.body));
+      const parsedBody = JSON.parse(init.body instanceof FormData?String(init.body.get('payload_json')):String(init.body));
       sentMessages.push({ channelId: data.config.channelId, content: parsedBody.content });
       return new Response(JSON.stringify({
         id: 'msg-dispatch-bot',
@@ -205,7 +240,8 @@ test('Discord transport end-to-end: dispatch, specialist progress, completion ma
     assert.equal(res.statusCode, 200);
     const body = res.json();
     assert.equal(body.taskId, data.binding.task_id);
-    assert.equal(body.proposal.status, 'NEEDS_CLIENT_CLARIFICATION');
+    assert.equal(body.proposal.status, 'READY_FOR_OWNER_REVIEW');
+    assert.equal(body.proposal.project.agreedRevenueCents,null);
   } finally {
     await app.close();
   }

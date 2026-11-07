@@ -65,7 +65,7 @@ export function dispatchDiagnostic(error: unknown): string {
 }
 
 export function safeDispatchDiagnostic(value: string | null): string | null {
-  return value && /^(authentication_failure|missing_access|guild_channel_not_found|missing_permissions|invalid_message_payload|rate_limited|network_failure|unknown_dispatch_outcome)(; http=\d{1,3}; discord=(none|\d{1,8}))?$/.test(value) ? value : null;
+  return value && /^(configuration_invalid|authentication_failure|missing_access|guild_channel_not_found|missing_permissions|invalid_message_payload|rate_limited|network_failure|unknown_dispatch_outcome)(; http=\d{1,3}; discord=(none|\d{1,8}))?$/.test(value) ? value : null;
 }
 
 export interface DiscordClientOptions {
@@ -130,8 +130,8 @@ export class DiscordRestClient {
   async fetchAttachment(attachment: DiscordAttachmentMeta, maxBytes: number): Promise<FetchedAttachment> {
     const parsed = new URL(attachment.url);
     const allowedHosts = ['cdn.discordapp.com', 'media.discordapp.net'];
-    if (!allowedHosts.includes(parsed.hostname.toLowerCase())) {
-      throw new DiscordApiError(400, 'UNTRUSTED_ATTACHMENT_URL', `Attachment URL host ${parsed.hostname} is not an authorized Discord CDN.`);
+    if (parsed.protocol !== 'https:' || parsed.port || parsed.username || parsed.password || !allowedHosts.includes(parsed.hostname.toLowerCase())) {
+      throw new DiscordApiError(400, 'UNTRUSTED_ATTACHMENT_URL', 'Attachment URL is not an authorized HTTPS Discord CDN URL.');
     }
 
     if (attachment.size > maxBytes) {
@@ -140,21 +140,35 @@ export class DiscordRestClient {
 
     const response = await this.fetchFn(attachment.url, {
       method: 'GET',
+      redirect: 'error',
+      signal: AbortSignal.timeout(15000),
       headers: {
         'User-Agent': 'RoomTreasuryBot (https://roomtreasury.local, 0.1.0)',
       },
     });
 
-    if (!response.ok) {
-      throw new DiscordApiError(response.status, 'ATTACHMENT_FETCH_FAILED', `Failed to download attachment ${attachment.filename}: HTTP ${response.status}.`);
+    if (!response.ok || !response.body) {
+      throw new DiscordApiError(response.status, 'ATTACHMENT_FETCH_FAILED', 'Discord attachment download failed.');
     }
 
-    const arrayBuffer = await response.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-
-    if (buffer.byteLength > maxBytes) {
-      throw new DiscordApiError(400, 'ATTACHMENT_TOO_LARGE', `Downloaded attachment ${attachment.filename} (${buffer.byteLength} bytes) exceeds limit of ${maxBytes} bytes.`);
+    const reader = response.body.getReader();
+    const chunks: Uint8Array[] = [];
+    let length = 0;
+    try {
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        length += value.byteLength;
+        if (length > maxBytes) {
+          void reader.cancel().catch(() => {});
+          throw new DiscordApiError(400, 'ATTACHMENT_TOO_LARGE', 'Downloaded attachment exceeds its size limit.');
+        }
+        chunks.push(value);
+      }
+    } finally {
+      reader.releaseLock();
     }
+    const buffer = Buffer.concat(chunks, length);
 
     const sha256 = createHash('sha256').update(buffer).digest('hex');
     const contentText = buffer.toString('utf8');

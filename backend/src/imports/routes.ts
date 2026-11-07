@@ -1,4 +1,4 @@
-import {ownerSession,authSettings,type AuthSettings} from '../security/owner-auth.js';
+import {authorizeOwner,ownerSession,authSettings,type AuthSettings} from '../security/owner-auth.js';
 import {projectImportLink} from './project-linked.js';
 import {bindingAuthorized} from '../jobs/bindings.js';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
@@ -6,7 +6,12 @@ import type { Database } from 'better-sqlite3';
 import { ImportError, importBundle, validateBundle, type ImportBundle } from './service.js';
 import { errorSchema } from '../api/errors.js';
 export function registerImports(app:FastifyInstance,db:Database,settings:AuthSettings=authSettings(db)){
- function requireLinkedAccess(request:FastifyRequest,id:string){const link=projectImportLink(db,id);if(link){const owner=ownerSession(db,request,settings);bindingAuthorized(db,owner.ownerId,link.binding_id);}}
+ const real=Boolean(db.prepare("SELECT 1 FROM schema_migrations WHERE version=1 AND mode='real'").get());
+ function requireLinkedAccess(request:FastifyRequest,id:string){
+  const link=projectImportLink(db,id);
+  if(link){const owner=ownerSession(db,request,settings);bindingAuthorized(db,owner.ownerId,link.binding_id);}
+  else if(real)authorizeOwner(db,ownerSession(db,request,settings),id);
+ }
  function visible(request:FastifyRequest,id:string){try{requireLinkedAccess(request,id);return true;}catch{return false;}}
  const file={type:'object',additionalProperties:false,required:['name','content'],properties:{name:{type:'string',maxLength:200},content:{type:'string',maxLength:524288}}};
  const body={type:'object',additionalProperties:false,required:['proposal'],properties:{proposal:file,evidence:file,summary:file,fingerprint:{type:'string',pattern:'^[a-f0-9]{64}$'}}};

@@ -1,3 +1,7 @@
+import {ApprovalWorkflow} from '../src/approvals/service.js';
+import {gateChecks,type Gate} from '../src/approvals/policy.js';
+import {CommercialLedger} from '../src/commercial/service.js';
+import {onboardAuthorizedProject as onboardProject} from './helpers.js';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {test,type TestContext} from 'node:test';
@@ -6,7 +10,7 @@ import BetterSqlite3 from 'better-sqlite3';
 import {testDatabase} from './helpers.js';
 import {buildApp} from '../src/app.js';
 import {provisionOwner,loginOwner} from '../src/security/owner-auth.js';
-import {onboardProject} from '../src/jobs/bindings.js';
+
 import {ProcessingJobs} from '../src/jobs/service.js';
 import {validateBundle,importBundle,type ImportBundle} from '../src/imports/service.js';
 import {previewProjectImport,confirmProjectImport} from '../src/imports/project-linked.js';
@@ -108,22 +112,81 @@ test('failed linked import rolls back import/link/job/event updates atomically',
  assert.equal(data.jobs.get(data.session,data.job.id).state,'needs_attention');assert.equal(data.jobs.events(data.session,data.job.id).events.length,7);
  for(const table of ['proposal_imports','project_import_links'])assert.equal(data.db.prepare(`SELECT count(*) FROM ${table}`).pluck().get(),0);
 });
+function approvalInput(data:Awaited<ReturnType<typeof fixture>>,gate:Gate){
+ const s=new ApprovalWorkflow(data.db).snapshot(data.session,data.binding.client_project_id),g=s.gates.find(g=>g.id===gate)!;
+ return {gate,subjectHash:g.subjectHash,decision:'approve' as const,checks:[...gateChecks[gate]],reason:'Verified synthetic owner approval.',evidence:['fixture:verified']};
+}
+function prepareWorkflow(data:Awaited<ReturnType<typeof fixture>>,importId:string){
+ const project=data.binding.client_project_id,w=new ApprovalWorkflow(data.db);
+ w.decide(data.session,project,approvalInput(data,'proposal'),'proposal-gate');
+ const review=w.snapshot(data.session,project).review!;
+ const c=new CommercialLedger(data.db);let n=0;
+ const write=(input:Parameters<typeof c.apply>[2])=>c.apply(data.session,project,input,'commercial-stage-'+(++n));
+ const q=write({action:'submit',amountCents:intake.revenueCents,reference:'Submitted exact revision',importId,revisionId:review.revision.id,fingerprint:review.revision.fingerprint}).quote!;
+ write({action:'accept',quoteId:q.id,reference:'Client accepted exact revision'});
+ write({action:'agreement',quoteId:q.id,amountCents:intake.revenueCents,signedOn:new Date().toISOString().slice(0,10),terms:'Synthetic agreed terms',reference:'Signed fixture agreement'});
+ w.decide(data.session,project,approvalInput(data,'commercial'),'commercial-gate');
+ w.decide(data.session,project,approvalInput(data,'financial'),'financial-gate');
+ return approvalInput(data,'activation');
+}
 test('project-linked review preserves client terms and exact revision; concurrent authenticated approval activates only the original project',async t=>{
  const data=await fixture(t),result=await imported(data),review=await ready(data,result.id);
  const altered=changed(data.bundle,p=>p.project.brief='Unauthorized change to immutable intake');
  assert.equal((await data.app.inject({method:'POST',url:review.path+'/revisions',headers:data.headers,payload:{revisionId:review.body.revisionId,fingerprint:review.body.fingerprint,proposal:JSON.parse(altered.proposal.content),reason:'Changed original intake'}})).statusCode,409);
  assert.equal((await data.app.inject({method:'POST',url:review.path+'/approve',headers:data.headers,payload:{...review.body,revisionId:review.root.id,fingerprint:review.root.fingerprint}})).statusCode,409);
- const workers=await Promise.all([1,2].map(async()=>{const worker=new Worker(new URL('./owner-http-worker.js',import.meta.url),{workerData:{config:data.config,path:review.path,headers:data.headers,body:review.body}});const exit=new Promise<void>(resolve=>worker.once('exit',()=>resolve()));await new Promise<void>((resolve,reject)=>{worker.once('message',()=>resolve());worker.once('error',reject);});const response=new Promise<any>((resolve,reject)=>{worker.once('message',resolve);worker.once('error',reject);});return {worker,exit,response};}));for(const worker of workers)worker.worker.postMessage('go');const results=await Promise.all(workers.map(w=>w.response));await Promise.all(workers.map(w=>w.exit));assert.ok(results.every(r=>r.status===200));assert.equal(results[0].id,results[1].id);
- assert.equal(data.db.prepare('SELECT count(*) FROM client_projects').pluck().get(),1);assert.equal(data.db.prepare('SELECT count(*) FROM projects').pluck().get(),1);assert.equal(data.db.prepare('SELECT id FROM projects').pluck().get(),data.binding.client_project_id);
- assert.equal(data.db.prepare('SELECT financial_project_id FROM client_projects').pluck().get(),data.binding.client_project_id);assert.equal(data.db.prepare('SELECT financial_project_id FROM owner_review_decisions').pluck().get(),data.binding.client_project_id);
- assert.equal(data.db.prepare('SELECT count(*) FROM workstream_allocations').pluck().get(),4);assert.equal(data.db.prepare("SELECT count(*) FROM authenticated_review_events WHERE action='decision'").pluck().get(),1);
- assert.equal((await data.app.inject({method:'POST',url:review.path+'/approve',headers:data.headers,payload:review.body})).statusCode,200);
+ const finalInput=prepareWorkflow(data,result.id);
+ const path='/v1/client-projects/'+data.binding.client_project_id+'/approval-workflow/decisions';
+ const calls=await Promise.all([1,2].map(()=>data.app.inject({method:'POST',url:path,headers:{...data.headers,'idempotency-key':'concurrent-final'},payload:finalInput})));
+ assert.ok(calls.every(r=>r.statusCode===200),calls.map(r=>r.body).join(' '));
+ assert.equal(data.db.prepare('SELECT count(*) FROM projects').pluck().get(),1);
+ assert.equal(data.db.prepare('SELECT id FROM projects').pluck().get(),data.binding.client_project_id);
+ assert.equal(data.db.prepare('SELECT count(*) FROM workstream_allocations').pluck().get(),4);
+ const finalState=new ApprovalWorkflow(data.db).snapshot(data.session,data.binding.client_project_id);
+ assert.ok(finalState.gates.every(g=>g.status==='approved'));
+ const finalReport=(new ApprovalWorkflow(data.db).reports(data.session,data.binding.client_project_id) as {snapshot:string;fingerprint:string}[])[0]!;
+ const finalSnapshot=JSON.parse(finalReport.snapshot);
+ assert.equal(finalReport.fingerprint,review.body.fingerprint);
+ assert.equal(finalSnapshot.active,true);
+ assert.equal(finalSnapshot.financial.proposal.status,'approved');
+ assert.equal(finalSnapshot.financial.delivery.budget,finalSnapshot.review.revision.proposal.proposal.budgetCents);
+ assert.equal(finalSnapshot.financial.allocations.length,4);
+ assert.ok(finalSnapshot.gates.every((g:{status:string})=>g.status==='approved'));
+ assert.throws(()=>data.db.exec("DELETE FROM approval_reports"),/retain/);
+ const commercialLedger=new CommercialLedger(data.db),today=new Date().toISOString().slice(0,10);
+ assert.equal(commercialLedger.apply(data.session,data.binding.client_project_id,{action:'delivery_start',reference:'Authorized delivery kickoff'},'kickoff').stage,'delivery');
+ assert.throws(()=>commercialLedger.apply(data.session,data.binding.client_project_id,{action:'submit',amountCents:intake.revenueCents,reference:'Attempted mutation after activation'},'post-activation-quote'),{code:'ACTIVE_DELIVERY_AMENDMENTS_DEFERRED'});
+ commercialLedger.apply(data.session,data.binding.client_project_id,{action:'receipt',amountCents:intake.revenueCents,date:today,method:'Fixture receipt',reference:'fixture:final-payment'},'receipt');
+ commercialLedger.apply(data.session,data.binding.client_project_id,{action:'expense',amountCents:13000,date:today,method:'Fixture expense',reference:'fixture:expense'},'expense');
+ const completed=commercialLedger.apply(data.session,data.binding.client_project_id,{action:'complete',reference:'Authorized delivery completion'},'complete');
+ assert.equal(completed.recordedMarginCents,intake.revenueCents-13000);
+
+
+ assert.equal(data.db.prepare("SELECT count(*) FROM authenticated_review_events WHERE action='decision'").pluck().get(),1);
+ assert.equal((await data.app.inject({method:'POST',url:review.path+'/approve',headers:data.headers,payload:review.body})).statusCode,409);
  for(const table of ['ledger_entries','reservations','payment_approvals'])assert.equal(data.db.prepare(`SELECT count(*) FROM ${table}`).pluck().get(),0);
+});
+test('a new evidence note invalidates prepared financial and activation approval without altering prior decisions',async t=>{
+ const data=await fixture(t),result=await imported(data),review=await ready(data,result.id);
+ const finalInput=prepareWorkflow(data,result.id);
+ const previous=data.db.prepare('SELECT * FROM approval_decisions ORDER BY rowid').all();
+ const note=await data.app.inject({method:'POST',url:review.path+'/notes',headers:data.headers,
+  payload:{revisionId:review.body.revisionId,fingerprint:review.body.fingerprint,gate:'capacity',answer:'New scheduling conflict discovered',reference:'fixture:new-capacity-evidence'}});
+ assert.equal(note.statusCode,200);
+ const workflow=new ApprovalWorkflow(data.db).snapshot(data.session,data.binding.client_project_id);
+ assert.equal(workflow.gates[3]!.status,'blocked');
+ assert.ok(workflow.gates[4]!.blockers.length);
+ const request=await data.app.inject({method:'POST',url:'/v1/client-projects/'+data.binding.client_project_id+'/approval-workflow/decisions',
+  headers:{...data.headers,'idempotency-key':'stale-final'},payload:finalInput});
+ assert.equal(request.statusCode,409);
+ assert.equal(request.json().error.code,'STALE_APPROVAL_SUBJECT');
+ assert.deepEqual(data.db.prepare('SELECT * FROM approval_decisions ORDER BY rowid').all(),previous);
+ assert.equal(data.db.prepare('SELECT count(*) FROM projects').pluck().get(),0);
 });
 test('failed linked approval rolls back financial activation and retains the single original draft',async t=>{
  const data=await fixture(t),result=await imported(data),review=await ready(data,result.id);
+ const finalInput=prepareWorkflow(data,result.id);
  data.db.exec("CREATE TRIGGER fail_linked_decision BEFORE INSERT ON owner_review_decisions BEGIN SELECT RAISE(ABORT,'synthetic failure'); END;");
- assert.notEqual((await data.app.inject({method:'POST',url:review.path+'/approve',headers:data.headers,payload:review.body})).statusCode,200);
+ assert.notEqual((await data.app.inject({method:'POST',url:'/v1/client-projects/'+data.binding.client_project_id+'/approval-workflow/decisions',headers:{...data.headers,'idempotency-key':'rollback-final'},payload:finalInput})).statusCode,200);
  assert.equal(data.db.prepare('SELECT count(*) FROM client_projects').pluck().get(),1);assert.equal(data.db.prepare('SELECT status FROM client_projects').pluck().get(),'draft');
  for(const table of ['projects','delivery_proposals','owner_review_decisions','workstream_allocations'])assert.equal(data.db.prepare(`SELECT count(*) FROM ${table}`).pluck().get(),0);
 });

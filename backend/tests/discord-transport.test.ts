@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import { createHash } from 'node:crypto';
 import { testDatabase } from './helpers.js';
 import { provisionOwner, loginOwner } from '../src/security/owner-auth.js';
-import { onboardProject } from '../src/jobs/bindings.js';
+import {onboardAuthorizedProject as onboardProject} from './helpers.js';
 import { ProcessingJobs } from '../src/jobs/service.js';
 import {
   hasDiscordConfig,
@@ -141,6 +141,28 @@ test('Discord REST client attachment download enforces domain, size limit and SH
   assert.equal(downloaded.id, 'att-1');
   assert.equal(downloaded.contentText, payload);
   assert.equal(downloaded.sha256, expectedHash);
+});
+
+test('Discord attachment fetch requires HTTPS, disables redirects, sets a timeout and bounds streamed bytes', async () => {
+  const config = readDiscordConfig({ DISCORD_BOT_TOKEN: 'disposable-offline-attachment-fixture' });
+  let calls = 0;
+  let cancelled = false;
+  const client = new DiscordRestClient({ config, fetchFn: async (_url, init) => {
+    calls++;
+    assert.equal(init?.redirect, 'error');
+    assert.ok(init.signal instanceof AbortSignal);
+    return new Response(new ReadableStream({
+      start(controller) { controller.enqueue(new Uint8Array(32)); },
+      cancel() { cancelled = true; },
+    }));
+  }});
+  const file = { id:'fixture',filename:'proposal.json',size:4,url:'https://cdn.discordapp.com/attachments/1/2/proposal.json' };
+  for (const url of ['http://cdn.discordapp.com/a', 'https://user@cdn.discordapp.com/a', 'https://cdn.discordapp.com:444/a']) {
+    await assert.rejects(client.fetchAttachment({...file,url},8), (error: any) => error.code === 'UNTRUSTED_ATTACHMENT_URL');
+  }
+  assert.equal(calls,0);
+  await assert.rejects(client.fetchAttachment(file,8), (error: any) => error.code === 'ATTACHMENT_TOO_LARGE');
+  assert.equal(cancelled,true);
 });
 
 test('Sender classification accurately identifies coordinator, specialists and other participants', () => {

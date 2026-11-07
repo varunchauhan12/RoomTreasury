@@ -3,7 +3,7 @@ import { test, type TestContext } from 'node:test';
 import { EventEmitter } from 'node:events';
 import { testDatabase } from './helpers.js';
 import { provisionOwner, loginOwner } from '../src/security/owner-auth.js';
-import { onboardProject } from '../src/jobs/bindings.js';
+import {onboardAuthorizedProject as onboardProject} from './helpers.js';
 import { ProcessingJobs } from '../src/jobs/service.js';
 import { readDiscordConfig } from '../src/discord/config.js';
 import { DiscordRestClient, type DiscordMessage } from '../src/discord/client.js';

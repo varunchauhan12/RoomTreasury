@@ -29,7 +29,7 @@ export function ownerSession(db:Database,request:FastifyRequest,settings:AuthSet
  if(!row||row.revoked_at!==null||row.disabled_at!==null||row.expires_at<=now||row.last_seen+900000<=now)throw new AuthError(401,'OWNER_LOGIN_REQUIRED');
  const expected=csrf(token);
  if(mutation){checkOrigin(request,settings);const supplied=request.headers['x-csrf-token'];if(typeof supplied!=='string'||supplied.length!==expected.length||!timingSafeEqual(Buffer.from(supplied),Buffer.from(expected)))throw new AuthError(403,'CSRF_REJECTED');}
- db.prepare('UPDATE human_sessions SET last_seen=? WHERE digest=?').run(now,row.digest);
+ if(mutation||request.method!=='GET'||request.headers['x-roomtreasury-passive']!=='1')db.prepare('UPDATE human_sessions SET last_seen=? WHERE digest=?').run(now,row.digest);
  return Object.freeze({ownerId:row.owner_id,digest:row.digest,csrf:expected,createdAt:row.created_at});
 }
 export function authorizeOwner(db:Database,session:OwnerSession,importId:string):string {

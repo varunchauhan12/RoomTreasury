@@ -1,3 +1,5 @@
+import {ApprovalWorkflow} from '../approvals/service.js';
+import {authenticationBlockers} from './auth-policy.js';
 import {projectImportLink} from '../imports/project-linked.js';
 import {bindingAuthorized} from '../jobs/bindings.js';
 import type {FastifyInstance,FastifyRequest} from 'fastify';
@@ -14,15 +16,25 @@ export function registerReview(app:FastifyInstance,db:Database,settings:AuthSett
  const binding={revisionId:{type:'string',minLength:1,maxLength:100},fingerprint:{type:'string',pattern:'^[a-f0-9]{64}$'}};
  const string={type:'string',minLength:1,maxLength:8000};
  function actor(request:FastifyRequest,id:string,mutation:boolean){const session=ownerSession(db,request,settings,mutation);const taskId=authorizeOwner(db,session,id);const link=projectImportLink(db,id);if(link)bindingAuthorized(db,session.ownerId,link.binding_id);return {session,actor:Object.freeze({kind:'human' as const,id:session.ownerId,role:'owner' as const,projectId:taskId})};}
- function authenticationBlockers(id:string){const snapshot=new OwnerReview(db).snapshot(id);const verifications=db.prepare(`SELECT v.gate FROM owner_review_verifications v JOIN authenticated_review_events a
- ON a.revision_id=v.revision_id AND a.fingerprint=v.fingerprint AND a.action='verify' AND a.target_id=v.note_id AND a.gate=v.gate AND a.owner_id=v.owner_id
- JOIN human_owners o ON o.id=a.owner_id JOIN human_owner_scopes s ON s.owner_id=o.id
- JOIN proposal_imports p ON p.id=a.import_id AND p.task_id=s.task_id
- WHERE v.revision_id=? AND v.fingerprint=? AND o.disabled_at IS NULL AND s.revoked_at IS NULL`).pluck().all(snapshot.revision.id,snapshot.revision.fingerprint) as string[];
- return Object.keys(gates).filter(g=>!verifications.includes(g)).map(g=>'Authenticated owner verification required: '+g);}
- function state(id:string){const snapshot=new OwnerReview(db).snapshot(id);const authentication=authenticationBlockers(id);return {...snapshot,blockers:[...snapshot.blockers,...authentication],status:snapshot.decision?snapshot.status:snapshot.blockers.length||authentication.length?'BLOCKED':'ELIGIBLE_FOR_AUTHENTICATED_OWNER_APPROVAL',ownerHttpApprovalAvailable:true,authBasis:'authenticated_owner_session',authenticationBlockers:authentication};}
+ function state(id:string){const snapshot=new OwnerReview(db).snapshot(id);const authentication=authenticationBlockers(db,id);return {...snapshot,blockers:[...snapshot.blockers,...authentication],status:snapshot.decision?snapshot.status:snapshot.blockers.length||authentication.length?'BLOCKED':'ELIGIBLE_FOR_AUTHENTICATED_OWNER_APPROVAL',ownerHttpApprovalAvailable:!projectImportLink(db,id),authBasis:'authenticated_owner_session',authenticationBlockers:authentication};}
  function audit(session:OwnerSession,id:string,revisionId:string,fingerprint:string,action:string,target:string,gate:string|null=null){db.prepare("INSERT INTO authenticated_review_events(owner_id,session_digest,import_id,revision_id,fingerprint,action,target_id,gate,occurred_at,auth_basis) VALUES (?,?,?,?,?,?,?,?,?,'authenticated_owner_session')").run(session.ownerId,session.digest,id,revisionId,fingerprint,action,target,gate,Date.now());}
- app.get<{Params:{id:string}}>('/v1/proposal-imports/:id/review',{schema:{operationId:'getOwnerReview',params,response}},(request,reply)=>{reply.header('Cache-Control','no-store');actor(request,request.params.id,false);return state(request.params.id);});
+ app.get<{Params:{id:string}}>('/v1/proposal-imports/:id/review',{schema:{operationId:'getOwnerReview',params,response}},(request,reply)=>{
+  reply.header('Cache-Control','no-store');
+  const id=request.params.id;
+  actor(request,id,false);
+  return db.transaction(()=>{
+   const review=state(id);
+   const reviewActivity=db.prepare(`
+    SELECT a.id,a.owner_id,a.occurred_at,a.action,a.target_id,r.revision,d.decision
+    FROM authenticated_review_events a
+    JOIN owner_review_revisions r ON r.id=a.revision_id AND r.import_id=a.import_id AND r.fingerprint=a.fingerprint
+    LEFT JOIN owner_review_decisions d ON a.action='decision' AND d.id=a.target_id AND d.revision_id=r.id
+    WHERE a.import_id=? AND (a.action='revise' OR d.id IS NOT NULL)
+    ORDER BY a.occurred_at DESC,a.id DESC
+   `).all(id);
+   return {...review,reviewActivity};
+  })();
+ });
  const definitions={
  notes:{required:['gate','answer','reference'],properties:{gate:{type:'string',enum:Object.keys(gates)},answer:string,reference:string}},
  verify:{required:['noteId','origin','facts'],properties:{noteId:{type:'string',maxLength:100},origin:{type:'string',enum:['client_confirmed','owner_verified_internal']},facts:{type:'object',additionalProperties:false,properties:{rateCentsPerHour:{type:'integer',minimum:1,maximum:1000000000},capacityHours:{type:'number',minimum:1,maximum:100000},paymentTerms:string,policyLimitCents:{type:'integer',minimum:1,maximum:1000000},acceptLowMargin:{type:'boolean'},reason:string}}}},
@@ -37,16 +49,18 @@ export function registerReview(app:FastifyInstance,db:Database,settings:AuthSett
    if(action==='notes'){const note=review.recordNote(id,b.revisionId,b.fingerprint,b.gate as Gate,b.answer,b.reference,owner);audit(session,id,b.revisionId,b.fingerprint,'note',note,b.gate);}
    if(action==='verify'){review.verifyGate(owner,id,b.revisionId,b.fingerprint,b.noteId,b.origin,b.facts);const note=db.prepare('SELECT gate FROM owner_review_notes WHERE id=?').pluck().get(b.noteId) as string;audit(session,id,b.revisionId,b.fingerprint,'verify',b.noteId,note);}
    if(action==='revisions'){const revised=review.revise(owner,id,b.revisionId,b.fingerprint,b.proposal,b.reason);const fp=db.prepare('SELECT fingerprint FROM owner_review_revisions WHERE id=?').pluck().get(revised) as string;audit(session,id,revised,fp,'revise',revised);}
+   if(action==='approve'&&projectImportLink(db,id))throw new AuthError(409,'USE_PROJECT_APPROVAL_WORKFLOW');
    if(action==='approve'||action==='decision'){
     if(Date.now()-session.createdAt>900000)throw new AuthError(401,'RECENT_OWNER_LOGIN_REQUIRED');
     const existing=db.prepare('SELECT id FROM owner_review_decisions WHERE revision_id=? AND fingerprint=?').pluck().get(b.revisionId,b.fingerprint) as string|undefined;
     if(action==='approve'){
-     if(!existing){const blockers=authenticationBlockers(id);if(blockers.length)throw new ImportError(blockers,409);}
+     if(!existing){const blockers=authenticationBlockers(db,id);if(blockers.length)throw new ImportError(blockers,409);}
      else if(!db.prepare("SELECT 1 FROM authenticated_review_events WHERE action='decision' AND target_id=?").get(existing))throw new AuthError(403,'SYNTHETIC_APPROVAL_NOT_AUTHENTICATED');
     }
     const decision=review.decide(owner,id,b.revisionId,b.fingerprint,action==='approve'?'APPROVED_SYNTHETIC_DELIVERY':b.decision) as {id:string};
     if(!existing)audit(session,id,b.revisionId,b.fingerprint,'decision',decision.id);
    }
+   if(action==='revisions'){const link=projectImportLink(db,id);if(link){const b=bindingAuthorized(db,session.ownerId,link.binding_id);new ApprovalWorkflow(db).regenerate(session,b.client_project_id);}}
    return state(id);
   }).immediate();
  });

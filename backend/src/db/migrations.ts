@@ -1,3 +1,5 @@
+import {approvalWorkflowSchema} from './approval-workflow-schema.js';
+import { commercialSchema } from './commercial-schema.js';
 import { artifactRecoverySchema } from './artifact-recovery-schema.js';
 import { discordSchema } from './discord-schema.js';
 import { linkedImportSchema } from './linked-import-schema.js';
@@ -24,7 +26,7 @@ export const migrations: readonly Migration[] = [{
     mode TEXT NOT NULL CHECK (mode IN ('test', 'demo', 'real')),
     applied_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
   ) STRICT;`
-}, { version: 2, name: 'service_identity', sql: serviceSchema }, { version: 3, name: 'synthetic_financial_engine', sql: financialSchema }, { version: 4, name: 'agency_projects_and_allocations', sql: agencySchema }, { version: 5, name: 'ai_estimation_provenance', sql: aiSchema }, { version: 6, name: 'review_only_proposal_imports', sql: importSchema }, { version: 7, name: 'controlled_owner_review', sql: reviewSchema }, { version: 8, name: 'authenticated_owner_sessions', sql: ownerAuthSchema }, { version: 9, name: 'bound_processing_jobs', sql: jobSchema }, { version: 10, name: 'project_linked_proposal_imports', sql: linkedImportSchema }, { version: 11, name: 'discord_transport_and_agent_jobs', sql: discordSchema }, { version: 12, name: 'artifact_recovery_and_originals', sql: artifactRecoverySchema }];
+}, { version: 2, name: 'service_identity', sql: serviceSchema }, { version: 3, name: 'synthetic_financial_engine', sql: financialSchema }, { version: 4, name: 'agency_projects_and_allocations', sql: agencySchema }, { version: 5, name: 'ai_estimation_provenance', sql: aiSchema }, { version: 6, name: 'review_only_proposal_imports', sql: importSchema }, { version: 7, name: 'controlled_owner_review', sql: reviewSchema }, { version: 8, name: 'authenticated_owner_sessions', sql: ownerAuthSchema }, { version: 9, name: 'bound_processing_jobs', sql: jobSchema }, { version: 10, name: 'project_linked_proposal_imports', sql: linkedImportSchema }, { version: 11, name: 'discord_transport_and_agent_jobs', sql: discordSchema }, { version: 12, name: 'artifact_recovery_and_originals', sql: artifactRecoverySchema }, { version: 13, name: 'owner_commercial_ledger', sql: commercialSchema }, {version:14,name:'sequential_owner_approval',sql:approvalWorkflowSchema}];
 export class MigrationError extends Error {
   constructor() { super('Database migration failed; no pending migrations were committed.'); }
 }

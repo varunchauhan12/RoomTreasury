@@ -1,0 +1,50 @@
+import assert from 'node:assert/strict';
+import {test} from 'node:test';
+import {createHash} from 'node:crypto';
+import {testDatabase,onboardAuthorizedProject} from './helpers.js';
+import {provisionOwner,loginOwner} from '../src/security/owner-auth.js';
+import {ProcessingJobs} from '../src/jobs/service.js';
+import {buildApp} from '../src/app.js';
+import {Script} from 'node:vm';
+import {appScript} from '../src/web/app-client.js';
+const base={origin:'http://127.0.0.1:3000',host:'127.0.0.1:3000'};
+
+test('Discord captures and retained downloads require complete owner scope; raw transport fields never leave the API',async t=>{
+ const {db}=testDatabase(t);
+ await provisionOwner(db,'console-owner','Synthetic console password','console-seed');
+ const login=await loginOwner(db,'console-owner','Synthetic console password','fixture');
+ const binding=onboardAuthorizedProject(db,login.session,{clientName:'Console fixture',brief:'Synthetic console intake',revenueCents:100000},'console-project');
+ const jobs=new ProcessingJobs(db),job=jobs.create(login.session,binding.id,'console-job','discord');
+ const contents=['First captured message','ROOMTREASURY_RESULT_READY job='+job.id,'Final captured message'];
+ for(let i=0;i<3;i++)db.prepare(`INSERT INTO discord_messages VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`).run(String(100+i),job.id,'12345678901234567','23456789012345678','fixture-coordinator',1,'coordinator','make-proposal-agent',contents[i],JSON.stringify({guild_id:'34567890123456789',private:'raw payload not returned',attachments:[{url:'https://cdn.discordapp.com/private-original'}]}),1000,2000+i);
+ const content='{"synthetic":true}';
+ db.prepare('INSERT INTO discord_attachments VALUES (?,?,?,?,?,?,?,?,?)').run('artifact','102',job.id,'proposal.json',Buffer.byteLength(content),createHash('sha256').update(content).digest('hex'),content,'https://cdn.discordapp.com/private-original',2000);
+ const app=await buildApp(db);t.after(()=>app.close());
+ const cookie='rt_demo_owner='+login.token,headers={...base,cookie,'x-roomtreasury-passive':'1'};
+ const path='/v1/processing-jobs/'+job.id+'/discord-messages';
+ assert.equal((await app.inject(path)).statusCode,401);
+ await provisionOwner(db,'other-owner','Synthetic unrelated owner password','another-scope');
+ const other=await loginOwner(db,'other-owner','Synthetic unrelated owner password','other-fixture');
+ assert.equal((await app.inject({url:path,headers:{...base,cookie:'rt_demo_owner='+other.token}})).statusCode,403);
+ const before=db.prepare('SELECT last_seen FROM human_sessions WHERE digest=?').pluck().get(login.session.digest);
+ const response=await app.inject({url:path+'?limit=2',headers});assert.equal(response.statusCode,200);
+ const data=response.json();assert.deepEqual(data.messages.map((m:any)=>m.id),['101','102']);assert.equal(data.nextBefore,'101');assert.equal(data.messages[0].completionMarker,true);assert.equal(data.messages[0].senderVerified,false);assert.equal(data.source,'persisted_discord_capture');assert.equal(data.channel.guildId,'34567890123456789');assert.equal(data.messages[1].attachments[0].filename,'proposal.json');
+ assert.ok(!response.body.includes('private-original'));assert.ok(!response.body.includes('raw payload not returned'));assert.ok(!response.body.includes(login.token));
+ assert.equal(db.prepare('SELECT last_seen FROM human_sessions WHERE digest=?').pluck().get(login.session.digest),before);
+ const earlier=await app.inject({url:path+'?limit=2&before='+data.nextBefore,headers});assert.deepEqual(earlier.json().messages.map((m:any)=>m.id),['100']);
+ const download='/v1/processing-jobs/'+job.id+'/discord-attachments/artifact';
+ assert.equal((await app.inject(download)).statusCode,401);
+ assert.equal((await app.inject({url:download,headers:{...base,cookie:'rt_demo_owner='+other.token}})).statusCode,403);
+ const artifact=await app.inject({url:download,headers});assert.equal(artifact.statusCode,200);assert.equal(artifact.body,content);assert.match(artifact.headers['content-disposition'] as string,/attachment/);assert.equal(artifact.headers['cache-control'],'no-store');
+ assert.equal((await app.inject({url:download.replace('artifact','missing'),headers})).statusCode,404);
+ assert.equal((await app.inject({method:'POST',url:path,headers,payload:{actor:'owner'}})).statusCode,404);
+ db.prepare('UPDATE human_owner_scopes SET revoked_at=? WHERE owner_id=? AND task_id=?').run(Date.now(),login.session.ownerId,binding.task_id);
+ assert.equal((await app.inject({url:path,headers})).statusCode,403);
+ new Script(appScript);
+});
+
+test('owner sign-in suggestions are absent from test and production page configuration',async t=>{
+ const {db}=testDatabase(t),app=await buildApp(db);t.after(()=>app.close());
+ const page=await app.inject('/owner-login');assert.match(page.body,/data-demo="false"/);assert.ok(!page.body.includes('demo123'));
+ new Script((await app.inject('/owner-login.js')).body);
+});
