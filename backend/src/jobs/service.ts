@@ -6,6 +6,7 @@ import {activeSession,bindingAuthorized,hash,key,mockMode} from './bindings.js';
 import {DispatchFailure,MockTransport,type DispatchRequest,type JobTransport,type TransportEvent} from './transport.js';
 import {DiscordTransport} from '../discord/transport.js';
 import {readDiscordConfig} from '../discord/config.js';
+import {safeDispatchDiagnostic} from '../discord/client.js';
 
 export type JobState='queued'|'dispatching'|'dispatched'|'running'|'collecting'|'validating'|'imported'|'dispatch_uncertain'|'needs_attention'|'failed'|'cancelled';
 export interface Job {
@@ -82,6 +83,10 @@ export class ProcessingJobs {
    return expired.length;
   }).immediate();
  }
+ renewLease(id: string, lease: string, durationMs = 60000): void {
+  this.db.prepare('UPDATE processing_jobs SET lease_until=? WHERE id=? AND lease_owner=? AND completed_at IS NULL')
+    .run(Date.now() + durationMs, id, lease);
+ }
  claim(transport?:'mock'|'discord'):Job|null {
   return this.db.transaction(()=>{
    if(transport!=='discord')mockMode(this.db);
@@ -115,31 +120,40 @@ export class ProcessingJobs {
   const lease=job.lease_owner!;
   const snapshot=JSON.parse(job.intake_snapshot);
   const request:DispatchRequest={jobId:job.id,correlationId:job.correlation_id,intakeHash:job.intake_hash,projectId:snapshot.projectId,taskId:snapshot.taskId,clientName:snapshot.clientName,brief:snapshot.brief,revenueCents:snapshot.revenueCents,currency:snapshot.currency,intakeRevision:job.intake_revision};
+  const heartbeat=setInterval(()=>{
+   try{this.renewLease(job.id,lease,60000);}catch{}
+  },10000);
+  heartbeat.unref();
   try{
-   const acknowledgement=await selectedTransport.dispatch(request);
-   if(selectedTransport.type!==job.transport||acknowledgement.correlationId!==job.correlation_id)throw new DispatchFailure(false);
-   this.apply(job.id,lease,'dispatch-ack','dispatched');
-  }catch(error){
-   const failureCode=job.transport==='discord'?'discord_dispatch_failed':'mock_dispatch_failed';
-   this.finishFailure(job.id,lease,error instanceof DispatchFailure&&error.certain?'failed':'dispatch_uncertain',error instanceof DispatchFailure&&error.certain?failureCode:'dispatch_outcome_unknown');return true;
+   try{
+    const acknowledgement=await selectedTransport.dispatch(request);
+    if(selectedTransport.type!==job.transport||acknowledgement.correlationId!==job.correlation_id)throw new DispatchFailure(false);
+    this.apply(job.id,lease,'dispatch-ack','dispatched');
+   }catch(error){
+    const failureCode=job.transport==='discord'?'discord_dispatch_failed':'mock_dispatch_failed';
+    const diagnostic=error instanceof DispatchFailure?safeDispatchDiagnostic(error.diagnostic):null;
+    this.finishFailure(job.id,lease,error instanceof DispatchFailure&&error.certain?'failed':'dispatch_uncertain',error instanceof DispatchFailure&&error.certain?failureCode:'dispatch_outcome_unknown',diagnostic);return true;
+   }
+   try{for await(const event of selectedTransport.events(request)){
+    const typed:TransportEvent=event;
+    const current=this.row(job.id);
+    if(current.state==='imported')continue;
+    this.apply(job.id,lease,typed.key,typed.state,typed.code??null,typed.diagnostic??null);
+   }
+    const latest=this.row(job.id);if(!terminal.has(latest.state))this.finishFailure(job.id,lease,'needs_attention','worker_interrupted');
+   }catch{this.finishFailure(job.id,lease,'needs_attention','worker_interrupted');}
+   return true;
+  }finally{
+   clearInterval(heartbeat);
   }
-  try{for await(const event of selectedTransport.events(request)){
-   const typed:TransportEvent=event;
-   const current=this.row(job.id);
-   if(current.state==='imported')continue;
-   this.apply(job.id,lease,typed.key,typed.state,typed.code??null,typed.diagnostic??null);
-  }
-   const latest=this.row(job.id);if(!terminal.has(latest.state))this.finishFailure(job.id,lease,'needs_attention','worker_interrupted');
-  }catch{this.finishFailure(job.id,lease,'needs_attention','worker_interrupted');}
-  return true;
  }
- private finishFailure(id:string,lease:string,state:JobState,code:string){
+ private finishFailure(id:string,lease:string,state:JobState,code:string,diagnostic:string|null=null){
   this.db.transaction(()=>{
    const job=this.row(id);if(terminal.has(job.state)||job.state==='dispatch_uncertain'||job.lease_owner!==lease||job.lease_until===null||job.lease_until<=Date.now())return;
    let permitted=true;try{bindingAuthorized(this.db,job.submitting_owner_id,job.binding_id);}catch{permitted=false;}
-   this.transition(job,permitted?state:'failed','worker-failure',permitted?code:'owner_access_revoked');
+   this.transition(job,permitted?state:'failed','worker-failure',permitted?code:'owner_access_revoked',undefined,permitted?diagnostic:null);
   }).immediate();
  }
 }
-// Public read model excludes internal lease tokens and diagnostics.
-export function jobView(job:Job){const {lease_owner:_owner,lease_until:_until,diagnostic:_diagnostic,...view}=job;return view;}
+// Public read model excludes lease tokens and raw diagnostics; only allowlisted dispatch metadata is exposed.
+export function jobView(job:Job){const {lease_owner:_owner,lease_until:_until,diagnostic:_diagnostic,...view}=job;const diagnostic=safeDispatchDiagnostic(_diagnostic);return diagnostic?{...view,dispatch_diagnostic:diagnostic}:view;}

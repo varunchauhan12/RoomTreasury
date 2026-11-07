@@ -53,10 +53,12 @@ export class OwnerReview {
   if(p.status!=='READY_FOR_OWNER_REVIEW')blockers.push('Proposal status blocks approval: '+p.status);
   if(p.blockingReviews.length)blockers.push(...p.blockingReviews.map((s:string)=>'Proposal blocker: '+s));
   if(p.ownerDecisionRecommendation.recommendation!=='SEEK_OWNER_REVIEW')blockers.push('Owner recommendation still defers or rejects delivery approval.');
-  const margin=p.project.agreedRevenueCents-p.proposal.budgetCents;
-  const marginPercent=100*margin/p.project.agreedRevenueCents;
+  if(p.project.agreedRevenueCents===null||p.project.agreedRevenueCents===undefined)blockers.push('Client agreed revenue is unconfirmed. Reconcile agreed revenue before owner review.');
+  const effectiveRevenue = p.project.agreedRevenueCents ?? p.project.proposedRevenueCents ?? 0;
+  const margin=effectiveRevenue-p.proposal.budgetCents;
+  const marginPercent=effectiveRevenue>0?100*margin/effectiveRevenue:0;
   if(marginPercent<15&&!verifications.some(v=>v.gate==='margin_review'))blockers.push('Explicit financial review required: low or negative projected margin.');
-  if(p.proposal.budgetCents>1000000||p.project.agreedRevenueCents>1000000)blockers.push('Local review policy cap is 1,000,000 cents for revenue and delivery budget.');
+  if(p.proposal.budgetCents>1000000||effectiveRevenue>1000000)blockers.push('Local review policy cap is 1,000,000 cents for revenue and delivery budget.');
   const latestImport=this.db.prepare('SELECT id FROM proposal_imports WHERE task_id=? ORDER BY revision DESC LIMIT 1').pluck().get(this.original(importId).task_id);if(latestImport!==importId)blockers.push('A newer imported proposal exists.');
   return {projectLink:link?{projectId:bound!.client_project_id,jobId:link.job_id,intakeRevision:link.intake_revision}:null,revision:{...revision,proposal:p},history:revisions.length?revisions:[root],notes,verifications,decision:decision??null,gates,blockers,status:decision?.decision??(blockers.length?'BLOCKED':'ELIGIBLE_FOR_TRUSTED_OWNER_REVIEW'),projectedGrossMarginCents:margin,projectedGrossMarginPercent:marginPercent,ownerHttpApprovalAvailable:false,authBasis:'trusted_domain_only_no_human_authentication',unresolvedQuestions:p.unresolvedQuestions};
  })();}

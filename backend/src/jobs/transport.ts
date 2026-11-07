@@ -21,7 +21,7 @@ export interface JobTransport {
   dispatch(request: DispatchRequest): Promise<{ correlationId: string; messageId?: string }>;
   events(request: DispatchRequest): AsyncIterable<TransportEvent>;
 }
-export class DispatchFailure extends Error { constructor(readonly certain: boolean, message = 'Dispatch failed.') { super(message); } }
+export class DispatchFailure extends Error { constructor(readonly certain: boolean, message = 'Dispatch failed.', readonly diagnostic: string | null = null) { super(message); } }
 export type MockScenario='success'|'dispatch_failure'|'uncertain'|'execution_failure'|'duplicate';
 // No network, generated artifacts, proposal imports or financial operations.
 export class MockTransport implements JobTransport {

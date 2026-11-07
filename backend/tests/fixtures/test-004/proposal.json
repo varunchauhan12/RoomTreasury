@@ -1,0 +1,1289 @@
+{
+  "taskId": "RT-INSTRUCTION-TEST-004",
+  "currency": "USD",
+  "status": "NEEDS_CLIENT_CLARIFICATION",
+  "client": {
+    "name": "PixelCraft Studio"
+  },
+  "project": {
+    "name": "Business Landing Page",
+    "brief": "Five responsive pages:Home,About,Services,Portfolio,Contact; contact form with email notifications; portfolio displaying6 projects; basic SEO/performance optimization. Client supplies logo and written content. No CMS requirement specified. Hosting/domain costs excluded from proposed150000 USD-cent price. Requested deadline15 business days; no start trigger/calendar dates.",
+    "agreedRevenueCents": null,
+    "deadline": null,
+    "targetDurationBusinessDays": 15,
+    "proposedRevenueCents": 150000,
+    "revenueStatus": "PROPOSED_NOT_AGREED_OR_RECEIVED"
+  },
+  "proposal": {
+    "budgetCents": 154560,
+    "provenance": "switch_agent",
+    "explanation": "Specialist-derived provisional estimate: 46h x 2800 cents/hour = 128800 base plus 25760 contingency = 154560. All cost/rate/capacity assumptions unverified. Baseline exceeds proposed price by 4560 cents; re-scope or reprice before approval.",
+    "assumptions": [
+      {
+        "assumptionId": "RT-INSTRUCTION-TEST-004-A1",
+        "description": "One Portfolio listing with 6 supplied standardized project cards; separate detail pages are not included in the planning model.",
+        "status": "UNVERIFIED_PLANNING_ASSUMPTION",
+        "verificationRequired": "Client architecture confirmation."
+      },
+      {
+        "assumptionId": "RT-INSTRUCTION-TEST-004-A2",
+        "description": "Reusable templates, one language and no CMS, migration, custom integration or content/media production in baseline. No CMS request does not establish an approved exclusion.",
+        "status": "UNVERIFIED_PLANNING_ASSUMPTION",
+        "verificationRequired": "Client scope/platform/editing decision."
+      },
+      {
+        "assumptionId": "RT-INSTRUCTION-TEST-004-A3",
+        "description": "Client will supply logo/written content per brief, but completeness, timing and quality are unverified; six portfolio media/metadata and rights also required.",
+        "status": "UNVERIFIED_PLANNING_ASSUMPTION",
+        "verificationRequired": "Complete approved asset/rights manifest before start."
+      },
+      {
+        "assumptionId": "RT-INSTRUCTION-TEST-004-A4",
+        "description": "One consolidated design revision and one acceptance correction cycle; revision terms are proposed, and defects must still meet contracted criteria.",
+        "status": "UNVERIFIED_PLANNING_ASSUMPTION",
+        "verificationRequired": "Client accepts revision, defect and change process."
+      },
+      {
+        "assumptionId": "RT-INSTRUCTION-TEST-004-A5",
+        "description": "Providers/access ready before build; external-service prices and billing owners are unknown, not assumed client-funded.",
+        "status": "UNVERIFIED_PLANNING_ASSUMPTION",
+        "verificationRequired": "Provider, billing, access, privacy and retention decisions."
+      },
+      {
+        "assumptionId": "RT-INSTRUCTION-TEST-004-A6",
+        "description": "46 planning hours at 2800 USD cents/hour with 20% contingency; actual rates and capacity unverified.",
+        "status": "UNVERIFIED_PLANNING_ASSUMPTION",
+        "verificationRequired": "Owner validates actual costs and role capacity."
+      },
+      {
+        "assumptionId": "RT-INSTRUCTION-TEST-004-A7",
+        "description": "15-business-day plan is conditional on approved scope, ready assets/access, booked capacity across handoffs and proposed client feedback within one business day. No calendar start/end date established.",
+        "status": "UNVERIFIED_PLANNING_ASSUMPTION",
+        "verificationRequired": "Client/owner confirm start trigger, review windows and dates."
+      },
+      {
+        "assumptionId": "RT-INSTRUCTION-TEST-004-A8",
+        "description": "Basic SEO/performance is a checklist and documented measurement/remediation process, not a score, ranking, SLA or certification guarantee.",
+        "status": "UNVERIFIED_PLANNING_ASSUMPTION",
+        "verificationRequired": "Client approves test matrix/protocol and any additional targets."
+      }
+    ],
+    "risks": [
+      "RT-INSTRUCTION-TEST-004-K1",
+      "RT-INSTRUCTION-TEST-004-K2",
+      "RT-INSTRUCTION-TEST-004-K3",
+      "RT-INSTRUCTION-TEST-004-K4",
+      "RT-INSTRUCTION-TEST-004-K5",
+      "RT-INSTRUCTION-TEST-004-K6",
+      "RT-INSTRUCTION-TEST-004-K7",
+      "RT-INSTRUCTION-TEST-004-K8",
+      "RT-INSTRUCTION-TEST-004-K9",
+      "RT-INSTRUCTION-TEST-004-K10",
+      "RT-INSTRUCTION-TEST-004-K11"
+    ],
+    "allocations": [
+      {
+        "workstream": "Research",
+        "limitCents": 16800,
+        "baseCostCents": 14000,
+        "contingencyCents": 2800,
+        "estimatedEffortHours": 5,
+        "effortRangeHours": {
+          "min": 4,
+          "max": 6
+        },
+        "explanation": "Unverified planning rate 2800 USD cents/hour; 20% contingency included, separately tracked. Proposed limit, not reserved funds or authority.",
+        "relatedTasks": [
+          "RT-INSTRUCTION-TEST-004-R1",
+          "RT-INSTRUCTION-TEST-004-R2",
+          "RT-INSTRUCTION-TEST-004-R3",
+          "RT-INSTRUCTION-TEST-004-R4",
+          "RT-INSTRUCTION-TEST-004-R5"
+        ]
+      },
+      {
+        "workstream": "Design",
+        "limitCents": 33600,
+        "baseCostCents": 28000,
+        "contingencyCents": 5600,
+        "estimatedEffortHours": 10,
+        "effortRangeHours": {
+          "min": 8,
+          "max": 12
+        },
+        "explanation": "Unverified planning rate 2800 USD cents/hour; 20% contingency included, separately tracked. Proposed limit, not reserved funds or authority.",
+        "relatedTasks": [
+          "RT-INSTRUCTION-TEST-004-D1",
+          "RT-INSTRUCTION-TEST-004-D2",
+          "RT-INSTRUCTION-TEST-004-D3",
+          "RT-INSTRUCTION-TEST-004-D4",
+          "RT-INSTRUCTION-TEST-004-D5",
+          "RT-INSTRUCTION-TEST-004-D6"
+        ]
+      },
+      {
+        "workstream": "Development",
+        "limitCents": 77280,
+        "baseCostCents": 64400,
+        "contingencyCents": 12880,
+        "estimatedEffortHours": 23,
+        "effortRangeHours": {
+          "min": 19,
+          "max": 28
+        },
+        "explanation": "Unverified planning rate 2800 USD cents/hour; 20% contingency included, separately tracked. Proposed limit, not reserved funds or authority.",
+        "relatedTasks": [
+          "RT-INSTRUCTION-TEST-004-DEV1",
+          "RT-INSTRUCTION-TEST-004-DEV2",
+          "RT-INSTRUCTION-TEST-004-DEV3",
+          "RT-INSTRUCTION-TEST-004-DEV4",
+          "RT-INSTRUCTION-TEST-004-DEV5",
+          "RT-INSTRUCTION-TEST-004-DEV6",
+          "RT-INSTRUCTION-TEST-004-DEV7",
+          "RT-INSTRUCTION-TEST-004-DEV8"
+        ]
+      },
+      {
+        "workstream": "QA",
+        "limitCents": 26880,
+        "baseCostCents": 22400,
+        "contingencyCents": 4480,
+        "estimatedEffortHours": 8,
+        "effortRangeHours": {
+          "min": 6,
+          "max": 10
+        },
+        "explanation": "Unverified planning rate 2800 USD cents/hour; 20% contingency included, separately tracked. Proposed limit, not reserved funds or authority.",
+        "relatedTasks": [
+          "RT-INSTRUCTION-TEST-004-Q1",
+          "RT-INSTRUCTION-TEST-004-Q2",
+          "RT-INSTRUCTION-TEST-004-Q3",
+          "RT-INSTRUCTION-TEST-004-Q4",
+          "RT-INSTRUCTION-TEST-004-Q5",
+          "RT-INSTRUCTION-TEST-004-Q6",
+          "RT-INSTRUCTION-TEST-004-Q7",
+          "RT-INSTRUCTION-TEST-004-Q8",
+          "RT-INSTRUCTION-TEST-004-Q9"
+        ]
+      }
+    ],
+    "contingencyPolicy": "25760 cents included within the four limits, not additional. Track base/reserve separately; any eventual draw/transfer requires documented justification and owner authority.",
+    "externalExpenses": {
+      "totalCents": null,
+      "status": "UNPRICED_EXCLUDED_FROM_INTERNAL_MODEL",
+      "hostingDomainTreatment": "Hosting/domain costs explicitly excluded from proposed price; payer/provider/access unknown. Ready-path deployment labor included; procurement/DNS/provider remediation excluded from base model.",
+      "otherItems": [
+        "Form/email/spam",
+        "Media/CDN/licensing",
+        "Premium templates/plugins",
+        "Privacy/consent/analytics",
+        "Maintenance/support"
+      ],
+      "billingOwner": "UNCONFIRMED"
+    }
+  },
+  "statementOfWork": {
+    "projectOverview": {
+      "client": "PixelCraft Studio",
+      "project": "Business Landing Page",
+      "status": "DRAFT_FOR_SCOPE_AND_COMMERCIAL_REVIEW_NOT_ACCEPTED_CONTRACT"
+    },
+    "objective": "Present PixelCraft Studio's services and portfolio clearly and enable prospects to submit enquiries.",
+    "scope": [
+      "Five responsive pages: Home, About, Services, Portfolio and Contact.",
+      "Planning interpretation: one portfolio listing containing 6 supplied project cards; detail pages/CMS remain open client decisions.",
+      "Contact form with agreed fields, validation, spam controls, email delivery and success/failure behavior.",
+      "Defined basic on-page/technical SEO plus asset/loading improvements and documented performance checks."
+    ],
+    "deliverables": [
+      {
+        "name": "Scope/content/readiness record",
+        "description": "Page/portfolio architecture, content/rights manifest, platform/form decisions and acceptance plan.",
+        "expectedOutcome": "Explicit bounded scope and dependencies.",
+        "acceptanceCriteria": [
+          "Client approves architecture, ownership and acceptance checklist."
+        ],
+        "dependencies": [
+          "Client scope/content/provider decisions",
+          "Owner validation of commercial feasibility and capacity"
+        ]
+      },
+      {
+        "name": "Responsive design",
+        "description": "Five-page layouts, portfolio-card template and one proposed consolidated design revision.",
+        "expectedOutcome": "Approved consistent presentation.",
+        "acceptanceCriteria": [
+          "Named client authority approves designs and navigation."
+        ],
+        "dependencies": [
+          "Approved scope and supplied brand/content"
+        ]
+      },
+      {
+        "name": "Website and lead capture",
+        "description": "Five pages, 6-project listing, configured form/email, defined SEO and performance work.",
+        "expectedOutcome": "Visitors can browse services/work and send enquiries.",
+        "acceptanceCriteria": [
+          "All five pages (Home, About, Services, Portfolio, Contact) contain approved content and are reachable; no broken internal navigation.",
+          "Portfolio displays 6 approved projects in the client-confirmed architecture; each title/copy/media/link matches the approved manifest and unavailable media has agreed fallback behavior.",
+          "Proposed responsive test matrix: 375, 768 and 1440 CSS-pixel layout widths, Chrome/Firefox desktop and Safari desktop/mobile; exact devices/versions require client agreement. No blocking navigation/layout/form defects.",
+          "Agreed required fields are validated; valid submission reaches nominated email destination; invalid and failed submissions display useful errors, success state works and agreed spam controls are tested.",
+          "Every agreed indexable page has unique title/description, appropriate heading structure, descriptive links and meaningful image alt text. Canonical, robots, sitemap and production indexability match written launch instructions.",
+          "For Home, Portfolio and Contact record before/after audit date, URL, tool/version, agreed mobile/desktop profiles, page weight/requests and LCP/CLS where measurable; record INP only with valid interaction data, otherwise not measured. Remediate identified avoidable oversized media and unnecessary blocking scripts; document results and remaining limitations. No numeric passing score is invented."
+        ],
+        "dependencies": [
+          "Approved design",
+          "Complete content/media",
+          "Provider access and form decisions"
+        ]
+      },
+      {
+        "name": "QA, deployment and handover",
+        "description": "Test/defect evidence, release/rollback documentation, acceptance and ownership handover.",
+        "expectedOutcome": "Reviewable accepted release with maintenance ownership.",
+        "acceptanceCriteria": [
+          "Keyboard navigation, visible focus, form labels and error messages pass smoke checks; this does not assert formal accessibility conformance.",
+          "HTTPS and provider/server-side input validation configured; server secrets absent from browser assets; client-approved privacy/retention decisions and media rights documented.",
+          "Deployment/rollback owner and procedure documented; no critical/high launch blockers remain. Lower-severity items require explicit client acceptance or an agreed correction plan; named client acceptance and launch sign-off recorded."
+        ],
+        "dependencies": [
+          "Release candidate",
+          "Client acceptance and launch decision"
+        ]
+      }
+    ],
+    "exclusions": [
+      "Hosting and domain costs excluded per brief; provider, billing owner and access remain unresolved.",
+      "Unapproved planning exclusions:CMS/editing, project detail pages, migration, custom integrations, media/content production and additional languages; confirm or re-estimate.",
+      "Custom sender-authentication remediation, DNS/email troubleshooting, platform procurement and complex launch failures require separate scope; standard ready-provider configuration included.",
+      "Analytics/reporting, ongoing SEO/support, legal drafting, formal accessibility certification and guaranteed scores/rankings require separate agreement.",
+      "Other external-service costs unpriced; no inference client pays or charges included."
+    ],
+    "assumptions": [
+      {
+        "assumptionId": "RT-INSTRUCTION-TEST-004-A1",
+        "description": "One Portfolio listing with 6 supplied standardized project cards; separate detail pages are not included in the planning model.",
+        "status": "UNVERIFIED_PLANNING_ASSUMPTION",
+        "verificationRequired": "Client architecture confirmation."
+      },
+      {
+        "assumptionId": "RT-INSTRUCTION-TEST-004-A2",
+        "description": "Reusable templates, one language and no CMS, migration, custom integration or content/media production in baseline. No CMS request does not establish an approved exclusion.",
+        "status": "UNVERIFIED_PLANNING_ASSUMPTION",
+        "verificationRequired": "Client scope/platform/editing decision."
+      },
+      {
+        "assumptionId": "RT-INSTRUCTION-TEST-004-A3",
+        "description": "Client will supply logo/written content per brief, but completeness, timing and quality are unverified; six portfolio media/metadata and rights also required.",
+        "status": "UNVERIFIED_PLANNING_ASSUMPTION",
+        "verificationRequired": "Complete approved asset/rights manifest before start."
+      },
+      {
+        "assumptionId": "RT-INSTRUCTION-TEST-004-A4",
+        "description": "One consolidated design revision and one acceptance correction cycle; revision terms are proposed, and defects must still meet contracted criteria.",
+        "status": "UNVERIFIED_PLANNING_ASSUMPTION",
+        "verificationRequired": "Client accepts revision, defect and change process."
+      },
+      {
+        "assumptionId": "RT-INSTRUCTION-TEST-004-A5",
+        "description": "Providers/access ready before build; external-service prices and billing owners are unknown, not assumed client-funded.",
+        "status": "UNVERIFIED_PLANNING_ASSUMPTION",
+        "verificationRequired": "Provider, billing, access, privacy and retention decisions."
+      },
+      {
+        "assumptionId": "RT-INSTRUCTION-TEST-004-A7",
+        "description": "15-business-day plan is conditional on approved scope, ready assets/access, booked capacity across handoffs and proposed client feedback within one business day. No calendar start/end date established.",
+        "status": "UNVERIFIED_PLANNING_ASSUMPTION",
+        "verificationRequired": "Client/owner confirm start trigger, review windows and dates."
+      },
+      {
+        "assumptionId": "RT-INSTRUCTION-TEST-004-A8",
+        "description": "Basic SEO/performance is a checklist and documented measurement/remediation process, not a score, ranking, SLA or certification guarantee.",
+        "status": "UNVERIFIED_PLANNING_ASSUMPTION",
+        "verificationRequired": "Client approves test matrix/protocol and any additional targets."
+      }
+    ],
+    "acceptanceCriteria": [
+      "All five pages (Home, About, Services, Portfolio, Contact) contain approved content and are reachable; no broken internal navigation.",
+      "Portfolio displays 6 approved projects in the client-confirmed architecture; each title/copy/media/link matches the approved manifest and unavailable media has agreed fallback behavior.",
+      "Proposed responsive test matrix: 375, 768 and 1440 CSS-pixel layout widths, Chrome/Firefox desktop and Safari desktop/mobile; exact devices/versions require client agreement. No blocking navigation/layout/form defects.",
+      "Agreed required fields are validated; valid submission reaches nominated email destination; invalid and failed submissions display useful errors, success state works and agreed spam controls are tested.",
+      "Every agreed indexable page has unique title/description, appropriate heading structure, descriptive links and meaningful image alt text. Canonical, robots, sitemap and production indexability match written launch instructions.",
+      "For Home, Portfolio and Contact record before/after audit date, URL, tool/version, agreed mobile/desktop profiles, page weight/requests and LCP/CLS where measurable; record INP only with valid interaction data, otherwise not measured. Remediate identified avoidable oversized media and unnecessary blocking scripts; document results and remaining limitations. No numeric passing score is invented.",
+      "Keyboard navigation, visible focus, form labels and error messages pass smoke checks; this does not assert formal accessibility conformance.",
+      "HTTPS and provider/server-side input validation configured; server secrets absent from browser assets; client-approved privacy/retention decisions and media rights documented.",
+      "Deployment/rollback owner and procedure documented; no critical/high launch blockers remain. Lower-severity items require explicit client acceptance or an agreed correction plan; named client acceptance and launch sign-off recorded."
+    ],
+    "milestones": [
+      {
+        "milestoneId": "RT-INSTRUCTION-TEST-004-M1",
+        "name": "Scope/readiness",
+        "estimatedDurationBusinessDays": 2,
+        "expectedCompletion": "Conditional planning day 2 after readiness gate",
+        "dependencies": [
+          "Client-confirmed scope/assets/access and owner-validated commercial viability/capacity"
+        ],
+        "deliverable": "Scope/content/access and acceptance record",
+        "completionCriteria": "Architecture, assets/access, financial and capacity gates met."
+      },
+      {
+        "milestoneId": "RT-INSTRUCTION-TEST-004-M2",
+        "name": "Responsive design",
+        "estimatedDurationBusinessDays": 4,
+        "expectedCompletion": "Conditional planning day 6 after readiness gate",
+        "dependencies": [
+          "RT-INSTRUCTION-TEST-004-M1"
+        ],
+        "deliverable": "Approved layouts, card and form design",
+        "completionCriteria": "Client approves bounded revision."
+      },
+      {
+        "milestoneId": "RT-INSTRUCTION-TEST-004-M3",
+        "name": "Build/integration",
+        "estimatedDurationBusinessDays": 6,
+        "expectedCompletion": "Conditional planning day 12 after readiness gate",
+        "dependencies": [
+          "RT-INSTRUCTION-TEST-004-M2"
+        ],
+        "deliverable": "Five-page release candidate and rollback notes",
+        "completionCriteria": "Form/portfolio/SEO/performance and developer checks complete."
+      },
+      {
+        "milestoneId": "RT-INSTRUCTION-TEST-004-M4",
+        "name": "QA/acceptance/handover",
+        "estimatedDurationBusinessDays": 3,
+        "expectedCompletion": "Conditional planning day 15 after readiness gate",
+        "dependencies": [
+          "RT-INSTRUCTION-TEST-004-M3"
+        ],
+        "deliverable": "Tested release and acceptance evidence",
+        "completionCriteria": "QA passes and client acceptance recorded."
+      }
+    ],
+    "timelineBasis": "15 business days supplied as deadline/target; conditional phased plan only. No date or start trigger invented. Phased role capacity and one-business-day feedback assumption require confirmation.",
+    "commercialTerms": [
+      "Proposed price: 150000 USD cents; not contractually agreed; receipt and payment terms unverified.",
+      "Proposed payment structure only: 75000 cents on accepted SOW and 75000 cents on final acceptance, subject to revised commercial agreement; neither is due/received by inference.",
+      "Tax/fee treatment, payment due dates, correction/warranty limits, support and external-service billing responsibility require agreement.",
+      "Current baseline cost exceeds commercial price/revenue basis. Draft is for clarification and repricing/re-scoping, not a firm offer or authority to begin.",
+      "Proposed client review within two business days; no silent acceptance. Fixing agreed acceptance defects is not automatically an added feature or billable change."
+    ],
+    "changeManagement": "Record scope changes, estimate added/removed effort, external liabilities, price, schedule and acceptance impact; obtain client agreement and separate verified owner review before implementation. Keep any prior approved revision effective until formally replaced; no prior approved revision is evidenced here."
+  },
+  "executionPlan": {
+    "tasks": [
+      {
+        "taskId": "RT-INSTRUCTION-TEST-004-R1",
+        "title": "Confirm scope/content readiness",
+        "description": "Confirm five-page/six-card architecture and logo/copy/media readiness.",
+        "workstream": "Research",
+        "priority": "High",
+        "estimatedEffortHours": 1.5,
+        "dependencies": [],
+        "expectedOutput": "Scope/asset inventory",
+        "completionCriteria": "Client confirms architecture and content gaps."
+      },
+      {
+        "taskId": "RT-INSTRUCTION-TEST-004-R2",
+        "title": "Resolve form/data/launch decisions",
+        "description": "Identify email/provider, privacy/retention responsibility and launch authority.",
+        "workstream": "Research",
+        "priority": "High",
+        "estimatedEffortHours": 1,
+        "dependencies": [
+          "RT-INSTRUCTION-TEST-004-R1"
+        ],
+        "expectedOutput": "Form/data decisions",
+        "completionCriteria": "Client contact records decisions."
+      },
+      {
+        "taskId": "RT-INSTRUCTION-TEST-004-R3",
+        "title": "Coordinate kickoff/acceptance",
+        "description": "Plan start gate, feedback and acceptance.",
+        "workstream": "Research",
+        "priority": "High",
+        "estimatedEffortHours": 1,
+        "dependencies": [
+          "RT-INSTRUCTION-TEST-004-R1"
+        ],
+        "expectedOutput": "Coordination plan",
+        "completionCriteria": "Review/staffing dependencies confirmed."
+      },
+      {
+        "taskId": "RT-INSTRUCTION-TEST-004-R4",
+        "title": "Confirm deployment readiness",
+        "description": "Check ready client-controlled hosting/access and rollback owner.",
+        "workstream": "Research",
+        "priority": "High",
+        "estimatedEffortHours": 0.75,
+        "dependencies": [
+          "RT-INSTRUCTION-TEST-004-R2"
+        ],
+        "expectedOutput": "Access evidence",
+        "completionCriteria": "Ready deployment path demonstrated."
+      },
+      {
+        "taskId": "RT-INSTRUCTION-TEST-004-R5",
+        "title": "Define bounded review/change plan",
+        "description": "Specify one bounded review/change allowance.",
+        "workstream": "Research",
+        "priority": "High",
+        "estimatedEffortHours": 0.75,
+        "dependencies": [
+          "RT-INSTRUCTION-TEST-004-R3"
+        ],
+        "expectedOutput": "Review/change plan",
+        "completionCriteria": "Client agrees terms or estimate reopened."
+      },
+      {
+        "taskId": "RT-INSTRUCTION-TEST-004-D1",
+        "title": "Set visual direction",
+        "description": "Use supplied logo/content for visual direction.",
+        "workstream": "Design",
+        "priority": "High",
+        "estimatedEffortHours": 2,
+        "dependencies": [
+          "RT-INSTRUCTION-TEST-004-R1",
+          "RT-INSTRUCTION-TEST-004-R2",
+          "RT-INSTRUCTION-TEST-004-R3",
+          "RT-INSTRUCTION-TEST-004-R4",
+          "RT-INSTRUCTION-TEST-004-R5"
+        ],
+        "expectedOutput": "Direction",
+        "completionCriteria": "Client selects direction."
+      },
+      {
+        "taskId": "RT-INSTRUCTION-TEST-004-D2",
+        "title": "Design responsive templates",
+        "description": "Specify five-page components/navigation.",
+        "workstream": "Design",
+        "priority": "High",
+        "estimatedEffortHours": 3,
+        "dependencies": [
+          "RT-INSTRUCTION-TEST-004-D1"
+        ],
+        "expectedOutput": "Layouts",
+        "completionCriteria": "Design covers required pages and profiles."
+      },
+      {
+        "taskId": "RT-INSTRUCTION-TEST-004-D3",
+        "title": "Design project cards",
+        "description": "Define six-card media/link/fallback treatment.",
+        "workstream": "Design",
+        "priority": "High",
+        "estimatedEffortHours": 2,
+        "dependencies": [
+          "RT-INSTRUCTION-TEST-004-D2"
+        ],
+        "expectedOutput": "Portfolio design",
+        "completionCriteria": "Client confirms entry model."
+      },
+      {
+        "taskId": "RT-INSTRUCTION-TEST-004-D4",
+        "title": "Design form states",
+        "description": "Define labels/validation/error/success states.",
+        "workstream": "Design",
+        "priority": "High",
+        "estimatedEffortHours": 1.5,
+        "dependencies": [
+          "RT-INSTRUCTION-TEST-004-D2",
+          "RT-INSTRUCTION-TEST-004-R2"
+        ],
+        "expectedOutput": "Form design",
+        "completionCriteria": "Agreed states documented."
+      },
+      {
+        "taskId": "RT-INSTRUCTION-TEST-004-D5",
+        "title": "Apply consolidated design revision",
+        "description": "Apply one bounded review/revision.",
+        "workstream": "Design",
+        "priority": "High",
+        "estimatedEffortHours": 1,
+        "dependencies": [
+          "RT-INSTRUCTION-TEST-004-D3",
+          "RT-INSTRUCTION-TEST-004-D4"
+        ],
+        "expectedOutput": "Approved design",
+        "completionCriteria": "Client approves design."
+      },
+      {
+        "taskId": "RT-INSTRUCTION-TEST-004-D6",
+        "title": "Handoff build/QA specification",
+        "description": "Transfer content rules/layouts/acceptance matrix.",
+        "workstream": "Design",
+        "priority": "High",
+        "estimatedEffortHours": 0.5,
+        "dependencies": [
+          "RT-INSTRUCTION-TEST-004-D5"
+        ],
+        "expectedOutput": "Handoff",
+        "completionCriteria": "Developer/QA have agreed inputs."
+      },
+      {
+        "taskId": "RT-INSTRUCTION-TEST-004-DEV1",
+        "title": "Set up environment",
+        "description": "Initialize selected standard platform/environment.",
+        "workstream": "Development",
+        "priority": "High",
+        "estimatedEffortHours": 1,
+        "dependencies": [
+          "RT-INSTRUCTION-TEST-004-D6"
+        ],
+        "expectedOutput": "Environment",
+        "completionCriteria": "Review build works."
+      },
+      {
+        "taskId": "RT-INSTRUCTION-TEST-004-DEV2",
+        "title": "Build five responsive pages",
+        "description": "Implement navigation/templates and approved supplied content.",
+        "workstream": "Development",
+        "priority": "High",
+        "estimatedEffortHours": 9,
+        "dependencies": [
+          "RT-INSTRUCTION-TEST-004-DEV1"
+        ],
+        "expectedOutput": "Five pages",
+        "completionCriteria": "Pages/content/navigation match design."
+      },
+      {
+        "taskId": "RT-INSTRUCTION-TEST-004-DEV3",
+        "title": "Implement six portfolio entries",
+        "description": "Insert supplied cards/links and agreed fallback.",
+        "workstream": "Development",
+        "priority": "High",
+        "estimatedEffortHours": 2.5,
+        "dependencies": [
+          "RT-INSTRUCTION-TEST-004-DEV2"
+        ],
+        "expectedOutput": "Six-project listing",
+        "completionCriteria": "All entries match manifest."
+      },
+      {
+        "taskId": "RT-INSTRUCTION-TEST-004-DEV4",
+        "title": "Configure form/email notifications",
+        "description": "Configure standard provider, supported sender setup, validation and success/failure notifications.",
+        "workstream": "Development",
+        "priority": "High",
+        "estimatedEffortHours": 3.5,
+        "dependencies": [
+          "RT-INSTRUCTION-TEST-004-DEV2",
+          "RT-INSTRUCTION-TEST-004-R2"
+        ],
+        "expectedOutput": "Email flow",
+        "completionCriteria": "Developer verifies form/provider behavior."
+      },
+      {
+        "taskId": "RT-INSTRUCTION-TEST-004-DEV5",
+        "title": "Configure technical SEO",
+        "description": "Set metadata/headings/links/canonical/robots/sitemap/indexability.",
+        "workstream": "Development",
+        "priority": "High",
+        "estimatedEffortHours": 2,
+        "dependencies": [
+          "RT-INSTRUCTION-TEST-004-DEV2"
+        ],
+        "expectedOutput": "SEO configuration",
+        "completionCriteria": "Agreed checklist implemented."
+      },
+      {
+        "taskId": "RT-INSTRUCTION-TEST-004-DEV6",
+        "title": "Optimize routine performance",
+        "description": "Observe loading/media and remedy confirmed avoidable issues.",
+        "workstream": "Development",
+        "priority": "High",
+        "estimatedEffortHours": 1.5,
+        "dependencies": [
+          "RT-INSTRUCTION-TEST-004-DEV3",
+          "RT-INSTRUCTION-TEST-004-DEV5"
+        ],
+        "expectedOutput": "Optimization record",
+        "completionCriteria": "Observations/changes documented; no score guarantee."
+      },
+      {
+        "taskId": "RT-INSTRUCTION-TEST-004-DEV7",
+        "title": "Deploy ready path and check rollback",
+        "description": "Deploy on client-ready path and document rollback owner/check.",
+        "workstream": "Development",
+        "priority": "High",
+        "estimatedEffortHours": 1.5,
+        "dependencies": [
+          "RT-INSTRUCTION-TEST-004-DEV4",
+          "RT-INSTRUCTION-TEST-004-DEV6",
+          "RT-INSTRUCTION-TEST-004-R4"
+        ],
+        "expectedOutput": "Release/rollback notes",
+        "completionCriteria": "Review deployment/rollback checked."
+      },
+      {
+        "taskId": "RT-INSTRUCTION-TEST-004-DEV8",
+        "title": "Coordinate bounded correction cycle",
+        "description": "Coordinate review and fix in-scope issues within bounded cycle.",
+        "workstream": "Development",
+        "priority": "High",
+        "estimatedEffortHours": 2,
+        "dependencies": [
+          "RT-INSTRUCTION-TEST-004-DEV7"
+        ],
+        "expectedOutput": "Corrected candidate",
+        "completionCriteria": "Issues triaged/fixes ready for QA."
+      },
+      {
+        "taskId": "RT-INSTRUCTION-TEST-004-Q1",
+        "title": "Prepare acceptance checks",
+        "description": "Coordinate tests with named client authority.",
+        "workstream": "QA",
+        "priority": "High",
+        "estimatedEffortHours": 0.5,
+        "dependencies": [
+          "RT-INSTRUCTION-TEST-004-DEV8"
+        ],
+        "expectedOutput": "Acceptance checklist",
+        "completionCriteria": "Tests map to agreed criteria."
+      },
+      {
+        "taskId": "RT-INSTRUCTION-TEST-004-Q2",
+        "title": "Verify notification paths",
+        "description": "Test valid/invalid/failed submissions, spam/messages and actual inbox receipt.",
+        "workstream": "QA",
+        "priority": "High",
+        "estimatedEffortHours": 1.5,
+        "dependencies": [
+          "RT-INSTRUCTION-TEST-004-Q1"
+        ],
+        "expectedOutput": "Form evidence",
+        "completionCriteria": "Receipt/failure behavior recorded."
+      },
+      {
+        "taskId": "RT-INSTRUCTION-TEST-004-Q3",
+        "title": "Verify responsive usability",
+        "description": "Check mobile/desktop navigation/content/form and keyboard/focus/labels/errors.",
+        "workstream": "QA",
+        "priority": "High",
+        "estimatedEffortHours": 1,
+        "dependencies": [
+          "RT-INSTRUCTION-TEST-004-Q1"
+        ],
+        "expectedOutput": "Usability evidence",
+        "completionCriteria": "No blocking defects in agreed matrix."
+      },
+      {
+        "taskId": "RT-INSTRUCTION-TEST-004-Q4",
+        "title": "Verify portfolio media",
+        "description": "Check six-project links/media/fallback.",
+        "workstream": "QA",
+        "priority": "High",
+        "estimatedEffortHours": 0.75,
+        "dependencies": [
+          "RT-INSTRUCTION-TEST-004-Q1"
+        ],
+        "expectedOutput": "Portfolio evidence",
+        "completionCriteria": "Entries/representative media checked."
+      },
+      {
+        "taskId": "RT-INSTRUCTION-TEST-004-Q5",
+        "title": "Verify SEO/indexability",
+        "description": "Check metadata/headings/links/canonical/robots/sitemap.",
+        "workstream": "QA",
+        "priority": "High",
+        "estimatedEffortHours": 1,
+        "dependencies": [
+          "RT-INSTRUCTION-TEST-004-Q1"
+        ],
+        "expectedOutput": "SEO evidence",
+        "completionCriteria": "Launch checklist passes."
+      },
+      {
+        "taskId": "RT-INSTRUCTION-TEST-004-Q6",
+        "title": "Record performance observations",
+        "description": "Record representative Home/Portfolio/Contact audits on agreed profiles and measurable before/after data.",
+        "workstream": "QA",
+        "priority": "High",
+        "estimatedEffortHours": 0.75,
+        "dependencies": [
+          "RT-INSTRUCTION-TEST-004-Q1"
+        ],
+        "expectedOutput": "Performance evidence",
+        "completionCriteria": "Tool/profile/date/URL/results/limitations recorded."
+      },
+      {
+        "taskId": "RT-INSTRUCTION-TEST-004-Q7",
+        "title": "Check deployment/rollback evidence",
+        "description": "Smoke-check release/HTTPS/exposed secrets and rollback ownership.",
+        "workstream": "QA",
+        "priority": "High",
+        "estimatedEffortHours": 0.75,
+        "dependencies": [
+          "RT-INSTRUCTION-TEST-004-Q1"
+        ],
+        "expectedOutput": "Release evidence",
+        "completionCriteria": "No launch blockers; rollback record complete."
+      },
+      {
+        "taskId": "RT-INSTRUCTION-TEST-004-Q8",
+        "title": "Support correction/retest",
+        "description": "Support defect correction/retest without double-counting developer allowance.",
+        "workstream": "QA",
+        "priority": "High",
+        "estimatedEffortHours": 1.25,
+        "dependencies": [
+          "RT-INSTRUCTION-TEST-004-Q2",
+          "RT-INSTRUCTION-TEST-004-Q3",
+          "RT-INSTRUCTION-TEST-004-Q4",
+          "RT-INSTRUCTION-TEST-004-Q5",
+          "RT-INSTRUCTION-TEST-004-Q6",
+          "RT-INSTRUCTION-TEST-004-Q7"
+        ],
+        "expectedOutput": "Defect/retest log",
+        "completionCriteria": "No critical/high blockers; other items dispositioned."
+      },
+      {
+        "taskId": "RT-INSTRUCTION-TEST-004-Q9",
+        "title": "Package handover/acceptance",
+        "description": "Obtain client acceptance/launch decision and provide ownership notes.",
+        "workstream": "QA",
+        "priority": "High",
+        "estimatedEffortHours": 0.5,
+        "dependencies": [
+          "RT-INSTRUCTION-TEST-004-Q8"
+        ],
+        "expectedOutput": "Acceptance/handover",
+        "completionCriteria": "Client sign-off and maintenance ownership recorded."
+      }
+    ],
+    "dependencies": [
+      {
+        "taskId": "RT-INSTRUCTION-TEST-004-R2",
+        "dependsOn": [
+          "RT-INSTRUCTION-TEST-004-R1"
+        ]
+      },
+      {
+        "taskId": "RT-INSTRUCTION-TEST-004-R3",
+        "dependsOn": [
+          "RT-INSTRUCTION-TEST-004-R1"
+        ]
+      },
+      {
+        "taskId": "RT-INSTRUCTION-TEST-004-R4",
+        "dependsOn": [
+          "RT-INSTRUCTION-TEST-004-R2"
+        ]
+      },
+      {
+        "taskId": "RT-INSTRUCTION-TEST-004-R5",
+        "dependsOn": [
+          "RT-INSTRUCTION-TEST-004-R3"
+        ]
+      },
+      {
+        "taskId": "RT-INSTRUCTION-TEST-004-D1",
+        "dependsOn": [
+          "RT-INSTRUCTION-TEST-004-R1",
+          "RT-INSTRUCTION-TEST-004-R2",
+          "RT-INSTRUCTION-TEST-004-R3",
+          "RT-INSTRUCTION-TEST-004-R4",
+          "RT-INSTRUCTION-TEST-004-R5"
+        ]
+      },
+      {
+        "taskId": "RT-INSTRUCTION-TEST-004-D2",
+        "dependsOn": [
+          "RT-INSTRUCTION-TEST-004-D1"
+        ]
+      },
+      {
+        "taskId": "RT-INSTRUCTION-TEST-004-D3",
+        "dependsOn": [
+          "RT-INSTRUCTION-TEST-004-D2"
+        ]
+      },
+      {
+        "taskId": "RT-INSTRUCTION-TEST-004-D4",
+        "dependsOn": [
+          "RT-INSTRUCTION-TEST-004-D2",
+          "RT-INSTRUCTION-TEST-004-R2"
+        ]
+      },
+      {
+        "taskId": "RT-INSTRUCTION-TEST-004-D5",
+        "dependsOn": [
+          "RT-INSTRUCTION-TEST-004-D3",
+          "RT-INSTRUCTION-TEST-004-D4"
+        ]
+      },
+      {
+        "taskId": "RT-INSTRUCTION-TEST-004-D6",
+        "dependsOn": [
+          "RT-INSTRUCTION-TEST-004-D5"
+        ]
+      },
+      {
+        "taskId": "RT-INSTRUCTION-TEST-004-DEV1",
+        "dependsOn": [
+          "RT-INSTRUCTION-TEST-004-D6"
+        ]
+      },
+      {
+        "taskId": "RT-INSTRUCTION-TEST-004-DEV2",
+        "dependsOn": [
+          "RT-INSTRUCTION-TEST-004-DEV1"
+        ]
+      },
+      {
+        "taskId": "RT-INSTRUCTION-TEST-004-DEV3",
+        "dependsOn": [
+          "RT-INSTRUCTION-TEST-004-DEV2"
+        ]
+      },
+      {
+        "taskId": "RT-INSTRUCTION-TEST-004-DEV4",
+        "dependsOn": [
+          "RT-INSTRUCTION-TEST-004-DEV2",
+          "RT-INSTRUCTION-TEST-004-R2"
+        ]
+      },
+      {
+        "taskId": "RT-INSTRUCTION-TEST-004-DEV5",
+        "dependsOn": [
+          "RT-INSTRUCTION-TEST-004-DEV2"
+        ]
+      },
+      {
+        "taskId": "RT-INSTRUCTION-TEST-004-DEV6",
+        "dependsOn": [
+          "RT-INSTRUCTION-TEST-004-DEV3",
+          "RT-INSTRUCTION-TEST-004-DEV5"
+        ]
+      },
+      {
+        "taskId": "RT-INSTRUCTION-TEST-004-DEV7",
+        "dependsOn": [
+          "RT-INSTRUCTION-TEST-004-DEV4",
+          "RT-INSTRUCTION-TEST-004-DEV6",
+          "RT-INSTRUCTION-TEST-004-R4"
+        ]
+      },
+      {
+        "taskId": "RT-INSTRUCTION-TEST-004-DEV8",
+        "dependsOn": [
+          "RT-INSTRUCTION-TEST-004-DEV7"
+        ]
+      },
+      {
+        "taskId": "RT-INSTRUCTION-TEST-004-Q1",
+        "dependsOn": [
+          "RT-INSTRUCTION-TEST-004-DEV8"
+        ]
+      },
+      {
+        "taskId": "RT-INSTRUCTION-TEST-004-Q2",
+        "dependsOn": [
+          "RT-INSTRUCTION-TEST-004-Q1"
+        ]
+      },
+      {
+        "taskId": "RT-INSTRUCTION-TEST-004-Q3",
+        "dependsOn": [
+          "RT-INSTRUCTION-TEST-004-Q1"
+        ]
+      },
+      {
+        "taskId": "RT-INSTRUCTION-TEST-004-Q4",
+        "dependsOn": [
+          "RT-INSTRUCTION-TEST-004-Q1"
+        ]
+      },
+      {
+        "taskId": "RT-INSTRUCTION-TEST-004-Q5",
+        "dependsOn": [
+          "RT-INSTRUCTION-TEST-004-Q1"
+        ]
+      },
+      {
+        "taskId": "RT-INSTRUCTION-TEST-004-Q6",
+        "dependsOn": [
+          "RT-INSTRUCTION-TEST-004-Q1"
+        ]
+      },
+      {
+        "taskId": "RT-INSTRUCTION-TEST-004-Q7",
+        "dependsOn": [
+          "RT-INSTRUCTION-TEST-004-Q1"
+        ]
+      },
+      {
+        "taskId": "RT-INSTRUCTION-TEST-004-Q8",
+        "dependsOn": [
+          "RT-INSTRUCTION-TEST-004-Q2",
+          "RT-INSTRUCTION-TEST-004-Q3",
+          "RT-INSTRUCTION-TEST-004-Q4",
+          "RT-INSTRUCTION-TEST-004-Q5",
+          "RT-INSTRUCTION-TEST-004-Q6",
+          "RT-INSTRUCTION-TEST-004-Q7"
+        ]
+      },
+      {
+        "taskId": "RT-INSTRUCTION-TEST-004-Q9",
+        "dependsOn": [
+          "RT-INSTRUCTION-TEST-004-Q8"
+        ]
+      }
+    ],
+    "milestones": [
+      {
+        "milestoneId": "RT-INSTRUCTION-TEST-004-M1",
+        "name": "Scope/readiness",
+        "estimatedDurationBusinessDays": 2,
+        "expectedCompletion": "Conditional planning day 2 after readiness gate",
+        "dependencies": [
+          "Client-confirmed scope/assets/access and owner-validated commercial viability/capacity"
+        ],
+        "deliverable": "Scope/content/access and acceptance record",
+        "completionCriteria": "Architecture, assets/access, financial and capacity gates met."
+      },
+      {
+        "milestoneId": "RT-INSTRUCTION-TEST-004-M2",
+        "name": "Responsive design",
+        "estimatedDurationBusinessDays": 4,
+        "expectedCompletion": "Conditional planning day 6 after readiness gate",
+        "dependencies": [
+          "RT-INSTRUCTION-TEST-004-M1"
+        ],
+        "deliverable": "Approved layouts, card and form design",
+        "completionCriteria": "Client approves bounded revision."
+      },
+      {
+        "milestoneId": "RT-INSTRUCTION-TEST-004-M3",
+        "name": "Build/integration",
+        "estimatedDurationBusinessDays": 6,
+        "expectedCompletion": "Conditional planning day 12 after readiness gate",
+        "dependencies": [
+          "RT-INSTRUCTION-TEST-004-M2"
+        ],
+        "deliverable": "Five-page release candidate and rollback notes",
+        "completionCriteria": "Form/portfolio/SEO/performance and developer checks complete."
+      },
+      {
+        "milestoneId": "RT-INSTRUCTION-TEST-004-M4",
+        "name": "QA/acceptance/handover",
+        "estimatedDurationBusinessDays": 3,
+        "expectedCompletion": "Conditional planning day 15 after readiness gate",
+        "dependencies": [
+          "RT-INSTRUCTION-TEST-004-M3"
+        ],
+        "deliverable": "Tested release and acceptance evidence",
+        "completionCriteria": "QA passes and client acceptance recorded."
+      }
+    ],
+    "qualityChecks": [
+      "All five pages (Home, About, Services, Portfolio, Contact) contain approved content and are reachable; no broken internal navigation.",
+      "Portfolio displays 6 approved projects in the client-confirmed architecture; each title/copy/media/link matches the approved manifest and unavailable media has agreed fallback behavior.",
+      "Proposed responsive test matrix: 375, 768 and 1440 CSS-pixel layout widths, Chrome/Firefox desktop and Safari desktop/mobile; exact devices/versions require client agreement. No blocking navigation/layout/form defects.",
+      "Agreed required fields are validated; valid submission reaches nominated email destination; invalid and failed submissions display useful errors, success state works and agreed spam controls are tested.",
+      "Every agreed indexable page has unique title/description, appropriate heading structure, descriptive links and meaningful image alt text. Canonical, robots, sitemap and production indexability match written launch instructions.",
+      "For Home, Portfolio and Contact record before/after audit date, URL, tool/version, agreed mobile/desktop profiles, page weight/requests and LCP/CLS where measurable; record INP only with valid interaction data, otherwise not measured. Remediate identified avoidable oversized media and unnecessary blocking scripts; document results and remaining limitations. No numeric passing score is invented.",
+      "Keyboard navigation, visible focus, form labels and error messages pass smoke checks; this does not assert formal accessibility conformance.",
+      "HTTPS and provider/server-side input validation configured; server secrets absent from browser assets; client-approved privacy/retention decisions and media rights documented.",
+      "Deployment/rollback owner and procedure documented; no critical/high launch blockers remain. Lower-severity items require explicit client acceptance or an agreed correction plan; named client acceptance and launch sign-off recorded."
+    ],
+    "estimatedTotalHours": 46,
+    "resourceRequirements": [
+      {
+        "workstream": "Research",
+        "estimatedHours": 5,
+        "status": "UNASSIGNED_CAPACITY_UNVERIFIED"
+      },
+      {
+        "workstream": "Design",
+        "estimatedHours": 10,
+        "status": "UNASSIGNED_CAPACITY_UNVERIFIED"
+      },
+      {
+        "workstream": "Development",
+        "estimatedHours": 23,
+        "status": "UNASSIGNED_CAPACITY_UNVERIFIED"
+      },
+      {
+        "workstream": "QA",
+        "estimatedHours": 8,
+        "status": "UNASSIGNED_CAPACITY_UNVERIFIED"
+      }
+    ],
+    "timelineBasis": "15 business days supplied as deadline/target; conditional phased plan only. No date or start trigger invented. Phased role capacity and one-business-day feedback assumption require confirmation."
+  },
+  "riskRegister": [
+    {
+      "riskId": "RT-INSTRUCTION-TEST-004-K1",
+      "category": "Scope",
+      "description": "Portfolio 6-card/detail-page/CMS interpretation remains unconfirmed.",
+      "severity": "Critical",
+      "probability": "High",
+      "potentialImpact": "Scope, content, cost and QA expansion.",
+      "mitigation": "Client confirms architecture, editing, page inventory and scope changes.",
+      "responsibleWorkstream": "Research",
+      "evidenceStatus": "IDENTIFIED_RISK_NOT_CONFIRMED_INCIDENT"
+    },
+    {
+      "riskId": "RT-INSTRUCTION-TEST-004-K2",
+      "category": "Schedule",
+      "description": "15-day target has no start date or verified staffing/assets/review timing.",
+      "severity": "High",
+      "probability": "High",
+      "potentialImpact": "Delivery deadline may slip.",
+      "mitigation": "Readiness gate, booked capacity by phase, named approver and written feedback windows.",
+      "responsibleWorkstream": "Research",
+      "evidenceStatus": "IDENTIFIED_RISK_NOT_CONFIRMED_INCIDENT"
+    },
+    {
+      "riskId": "RT-INSTRUCTION-TEST-004-K3",
+      "category": "External dependency",
+      "description": "Content/media completeness, timing and rights are unverified.",
+      "severity": "High",
+      "probability": "High",
+      "potentialImpact": "Blocked work and unpriced production/rework.",
+      "mitigation": "Approved content/asset/rights manifest before start.",
+      "responsibleWorkstream": "Research",
+      "evidenceStatus": "IDENTIFIED_RISK_NOT_CONFIRMED_INCIDENT"
+    },
+    {
+      "riskId": "RT-INSTRUCTION-TEST-004-K4",
+      "category": "Security",
+      "description": "Form provider, email authentication/routing, spam, failure handling and privacy/retention decisions unknown.",
+      "severity": "Critical",
+      "probability": "Medium",
+      "potentialImpact": "Lost notifications or mishandled enquiry data.",
+      "mitigation": "Agree data flow and ownership; test valid, invalid, failed and inbox-delivery cases.",
+      "responsibleWorkstream": "Development",
+      "evidenceStatus": "IDENTIFIED_RISK_NOT_CONFIRMED_INCIDENT"
+    },
+    {
+      "riskId": "RT-INSTRUCTION-TEST-004-K5",
+      "category": "Quality",
+      "description": "SEO/performance, browser/device and accessibility expectations lack agreed thresholds.",
+      "severity": "High",
+      "probability": "High",
+      "potentialImpact": "Acceptance disputes and rework.",
+      "mitigation": "Approve checklist/profiles and any thresholds; preserve minimum QA.",
+      "responsibleWorkstream": "QA",
+      "evidenceStatus": "IDENTIFIED_RISK_NOT_CONFIRMED_INCIDENT"
+    },
+    {
+      "riskId": "RT-INSTRUCTION-TEST-004-K6",
+      "category": "Technical",
+      "description": "CMS/platform, hosting/DNS/access, deployment and rollback ownership unconfirmed.",
+      "severity": "High",
+      "probability": "Medium",
+      "potentialImpact": "Launch delay and extra configuration cost.",
+      "mitigation": "Select platform, demonstrate access and document release/rollback responsibility.",
+      "responsibleWorkstream": "Development",
+      "evidenceStatus": "IDENTIFIED_RISK_NOT_CONFIRMED_INCIDENT"
+    },
+    {
+      "riskId": "RT-INSTRUCTION-TEST-004-K7",
+      "category": "Financial",
+      "description": "Baseline budget 154560 cents exceeds price/revenue basis 150000 cents by 4560; external services/overhead are additional unknowns.",
+      "severity": "Critical",
+      "probability": "High",
+      "potentialImpact": "Projected loss and funding shortfall.",
+      "mitigation": "Defer approval; reprice or explicitly reduce scope then independently re-estimate.",
+      "responsibleWorkstream": "Research",
+      "evidenceStatus": "IDENTIFIED_RISK_NOT_CONFIRMED_INCIDENT"
+    },
+    {
+      "riskId": "RT-INSTRUCTION-TEST-004-K8",
+      "category": "Financial",
+      "description": "Existing commitments, duplicate status, resource reservations, balance, policy and approval limits unverified.",
+      "severity": "High",
+      "probability": "Medium",
+      "potentialImpact": "Resource conflict or unsupported financial assumptions.",
+      "mitigation": "Obtain authorized source evidence; unknown is not zero or no liability.",
+      "responsibleWorkstream": "Research",
+      "evidenceStatus": "IDENTIFIED_RISK_NOT_CONFIRMED_INCIDENT"
+    },
+    {
+      "riskId": "RT-INSTRUCTION-TEST-004-K9",
+      "category": "External dependency",
+      "description": "Hosting/domain, forms/email, spam, media/CDN, templates/plugins and maintenance prices/payers unresolved.",
+      "severity": "High",
+      "probability": "High",
+      "potentialImpact": "Recurring liabilities or unpaid support.",
+      "mitigation": "Name provider, amount, billing/renewal owner and support boundaries.",
+      "responsibleWorkstream": "Research",
+      "evidenceStatus": "IDENTIFIED_RISK_NOT_CONFIRMED_INCIDENT"
+    },
+    {
+      "riskId": "RT-INSTRUCTION-TEST-004-K10",
+      "category": "Scope",
+      "description": "Review/correction/change terms unaccepted.",
+      "severity": "High",
+      "probability": "Medium",
+      "potentialImpact": "Repeated revisions consume base and contingency.",
+      "mitigation": "Agree consolidated revision process; distinguish defects from added scope.",
+      "responsibleWorkstream": "Design",
+      "evidenceStatus": "IDENTIFIED_RISK_NOT_CONFIRMED_INCIDENT"
+    },
+    {
+      "riskId": "RT-INSTRUCTION-TEST-004-K11",
+      "category": "Quality",
+      "description": "A lean price cannot be achieved by removing form, responsive, media, SEO/performance or deployment checks.",
+      "severity": "High",
+      "probability": "Medium",
+      "potentialImpact": "Failure to meet core requirements.",
+      "mitigation": "Keep minimum safeguards; independently re-estimate any simplified package.",
+      "responsibleWorkstream": "QA",
+      "evidenceStatus": "IDENTIFIED_RISK_NOT_CONFIRMED_INCIDENT"
+    }
+  ],
+  "specialistContributions": [
+    {
+      "specialist": "req-agent",
+      "status": "FINAL_REPORT_RECEIVED_AND_REVIEWED",
+      "sourceMessageIds": [
+        "sw_a8cb75977f4d4f1bbd5ff60cd25b1aa0"
+      ],
+      "conclusion": "Five pages govern over landing-page label; six-card/no-CMS model unapproved. Content supply not evidence of readiness; scope/form/quality/start gates remain."
+    },
+    {
+      "specialist": "challenge-agent",
+      "status": "FINAL_REPORT_RECEIVED_AND_REVIEWED",
+      "sourceMessageIds": [
+        "sw_41252fc66fae4ae1a0849a55022a0108",
+        "sw_9b096e6532cf47d19eff3fbf8ae0ec9a",
+        "sw_84eb36c2e52449cbb3e95579f0f43f01",
+        "sw_d48bc44b55ad44a6a90f93c4341d331b"
+      ],
+      "conclusion": "Independently confirmed46h model and arithmetic; explicit ordinary-work coverage resolves under-scoping concern only with ready content/providers. Reprice/re-scope; preserve minimum QA and conditional15-day target."
+    },
+    {
+      "specialist": "commitment-intelligence-agent",
+      "status": "FINAL_REPORT_RECEIVED_AND_REVIEWED",
+      "sourceMessageIds": [
+        "sw_07d6d48098b3482b837ce70b731983a4"
+      ],
+      "conclusion": "No confirmed obligations/reservations evidenced. Forms/email, media, plugins, hosting exclusion and support are potential leads. Actual liabilities, duplicates and resource conflicts unknown without ledger/contracts/calendar."
+    },
+    {
+      "specialist": "treasury-ops-agent",
+      "status": "FINAL_REPORT_RECEIVED_AND_REVIEWED",
+      "sourceMessageIds": [
+        "sw_23093e5271e04262ac1fc804c8fd329d",
+        "sw_60e5f276af1444d4b76adea0ed16560f",
+        "sw_e68a3afaf1204faf83f7ebcbbfd907f5"
+      ],
+      "conclusion": "Owns estimate46h at unverified2800 cents/hour:128800 base+25760 contingency=154560; hypothetical margin-4560 against proposed150000. Agreed revenue unknown; financially unviable under planning assumptions."
+    }
+  ],
+  "financialSummary": {
+    "agreedRevenueCents": null,
+    "proposedDeliveryBudgetCents": 154560,
+    "projectedGrossMarginCents": -4560,
+    "totalAllocationCents": 154560,
+    "baseEstimatedCostCents": 128800,
+    "contingencyCents": 25760,
+    "projectedGrossMarginPercent": -3.04,
+    "marginBasis": "HYPOTHETICAL_PROPOSED_PRICE_MINUS_INTERNAL_BUDGET",
+    "cashReceivedCents": null,
+    "availableFundsCents": null,
+    "externalExpenseCents": null,
+    "verificationStatus": "ESTIMATE_ONLY_NO_AUTHORIZED_LEDGER_EVIDENCE",
+    "explanation": "Margin uses proposed price of 150000 cents. It is not actual profit, settled spend or available funds; excludes overhead, taxes, fees and unpriced external services.",
+    "scenarios": [
+      {
+        "name": "Low",
+        "hours": 37,
+        "baseCostCents": 103600,
+        "contingencyCents": 20720,
+        "budgetCents": 124320,
+        "projectedGrossMarginCents": 25680,
+        "projectedGrossMarginPercent": 17.12
+      },
+      {
+        "name": "Planning",
+        "hours": 46,
+        "baseCostCents": 128800,
+        "contingencyCents": 25760,
+        "budgetCents": 154560,
+        "projectedGrossMarginCents": -4560,
+        "projectedGrossMarginPercent": -3.04
+      },
+      {
+        "name": "High",
+        "hours": 56,
+        "baseCostCents": 156800,
+        "contingencyCents": 31360,
+        "budgetCents": 188160,
+        "projectedGrossMarginCents": -38160,
+        "projectedGrossMarginPercent": -25.44
+      }
+    ],
+    "proposedRevenueCents": 150000
+  },
+  "unresolvedQuestions": [
+    "Confirm six cards versus detail pages and CMS/editing/platform/integrations; no CMS requirement is not a confirmed exclusion.",
+    "When are usable logo/copy and six project media/metadata/rights ready, and who approves?",
+    "Confirm form fields/email destination/provider, supported authentication, spam, failure/privacy/retention responsibilities.",
+    "Who owns/pays for hosting/domain/DNS and other services; is ready deployment path available?",
+    "Approve test profiles/browser matrix, SEO/performance checklist, review/correction/support and acceptance terms.",
+    "Owner verifies actual rates/capacity, assignments/reservations, duplicate obligations, authoritative funds and financial limits.",
+    "Is150000 price agreed by client? Reprice or reduce/re-estimate scope; resolve payment/tax/fee/external expenses.",
+    "Confirm15-day start trigger/calendar deadline and proposed1-business-day feedback for compact plan."
+  ],
+  "ownerApprovalRequired": true,
+  "readinessExplanation": "All four final reports and targeted treasury/independent-challenge reconciliations inspected. Client clarification and financial review block execution.154560-cent estimate exceeds proposed150000 price; agreed revenue is unknown and margin is hypothetical.",
+  "blockingReviews": [
+    "CLIENT_SCOPE_ASSET_PROVIDER_AND_ACCEPTANCE_DECISIONS",
+    "FINANCIAL_VIABILITY_AND_AUTHORITATIVE_FUNDING",
+    "STAFFED_CAPACITY_AND_SCHEDULE"
+  ],
+  "reconciliation": [
+    {
+      "issue": "Five pages versus project title",
+      "resolution": "Explicit five-page brief controls; do not reduce to single landing page."
+    },
+    {
+      "issue": "Proposed price versus agreed revenue",
+      "resolution": "agreedRevenueCents:null. proposedRevenueCents:150000. Margin-4560 is hypothetical proposed-price-minus-budget only, not agreed/received revenue."
+    },
+    {
+      "issue": "Initial challenge missing numeric evidence",
+      "resolution": "Later model review sw_9b096e6532cf47d19eff3fbf8ae0ec9a and itemized-hours check sw_d48bc44b55ad44a6a90f93c4341d331b supersede no-numerical-finding statement; no arithmetic corrections needed."
+    },
+    {
+      "issue": "Routine work coverage",
+      "resolution": "Adopt treasury's exact46h breakdown sw_e68a3afaf1204faf83f7ebcbbfd907f5 as execution tasks. Coordination, revision, form/provider config, deployment/rollback, testing/correction and handover are base work, not contingency. Custom auth/DNS remediation/unready assets require re-estimation."
+    },
+    {
+      "issue": "Hosting/domain and services",
+      "resolution": "Hosting/domain costs excluded per brief; ready-path deployment labor included. External costs/payer unpriced, never silently included or assumed client-funded."
+    },
+    {
+      "issue": "15-day deadline",
+      "resolution": "Conditional2/4/6/3-day milestones require phase-specific at least4 productive hours/day in Design/Development/QA and proposed feedback within1 business day. No start/calendar date invented; reforecast if assumptions fail."
+    },
+    {
+      "issue": "Performance/lean safeguards",
+      "resolution": "No numeric score/ranking/accessibility promise. Form/inbox/failure, mobile/desktop/keyboard, media fallback, SEO/indexability, performance observations and deployment/acceptance checks preserved. Low scenario is not an offer."
+    },
+    {
+      "issue": "Existing obligations",
+      "resolution": "No confirmed commitments found in supplied evidence does not establish no real obligations. Actual ledger/contracts/calendar unknown; identified services remain unverified leads."
+    }
+  ],
+  "sourceReferences": [
+    {
+      "messageId": "sw_0950e4b5ad9aec51bb5e5ffb670b4f37",
+      "system": "Switch",
+      "actualDiscordMessageId": null
+    }
+  ],
+  "ownerDecisionRecommendation": {
+    "decision": "DEFER_DELIVERY_AND_FINANCIAL_APPROVAL",
+    "actions": [
+      "Confirm architecture/CMS, usable content/media/rights and ready form/hosting providers.",
+      "Reprice or specify and independently re-estimate reduced scope; do not approve loss-making154560-cent baseline at proposed150000 price.",
+      "Verify rates, staffing/resource reservations, funds/obligations and external-service prices/billing owners.",
+      "Negotiate price/payment/tax/support, start/launch dates and one-business-day feedback windows. Test remains analytical."
+    ]
+  },
+  "authorityStatement": "Test analysis only. No approval, execution, backend submission, project creation, commitment, reservation, settlement, resource assignment or agent configuration change performed."
+}

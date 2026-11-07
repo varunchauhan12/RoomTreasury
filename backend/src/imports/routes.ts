@@ -28,7 +28,16 @@ export function registerImports(app:FastifyInstance,db:Database,settings:AuthSet
  app.get<{Params:{id:string}}>('/v1/proposal-imports/:id',{schema:{operationId:'getProposalImport',response}},(request,reply)=>{
   reply.header('Cache-Control','no-store');const row=db.prepare('SELECT * FROM proposal_imports WHERE id=?').get(request.params.id) as any;
   if(!row)throw new ImportError(['Imported proposal not found.'],404);requireLinkedAccess(request,row.id);
-  return {id:row.id,taskId:row.task_id,revision:row.revision,importedAt:row.imported_at,source:row.source,identityAuthenticated:false,executionAuthorized:false,fingerprint:row.bundle_fingerprint,proposal:JSON.parse(row.proposal_json),evidence:row.evidence_json?JSON.parse(row.evidence_json):null,summary:row.summary_markdown};
+  return {id:row.id,taskId:row.task_id,revision:row.revision,importedAt:row.imported_at,source:row.source,identityAuthenticated:false,executionAuthorized:false,fingerprint:row.bundle_fingerprint,normalization:originalMetadata(db,row.id),proposal:JSON.parse(row.proposal_json),evidence:row.evidence_json?JSON.parse(row.evidence_json):null,summary:row.summary_markdown};
+ });
+ app.get<{Params:{id:string;kind:string}}>('/v1/proposal-imports/:id/original-artifacts/:kind',{schema:{hide:true}},(request,reply)=>{
+  ownerSession(db,request,settings);
+  requireLinkedAccess(request,request.params.id);
+  const column={proposal:'proposal_raw',evidence:'evidence_raw',summary:'summary_raw'}[request.params.kind];
+  if(!column)throw new ImportError(['Artifact not found.'],404);
+  const row=db.prepare(`SELECT ${column} AS content FROM proposal_import_originals WHERE import_id=?`).get(request.params.id) as {content:string|null}|undefined;
+  if(!row?.content)throw new ImportError(['Original artifact not retained for this legacy import.'],404);
+  return reply.header('Cache-Control','no-store').header('X-Content-Type-Options','nosniff').type('application/octet-stream').send(row.content);
  });
  app.get<{Params:{id:string;kind:string}}>('/v1/proposal-imports/:id/artifacts/:kind',{schema:{hide:true}},(request,reply)=>{
   const column={proposal:'proposal_json',evidence:'evidence_json',summary:'summary_markdown'}[request.params.kind];
@@ -38,3 +47,5 @@ export function registerImports(app:FastifyInstance,db:Database,settings:AuthSet
   return reply.header('Cache-Control','no-store').header('X-Content-Type-Options','nosniff').header('Content-Disposition',`attachment; filename="${request.params.kind}.${request.params.kind==='summary'?'md':'json'}"`).type('application/octet-stream').send(row.content);
  });
 }
+
+function originalMetadata(db:Database,id:string){const row=db.prepare('SELECT proposal_sha256,evidence_sha256,summary_sha256,normalization_json FROM proposal_import_originals WHERE import_id=?').get(id) as any;return row?{...JSON.parse(row.normalization_json),hashes:{proposal:row.proposal_sha256,evidence:row.evidence_sha256,summary:row.summary_sha256}}:null;}

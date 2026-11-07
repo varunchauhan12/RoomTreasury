@@ -49,6 +49,25 @@ export class DiscordApiError extends Error {
   }
 }
 
+// Never persist Discord response text: it can echo submitted content or secrets.
+export function dispatchDiagnostic(error: unknown): string {
+  if (!(error instanceof DiscordApiError)) return 'unknown_dispatch_outcome';
+  const status = error.statusCode;
+  const category = status === 401 ? 'authentication_failure'
+    : error.code === 'DISCORD_50001' ? 'missing_access'
+    : status === 404 ? 'guild_channel_not_found'
+    : status === 403 ? 'missing_permissions'
+    : status === 400 ? 'invalid_message_payload'
+    : status === 429 ? 'rate_limited'
+    : status === 0 ? 'network_failure' : 'unknown_dispatch_outcome';
+  const code = /^DISCORD_\d{1,8}$/.test(error.code) ? error.code.slice(8) : 'none';
+  return `${category}; http=${status}; discord=${code}`;
+}
+
+export function safeDispatchDiagnostic(value: string | null): string | null {
+  return value && /^(authentication_failure|missing_access|guild_channel_not_found|missing_permissions|invalid_message_payload|rate_limited|network_failure|unknown_dispatch_outcome)(; http=\d{1,3}; discord=(none|\d{1,8}))?$/.test(value) ? value : null;
+}
+
 export interface DiscordClientOptions {
   config: DiscordConfig;
   fetchFn?: typeof fetch;
@@ -71,15 +90,28 @@ export class DiscordRestClient {
     };
   }
 
-  async sendMessage(channelId: string, content: string): Promise<DiscordMessage> {
+  async sendMessage(channelId: string, content: string, attachment?: { filename: string; content: string }): Promise<DiscordMessage> {
+    if (content.length > 2000) {
+      throw new DiscordApiError(400, 'MESSAGE_TOO_LONG', 'Discord message content exceeds 2000 characters.');
+    }
     const url = `${this.config.apiBaseUrl}/channels/${encodeURIComponent(channelId)}/messages`;
+    const role = /^<@&(\d{17,21})>$/.exec(this.config.coordinatorMention)?.[1];
+    const user = /^<@!?(\d{17,21})>$/.exec(this.config.coordinatorMention)?.[1];
+    const payload = {
+      content,
+      allowed_mentions: { parse: [], roles: role ? [role] : [], users: user ? [user] : [] },
+      ...(attachment ? { attachments: [{ id: 0, filename: attachment.filename }] } : {}),
+    };
+    let body: string | FormData = JSON.stringify(payload);
+    if (attachment) {
+      body = new FormData();
+      body.set('payload_json', JSON.stringify(payload));
+      body.set('files[0]', new Blob([attachment.content], { type: 'text/plain; charset=utf-8' }), attachment.filename);
+    }
     return this.requestWithRetry<DiscordMessage>(url, {
       method: 'POST',
-      headers: this.headers({ 'Content-Type': 'application/json' }),
-      body: JSON.stringify({
-        content,
-        allowed_mentions: { parse: ['users', 'roles'] },
-      }),
+      headers: this.headers(attachment ? {} : { 'Content-Type': 'application/json' }),
+      body,
     });
   }
 
@@ -141,9 +173,10 @@ export class DiscordRestClient {
     for (let attempt = 0; attempt <= retries; attempt++) {
       let response: Response;
       try {
-        response = await this.fetchFn(url, init);
+        response = await this.fetchFn(url, { ...init, signal: AbortSignal.timeout(15000) });
       } catch (err) {
-        if (attempt === retries) {
+        // A POST may have been accepted before the connection failed. Never resend it.
+        if (init.method === 'POST' || attempt === retries) {
           throw new DiscordApiError(0, 'NETWORK_ERROR', 'Discord API network request failed.');
         }
         await new Promise((r) => setTimeout(r, 100 * (attempt + 1)));
@@ -154,7 +187,7 @@ export class DiscordRestClient {
         let retryAfterMs = 1000;
         try {
           const body = await response.json();
-          if (typeof body.retry_after === 'number') {
+          if (typeof body.retry_after === 'number' && Number.isFinite(body.retry_after) && body.retry_after >= 0) {
             retryAfterMs = Math.ceil(body.retry_after * 1000);
           }
         } catch {
@@ -173,18 +206,22 @@ export class DiscordRestClient {
 
       if (!response.ok) {
         let code = 'DISCORD_API_ERROR';
-        let message = `Discord API returned HTTP ${response.status}.`;
+        const message = `Discord API returned HTTP ${response.status}.`;
         try {
           const errBody = await response.json();
-          if (errBody?.code) code = `DISCORD_${errBody.code}`;
-          if (errBody?.message) message = `Discord API: ${errBody.message}`;
+          if (Number.isSafeInteger(errBody?.code) && errBody.code >= 0 && errBody.code <= 99999999) code = `DISCORD_${errBody.code}`;
         } catch {
           // keep generic message
         }
         throw new DiscordApiError(response.status, code, message);
       }
 
-      return (await response.json()) as T;
+      try {
+        return (await response.json()) as T;
+      } catch {
+        // A successful POST with an unreadable acknowledgement may already be delivered.
+        throw new DiscordApiError(response.status, 'INVALID_RESPONSE', 'Discord returned an unreadable acknowledgement.');
+      }
     }
 
     throw new DiscordApiError(0, 'DISCORD_REQUEST_EXHAUSTED', 'Discord API request retries exhausted.');

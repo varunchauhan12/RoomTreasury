@@ -53,6 +53,7 @@ export function classifySender(authorUsername: string, isBot: boolean): { role: 
 }
 
 export class DiscordMessageCollector {
+  private readonly verifiedFiles = new Map<string,FetchedAttachment>();
   constructor(
     private readonly db: Database,
     private readonly config: DiscordConfig,
@@ -72,6 +73,33 @@ export class DiscordMessageCollector {
     return false;
   }
 
+  async correlateMessage(message: DiscordMessage, jobId: string, correlationId: string, taskId?: string): Promise<boolean> {
+    if (!this.filterMessage(message)) return false;
+    if (this.isCorrelated(message,jobId,correlationId,taskId)) return true;
+    if (classifySender(message.author.username,!!message.author.bot).role !== 'coordinator' || !message.attachments.length) return false;
+    const job = this.db.prepare('SELECT intake_snapshot,intake_hash,intake_revision,correlation_id FROM processing_jobs WHERE id=?').get(jobId) as {intake_snapshot:string;intake_hash:string;intake_revision:number;correlation_id:string}|undefined;
+    if (!job || job.correlation_id !== correlationId) return false;
+    const intake = JSON.parse(job.intake_snapshot);
+    if (taskId && intake.taskId !== taskId) return false;
+    for (const attachment of message.attachments) {
+      const limit = {'proposal.json':262144,'evidence.json':524288,'summary.md':65536}[attachment.filename];
+      if (!limit) continue;
+      try {
+        const file = this.verifiedFiles.get(attachment.id) ?? await this.client.fetchAttachment(attachment,limit);
+        if (attachment.filename === 'summary.md') {
+          if (![intake.projectId,intake.taskId,jobId,correlationId,job.intake_hash].every(value=>file.contentText.includes(value))
+            || !new RegExp('(?:intake\\s+)?revision\\s*[:=]?\\s*`?'+job.intake_revision+'\\b','i').test(file.contentText)) continue;
+        } else {
+          const data=JSON.parse(file.contentText);
+          if(data.projectId!==intake.projectId||data.taskId!==intake.taskId||data.processingJobId!==jobId||data.correlationId!==correlationId||data.intakeRevision!==job.intake_revision||data.intakeSha256!==job.intake_hash)continue;
+        }
+        this.verifiedFiles.set(attachment.id,file);
+        return true;
+      } catch { /* Unverified files are never attached to a job by proximity or filename. */ }
+    }
+    return false;
+  }
+
   recordMessage(message: DiscordMessage, jobId: string): ClassifiedMessage | null {
     if (!this.filterMessage(message)) return null;
 
@@ -82,14 +110,16 @@ export class DiscordMessageCollector {
     const recordedAt = Date.now();
 
     // Check completion marker: ROOMTREASURY_RESULT_READY job={job_id} correlation={correlation_id}
-    const hasCompletionMarker = /ROOMTREASURY_RESULT_READY\b/.test(content) && content.includes(jobId);
+    const boundJob=this.db.prepare('SELECT correlation_id FROM processing_jobs WHERE id=?').get(jobId) as {correlation_id:string}|undefined;
+    const hasCompletionMarker = role==='coordinator' && /ROOMTREASURY_RESULT_READY\b/.test(content) && content.includes('job='+jobId) && !!boundJob && content.includes('correlation='+boundJob.correlation_id);
     const isCoordinatorAck = role === 'coordinator' && !hasCompletionMarker && (
       /\b(ack|acknowledged|started|starting|received|working)\b/i.test(content) || content.includes(jobId)
     );
     const isSpecialistProgress = role === 'specialist' && !hasCompletionMarker;
 
     // Idempotent recording into discord_messages
-    const existing = this.db.prepare('SELECT id FROM discord_messages WHERE id=?').get(message.id);
+    const existing = this.db.prepare('SELECT id,job_id FROM discord_messages WHERE id=?').get(message.id) as {id:string;job_id:string}|undefined;
+    if(existing&&existing.job_id!==jobId)return null;
     if (!existing) {
       this.db.prepare(`
         INSERT INTO discord_messages(id, job_id, channel_id, author_id, author_username, is_bot, agent_role, agent_name, content, raw_json, occurred_at, recorded_at)
@@ -158,7 +188,7 @@ export class DiscordMessageCollector {
     const sorted = [...messages].sort((a, b) => (a.id < b.id ? -1 : 1));
 
     for (const msg of sorted) {
-      if (this.filterMessage(msg) && this.isCorrelated(msg, jobId, correlationId, taskId)) {
+      if (await this.correlateMessage(msg, jobId, correlationId, taskId)) {
         const classified = this.recordMessage(msg, jobId);
         if (classified) results.push(classified);
       }
@@ -199,9 +229,9 @@ export class DiscordMessageCollector {
 
     // Download attachments within their strict size limits:
     // proposal <= 256 KiB, evidence <= 512 KiB, summary <= 64 KiB
-    const proposal = await this.client.fetchAttachment(proposalMeta.attachment, 256 * 1024);
-    const evidence = await this.client.fetchAttachment(evidenceMeta.attachment, 512 * 1024);
-    const summary = await this.client.fetchAttachment(summaryMeta.attachment, 64 * 1024);
+    const proposal = this.verifiedFiles.get(proposalMeta.attachment.id) ?? await this.client.fetchAttachment(proposalMeta.attachment, 256 * 1024);
+    const evidence = this.verifiedFiles.get(evidenceMeta.attachment.id) ?? await this.client.fetchAttachment(evidenceMeta.attachment, 512 * 1024);
+    const summary = this.verifiedFiles.get(summaryMeta.attachment.id) ?? await this.client.fetchAttachment(summaryMeta.attachment, 64 * 1024);
 
     const now = Date.now();
     for (const [meta, fetched] of [

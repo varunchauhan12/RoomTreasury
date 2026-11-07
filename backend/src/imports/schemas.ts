@@ -24,6 +24,12 @@ export const proposalSchema = {
     "specialistContactFailures"
   ],
   "properties": {
+    "sourceReferences": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
     "taskId": {
       "type": "string",
       "minLength": 1,
@@ -72,7 +78,27 @@ export const proposalSchema = {
           "maxLength": 32000
         },
         "agreedRevenueCents": {
-          "type": "number"
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "proposedRevenueCents": {
+          "type": "number",
+          "minimum": 0
+        },
+        "revenueStatus": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "targetDurationBusinessDays": {
+          "type": "number",
+          "minimum": 1
         },
         "deadline": {
           "anyOf": [
@@ -100,6 +126,10 @@ export const proposalSchema = {
         "contingencyPolicy"
       ],
       "properties": {
+        "externalExpenses": {
+          "type": "object",
+          "additionalProperties": true
+        },
         "budgetCents": {
           "type": "number"
         },
@@ -139,9 +169,17 @@ export const proposalSchema = {
                 "minLength": 1,
                 "maxLength": 32000
               },
+              "status": {
+                "type": "string",
+                "maxLength": 32000
+              },
               "requiredConfirmation": {
                 "type": "string",
                 "minLength": 1,
+                "maxLength": 32000
+              },
+              "verificationRequired": {
+                "type": "string",
                 "maxLength": 32000
               }
             }
@@ -188,6 +226,22 @@ export const proposalSchema = {
               },
               "estimatedEffortHours": {
                 "type": "number"
+              },
+              "effortRangeHours": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "min",
+                  "max"
+                ],
+                "properties": {
+                  "min": {
+                    "type": "number"
+                  },
+                  "max": {
+                    "type": "number"
+                  }
+                }
               },
               "explanation": {
                 "type": "string",
@@ -382,15 +436,20 @@ export const proposalSchema = {
           "additionalProperties": false,
           "required": [
             "clientName",
-            "projectName",
-            "businessObjective",
-            "summary",
-            "documentStatus"
+            "projectName"
           ],
           "properties": {
+            "client": {
+              "type": "string",
+              "maxLength": 32000
+            },
             "clientName": {
               "type": "string",
               "minLength": 1,
+              "maxLength": 32000
+            },
+            "project": {
+              "type": "string",
               "maxLength": 32000
             },
             "projectName": {
@@ -398,19 +457,20 @@ export const proposalSchema = {
               "minLength": 1,
               "maxLength": 32000
             },
+            "status": {
+              "type": "string",
+              "maxLength": 32000
+            },
             "businessObjective": {
               "type": "string",
-              "minLength": 1,
               "maxLength": 32000
             },
             "summary": {
               "type": "string",
-              "minLength": 1,
               "maxLength": 32000
             },
             "documentStatus": {
               "type": "string",
-              "minLength": 1,
               "maxLength": 32000
             }
           }
@@ -443,9 +503,17 @@ export const proposalSchema = {
                 "minLength": 1,
                 "maxLength": 32000
               },
+              "status": {
+                "type": "string",
+                "maxLength": 32000
+              },
               "requiredConfirmation": {
                 "type": "string",
                 "minLength": 1,
+                "maxLength": 32000
+              },
+              "verificationRequired": {
+                "type": "string",
                 "maxLength": 32000
               }
             }
@@ -470,9 +538,7 @@ export const proposalSchema = {
         "tasks",
         "dependencies",
         "qualityChecks",
-        "estimatedTotalHours",
-        "resources",
-        "resourceStatus"
+        "estimatedTotalHours"
       ],
       "properties": {
         "tasks": {
@@ -653,18 +719,24 @@ export const proposalSchema = {
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": [
-              "role",
-              "hours"
-            ],
             "properties": {
               "role": {
                 "type": "string",
-                "minLength": 1,
+                "maxLength": 32000
+              },
+              "workstream": {
+                "type": "string",
                 "maxLength": 32000
               },
               "hours": {
                 "type": "number"
+              },
+              "estimatedHours": {
+                "type": "number"
+              },
+              "status": {
+                "type": "string",
+                "maxLength": 32000
               }
             }
           }
@@ -672,6 +744,24 @@ export const proposalSchema = {
         "resourceStatus": {
           "type": "string",
           "minLength": 1,
+          "maxLength": 32000
+        },
+        "milestones": {
+          "type": "array",
+          "maxItems": 200,
+          "items": {
+            "type": "object"
+          }
+        },
+        "resourceRequirements": {
+          "type": "array",
+          "maxItems": 200,
+          "items": {
+            "type": "object"
+          }
+        },
+        "timelineBasis": {
+          "type": "string",
           "maxLength": 32000
         }
       }
@@ -750,14 +840,14 @@ export const proposalSchema = {
         "additionalProperties": false,
         "required": [
           "specialist",
-          "analysisTaskId",
           "status",
-          "sourceMessageIds",
-          "findings",
-          "integration",
-          "projectId"
+          "sourceMessageIds"
         ],
         "properties": {
+          "conclusion": {
+            "type": "string",
+            "maxLength": 32000
+          },
           "specialist": {
             "type": "string",
             "minLength": 1,
@@ -816,15 +906,36 @@ export const proposalSchema = {
         "baseEstimatedCostCents",
         "contingencyCents",
         "cashReceivedCents",
-        "availableDeliveryFundsCents",
-        "backendVerificationStatus",
         "explanation",
-        "scenarios",
-        "financialReviewStatus"
+        "scenarios"
       ],
       "properties": {
         "agreedRevenueCents": {
-          "type": "number"
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "proposedRevenueCents": {
+          "type": "number",
+          "minimum": 0
+        },
+        "revenueStatus": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "targetDurationBusinessDays": {
+          "type": "number",
+          "minimum": 1
+        },
+        "marginBasis": {
+          "type": "string",
+          "maxLength": 32000
         },
         "proposedDeliveryBudgetCents": {
           "type": "number"
@@ -848,7 +959,38 @@ export const proposalSchema = {
           "type": "null"
         },
         "availableDeliveryFundsCents": {
-          "type": "null"
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "availableFundsCents": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "externalExpenseCents": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "type": "string",
+          "maxLength": 32000
         },
         "backendVerificationStatus": {
           "type": "string",
@@ -870,9 +1012,7 @@ export const proposalSchema = {
               "name",
               "hours",
               "baseCostCents",
-              "contingencyCents",
-              "totalCostCents",
-              "projectedGrossMarginCents"
+              "contingencyCents"
             ],
             "properties": {
               "name": {
@@ -889,10 +1029,16 @@ export const proposalSchema = {
               "contingencyCents": {
                 "type": "number"
               },
+              "budgetCents": {
+                "type": "number"
+              },
               "totalCostCents": {
                 "type": "number"
               },
               "projectedGrossMarginCents": {
+                "type": "number"
+              },
+              "projectedGrossMarginPercent": {
                 "type": "number"
               }
             }
@@ -977,6 +1123,10 @@ export const proposalSchema = {
         "ownerApprovalRequired"
       ],
       "properties": {
+        "decision": {
+          "type": "string",
+          "maxLength": 32000
+        },
         "recommendation": {
           "type": "string",
           "minLength": 1,
@@ -987,38 +1137,54 @@ export const proposalSchema = {
           "minLength": 1,
           "maxLength": 32000
         },
+        "actions": {
+          "type": "array",
+          "maxItems": 200,
+          "items": {
+            "type": "string",
+            "maxLength": 32000
+          }
+        },
         "options": {
           "type": "array",
           "maxItems": 200,
           "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "name",
-              "budgetCents",
-              "status",
-              "condition"
-            ],
-            "properties": {
-              "name": {
+            "anyOf": [
+              {
                 "type": "string",
-                "minLength": 1,
                 "maxLength": 32000
               },
-              "budgetCents": {
-                "type": "number"
-              },
-              "status": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 32000
-              },
-              "condition": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 32000
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "budgetCents",
+                  "status",
+                  "condition"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 32000
+                  },
+                  "budgetCents": {
+                    "type": "number"
+                  },
+                  "status": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 32000
+                  },
+                  "condition": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 32000
+                  }
+                }
               }
-            }
+            ]
           }
         },
         "ownerApprovalRequired": {
@@ -1039,180 +1205,265 @@ export const proposalSchema = {
   }
 } as const;
 export const evidenceSchema = {
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "initial",
-    "reconciliation"
-  ],
-  "properties": {
-    "initial": {
+  "anyOf": [
+    {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "threads",
-        "truncated",
-        "oldest_timestamp"
+        "initial",
+        "reconciliation"
       ],
       "properties": {
-        "threads": {
-          "type": "array",
-          "maxItems": 200,
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "root",
-              "replies"
-            ],
-            "properties": {
-              "root": {
+        "initial": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "threads",
+            "truncated",
+            "oldest_timestamp"
+          ],
+          "properties": {
+            "threads": {
+              "type": "array",
+              "maxItems": 200,
+              "items": {
                 "type": "object",
                 "additionalProperties": false,
                 "required": [
-                  "id",
-                  "kind",
-                  "sender",
-                  "sender_name",
-                  "body",
-                  "timestamp",
-                  "attachments"
+                  "root",
+                  "replies"
                 ],
                 "properties": {
-                  "id": {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 32000
+                  "root": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "id",
+                      "kind",
+                      "sender",
+                      "sender_name",
+                      "body",
+                      "timestamp",
+                      "attachments"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 32000
+                      },
+                      "kind": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 32000
+                      },
+                      "sender": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 32000
+                      },
+                      "sender_name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 32000
+                      },
+                      "body": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 32000
+                      },
+                      "timestamp": {
+                        "type": "number"
+                      },
+                      "attachments": {
+                        "type": "array",
+                        "maxItems": 200,
+                        "items": {}
+                      }
+                    }
                   },
-                  "kind": {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 32000
-                  },
-                  "sender": {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 32000
-                  },
-                  "sender_name": {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 32000
-                  },
-                  "body": {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 32000
-                  },
-                  "timestamp": {
-                    "type": "number"
-                  },
-                  "attachments": {
+                  "replies": {
                     "type": "array",
                     "maxItems": 200,
                     "items": {}
                   }
                 }
-              },
-              "replies": {
-                "type": "array",
-                "maxItems": 200,
-                "items": {}
               }
+            },
+            "truncated": {
+              "type": "boolean"
+            },
+            "oldest_timestamp": {
+              "type": "number"
             }
           }
         },
-        "truncated": {
-          "type": "boolean"
-        },
-        "oldest_timestamp": {
-          "type": "number"
+        "reconciliation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "threads",
+            "truncated",
+            "oldest_timestamp"
+          ],
+          "properties": {
+            "threads": {
+              "type": "array",
+              "maxItems": 200,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "root",
+                  "replies"
+                ],
+                "properties": {
+                  "root": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "id",
+                      "kind",
+                      "sender",
+                      "sender_name",
+                      "body",
+                      "timestamp",
+                      "attachments"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 32000
+                      },
+                      "kind": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 32000
+                      },
+                      "sender": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 32000
+                      },
+                      "sender_name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 32000
+                      },
+                      "body": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 32000
+                      },
+                      "timestamp": {
+                        "type": "number"
+                      },
+                      "attachments": {
+                        "type": "array",
+                        "maxItems": 200,
+                        "items": {}
+                      }
+                    }
+                  },
+                  "replies": {
+                    "type": "array",
+                    "maxItems": 200,
+                    "items": {}
+                  }
+                }
+              }
+            },
+            "truncated": {
+              "type": "boolean"
+            },
+            "oldest_timestamp": {
+              "type": "number"
+            }
+          }
         }
       }
     },
-    "reconciliation": {
+    {
       "type": "object",
-      "additionalProperties": false,
+      "additionalProperties": true,
       "required": [
-        "threads",
-        "truncated",
-        "oldest_timestamp"
+        "taskId",
+        "specialistReports",
+        "coordinationMessages"
       ],
       "properties": {
-        "threads": {
+        "taskId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32000
+        },
+        "sourceBrief": {
+          "type": ["object", "string"]
+        },
+        "sourceIdNotice": {
+          "type": "string",
+          "maxLength": 32000
+        },
+        "specialistReports": {
+          "type": ["array", "object"]
+        },
+        "evidenceReferences": {
+          "type": "array"
+        },
+        "calculations": {
+          "type": "object"
+        },
+        "assumptions": {
+          "type": "array"
+        },
+        "reconciliation": {
+          "type": ["array", "object"]
+        },
+        "unresolvedQuestions": {
+          "type": "array"
+        },
+        "verificationLimitations": {
+          "type": ["array", "string"]
+        },
+        "coordinationMessages": {
           "type": "array",
-          "maxItems": 200,
           "items": {
             "type": "object",
-            "additionalProperties": false,
             "required": [
-              "root",
-              "replies"
+              "id",
+              "sender_name",
+              "body"
             ],
             "properties": {
-              "root": {
-                "type": "object",
-                "additionalProperties": false,
-                "required": [
-                  "id",
-                  "kind",
-                  "sender",
-                  "sender_name",
-                  "body",
-                  "timestamp",
-                  "attachments"
-                ],
-                "properties": {
-                  "id": {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 32000
-                  },
-                  "kind": {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 32000
-                  },
-                  "sender": {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 32000
-                  },
-                  "sender_name": {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 32000
-                  },
-                  "body": {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 32000
-                  },
-                  "timestamp": {
-                    "type": "number"
-                  },
-                  "attachments": {
-                    "type": "array",
-                    "maxItems": 200,
-                    "items": {}
-                  }
-                }
+              "id": {
+                "type": "string"
               },
-              "replies": {
-                "type": "array",
-                "maxItems": 200,
-                "items": {}
+              "kind": {
+                "type": "string"
+              },
+              "sender": {
+                "type": "string"
+              },
+              "sender_name": {
+                "type": "string"
+              },
+              "body": {
+                "type": "string"
+              },
+              "timestamp": {
+                "type": "number"
+              },
+              "attachments": {
+                "type": "array"
               }
             }
           }
         },
-        "truncated": {
-          "type": "boolean"
-        },
-        "oldest_timestamp": {
-          "type": "number"
+        "approvalStatus": {
+          "type": "string"
         }
       }
     }
-  }
+  ]
 } as const;

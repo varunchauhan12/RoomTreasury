@@ -1,0 +1,1327 @@
+{
+  "projectId": "804019a2-0012-4f8d-964e-1caa343e82a4",
+  "taskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164",
+  "processingJobId": "e8c2e4a1-1546-45b3-b9f2-80b05000ecca",
+  "correlationId": "discord-e8c2e4a1-1546-45b3-b9f2-80b05000ecca",
+  "intakeRevision": 1,
+  "intakeSha256": "c75cdbb9f2f87ed8891574efa347bb0542a6b1992b65ae2644d32f4088b11c8b",
+  "currency": "USD",
+  "status": "READY_FOR_OWNER_REVIEW",
+  "client": {
+    "name": "NovaCreative Agency"
+  },
+  "project": {
+    "id": "804019a2-0012-4f8d-964e-1caa343e82a4",
+    "name": "Digital Agency Website — Design and Development",
+    "brief": "RoomTreasury project intake\nProject name: Digital Agency Website — Design and Development\nDescription: Design and develop a modern, professional and responsive website for NovaCreative Agency, a fictional digital agency offering web development, branding and AI automation services. The website should establish the agency's online presence, showcase its services and portfolio, communicate its working process, and generate enquiries from prospective clients.\nRequirements and scope: Build a responsive six-section business website.\n\nHOMEPAGE\n\nProfessional hero section with a strong headline.\n\nSupporting description explaining the agency's value proposition.\n\nPrimary call-to-action button.\n\nABOUT\n\nAgency introduction.\n\nMission, values and approach to client projects.\n\nSERVICES\nFour service offerings:\n\nWebsite Design and Development.\n\nUI/UX Design.\n\nAI Automation Solutions.\n\nDigital Branding.\nEach service must have a title and description.\n\nPORTFOLIO\n\nThree fictional project examples.\n\nEach example includes a title, short description and image placeholder.\n\nOUR PROCESS\nDisplay five stages:\n\nDiscovery.\n\nPlanning.\n\nDesign.\n\nDevelopment.\n\nDelivery.\n\nCONTACT\n\nContact information.\n\nFunctional email link.\n\nClear enquiry call-to-action.\n\nTECHNICAL REQUIREMENTS\n\nResponsive desktop, tablet and mobile layouts.\n\nModern, accessible frontend design.\n\nFunctional navigation and section links.\n\nConsistent typography, spacing and visual identity.\n\nOptimized images and reasonable load\nDeliverables: DELIVERABLES\n\nComplete responsive six-section website.\n\nFour service cards.\n\nThree portfolio project entries.\n\nFive-stage process section.\n\nFunctional navigation and contact email link.\n\nSource code and basic deployment instructions.\n\nACCEPTANCE CRITERIA\nAll six sections must be implemented and work correctly on desktop, tablet and mobile. Navigation and contact links must function, and the website must have no major visual or functional defects.\nDesired deadline: Not specified\nAdditional notes: This is a synthetic test project. The $1,800 is a proposed estimate only, not confirmed client revenue, a signed contract, received cash or available delivery funds. No deadline has been agreed. The agency should estimate project effort, resources, delivery timeline, risks and financial exposure. All spending must remain simulated and require human approval. No real client, payment or external commitment exists.",
+    "agreedRevenueCents": null,
+    "proposedRevenueCents": 180000,
+    "revenueStatus": "PROPOSED_ESTIMATE_NOT_AGREED_OR_RECEIVED",
+    "deadline": null,
+    "estimatedDurationBusinessDays": {
+      "min": 8,
+      "max": 10
+    }
+  },
+  "proposal": {
+    "budgetCents": 107520,
+    "provenance": "switch_agent",
+    "explanation": "Independent treasury model32h at unverified2800 USD cents/hour:89600 base+17920 separately tracked20% contingency=107520. Independent challenge confirms arithmetic and explicit base coverage. Conditional positive hypothetical margin72480 against proposed180000;not a ledger balance or formal approval.",
+    "assumptions": [
+      {
+        "assumptionId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-A1",
+        "description": "One scrolling static page with six section anchors,not six routes. No CMS/form/API/analytics/SEO campaign/details or public deployment.",
+        "status": "EXPLICIT_PLANNING_ASSUMPTION_NOT_CLIENT_APPROVAL",
+        "verificationRequired": "Supported planning interpretation of section-based brief; changes require re-estimation."
+      },
+      {
+        "assumptionId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-A2",
+        "description": "Synthetic agency copy,fictional examples and labelled local CSS/SVG placeholders are sufficient; real client assets are not missing dependencies.",
+        "status": "EXPLICIT_PLANNING_ASSUMPTION_NOT_CLIENT_APPROVAL",
+        "verificationRequired": "Intake explicitly fictional/placeholder-only; owner reviews presentation defaults."
+      },
+      {
+        "assumptionId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-A3",
+        "description": "Proposed synthetic contact default hello@novacreative.example is configurable; it is not a real mailbox or supplied client address. CTA targets Contact.",
+        "status": "EXPLICIT_PLANNING_ASSUMPTION_NOT_CLIENT_APPROVAL",
+        "verificationRequired": "Owner reviews or substitutes test address; only mailto syntax/invocation is required."
+      },
+      {
+        "assumptionId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-A4",
+        "description": "Use local/permissive assets/system fonts and no paid/external service by design; actual licence/cost checks still required if tooling/assets change.",
+        "status": "EXPLICIT_PLANNING_ASSUMPTION_NOT_CLIENT_APPROVAL",
+        "verificationRequired": "Owner reviews dependencies/asset policy; unselected external costs remain unknown,not confirmed zero."
+      },
+      {
+        "assumptionId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-A5",
+        "description": "Accessible means semantic/headings/names,keyboard/focus,link text,contrast/zoom and alt/decorative checks; no certification/conformance level.",
+        "status": "EXPLICIT_PLANNING_ASSUMPTION_NOT_CLIENT_APPROVAL",
+        "verificationRequired": "Proposed acceptance interpretation for owner review."
+      },
+      {
+        "assumptionId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-A6",
+        "description": "Reasonable load means lightweight local assets and recorded mobile/desktop observations. No score,guaranteed time or quantitative acceptance threshold adopted.",
+        "status": "EXPLICIT_PLANNING_ASSUMPTION_NOT_CLIENT_APPROVAL",
+        "verificationRequired": "Requirements specialist's optional3MB/500KB targets preserved as unapproved alternatives; owner may request a revised test scope."
+      },
+      {
+        "assumptionId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-A7",
+        "description": "32 planning hours at unverified2800 cents/hour,range25–39h;20% cost contingency. Staff capacity and actual costs unverified.",
+        "status": "EXPLICIT_PLANNING_ASSUMPTION_NOT_CLIENT_APPROVAL",
+        "verificationRequired": "Owner validates rates/resources before any future execution decision."
+      },
+      {
+        "assumptionId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-A8",
+        "description": "Conditional estimated duration8–10 business days; ten-day phase plan assumes at least4 productive hours/day through handoffs and internal feedback within1 business day.",
+        "status": "EXPLICIT_PLANNING_ASSUMPTION_NOT_CLIENT_APPROVAL",
+        "verificationRequired": "No deadline or calendar start/end agreed. Confirm reviewer/capacity before a promise."
+      },
+      {
+        "assumptionId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-A9",
+        "description": "Source archive with README,dependency/asset list and basic static-host deployment instructions is sufficient handover; no real environment provisioned.",
+        "status": "EXPLICIT_PLANNING_ASSUMPTION_NOT_CLIENT_APPROVAL",
+        "verificationRequired": "Owner confirms preferred archive/repository/toolchain; credentials and public hosting not required."
+      },
+      {
+        "assumptionId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-A10",
+        "description": "One bounded internal review/correction pass is included in base effort; extra cycles or expanded scope require re-estimation.",
+        "status": "EXPLICIT_PLANNING_ASSUMPTION_NOT_CLIENT_APPROVAL",
+        "verificationRequired": "Proposal assumption,not client approval or contractual restriction."
+      }
+    ],
+    "risks": [
+      "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-K1",
+      "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-K2",
+      "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-K3",
+      "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-K4",
+      "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-K5",
+      "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-K6",
+      "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-K7",
+      "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-K8",
+      "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-K9",
+      "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-K10",
+      "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-K11"
+    ],
+    "allocations": [
+      {
+        "workstream": "Research",
+        "limitCents": 13440,
+        "baseCostCents": 11200,
+        "contingencyCents": 2240,
+        "estimatedEffortHours": 4,
+        "effortRangeHours": {
+          "min": 3,
+          "max": 5
+        },
+        "explanation": "4 planning hours at unverified2800 USD cents/hour, with20% contingency included in the proposed limit, not in addition. No reservation or spending authority.",
+        "relatedTasks": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-R1",
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-R2",
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-R3",
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-R4"
+        ]
+      },
+      {
+        "workstream": "Design",
+        "limitCents": 23520,
+        "baseCostCents": 19600,
+        "contingencyCents": 3920,
+        "estimatedEffortHours": 7,
+        "effortRangeHours": {
+          "min": 5,
+          "max": 9
+        },
+        "explanation": "7 planning hours at unverified2800 USD cents/hour, with20% contingency included in the proposed limit, not in addition. No reservation or spending authority.",
+        "relatedTasks": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-D1",
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-D2",
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-D3",
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-D4",
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-D5"
+        ]
+      },
+      {
+        "workstream": "Development",
+        "limitCents": 50400,
+        "baseCostCents": 42000,
+        "contingencyCents": 8400,
+        "estimatedEffortHours": 15,
+        "effortRangeHours": {
+          "min": 12,
+          "max": 18
+        },
+        "explanation": "15 planning hours at unverified2800 USD cents/hour, with20% contingency included in the proposed limit, not in addition. No reservation or spending authority.",
+        "relatedTasks": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-DEV1",
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-DEV2",
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-DEV3",
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-DEV4",
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-DEV5",
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-DEV6",
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-DEV7",
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-DEV8"
+        ]
+      },
+      {
+        "workstream": "QA",
+        "limitCents": 20160,
+        "baseCostCents": 16800,
+        "contingencyCents": 3360,
+        "estimatedEffortHours": 6,
+        "effortRangeHours": {
+          "min": 5,
+          "max": 7
+        },
+        "explanation": "6 planning hours at unverified2800 USD cents/hour, with20% contingency included in the proposed limit, not in addition. No reservation or spending authority.",
+        "relatedTasks": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-Q1",
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-Q2",
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-Q3",
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-Q4",
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-Q5",
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-Q6",
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-Q7",
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-Q8",
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-Q9"
+        ]
+      }
+    ],
+    "contingencyPolicy": "17920 cents included within four proposed limits,not a fifth allocation or extra sum. Track base and reserve separately;no use or transfer authorized. Re-estimate expanded scope;do not hide ordinary omitted work in contingency.",
+    "externalExpenses": {
+      "totalCents": null,
+      "status": "UNPRICED_EXTERNAL_OPTIONS_NOT_PROCURED",
+      "items": [
+        "Potential fonts/templates/assets",
+        "Future host/domain/CDN",
+        "Future mail/CMS/analytics/support"
+      ],
+      "explanation": "No paid service/public deployment requested. Unknown cost is not confirmed zero and no expense/obligation is created."
+    }
+  },
+  "statementOfWork": {
+    "projectOverview": {
+      "clientName": "NovaCreative Agency",
+      "projectName": "Digital Agency Website — Design and Development",
+      "documentStatus": "PROPOSED_SYNTHETIC_SOW_NOT_ACCEPTED_CONTRACT"
+    },
+    "objective": "Establish a fictional agency presence,explain its services/process,present three clearly fictional work examples and guide visitors to a contact email link.",
+    "scope": [
+      {
+        "name": "Home",
+        "elements": [
+          "Professional hero/headline",
+          "Value proposition/supporting description",
+          "Primary CTA linking to Contact"
+        ]
+      },
+      {
+        "name": "About",
+        "elements": [
+          "Agency introduction",
+          "Mission",
+          "Values",
+          "Approach"
+        ]
+      },
+      {
+        "name": "Services",
+        "elements": [
+          "Website Design and Development",
+          "UI/UX Design",
+          "AI Automation Solutions",
+          "Digital Branding"
+        ],
+        "acceptance": "Exactly four service cards,each with title and description."
+      },
+      {
+        "name": "Portfolio",
+        "elements": [
+          "Fictional example1",
+          "Fictional example2",
+          "Fictional example3"
+        ],
+        "acceptance": "Exactly three clearly fictional entries,each with title,short description and local image placeholder."
+      },
+      {
+        "name": "Our Process",
+        "elements": [
+          "Discovery",
+          "Planning",
+          "Design",
+          "Development",
+          "Delivery"
+        ],
+        "acceptance": "Five stages displayed in this order."
+      },
+      {
+        "name": "Contact",
+        "elements": [
+          "Synthetic/configurable contact information",
+          "Functional mailto link",
+          "Clear enquiry CTA"
+        ],
+        "acceptance": "Correct scheme and intended target; no form,mailbox provisioning,notification or delivery test."
+      }
+    ],
+    "deliverables": [
+      {
+        "name": "Scope/content/visual plan",
+        "description": "Six-section content manifest,fictional copy/placeholder plan,visual system,technical boundaries and proposed acceptance matrix.",
+        "expectedOutcome": "Reviewable bounded synthetic implementation baseline.",
+        "acceptanceCriteria": [
+          "All required content and proposed defaults documented;no real claims or paid dependencies introduced."
+        ],
+        "dependencies": [
+          "Owner review of synthetic defaults and test/handover preferences"
+        ]
+      },
+      {
+        "name": "Responsive six-section frontend",
+        "description": "One scrolling page with Home,About,Services,Portfolio,Our Process,Contact;4 services,3 fictional title/description/local-placeholder entries and5 process stages.",
+        "expectedOutcome": "Readable consistent agency presentation on desktop/tablet/mobile.",
+        "acceptanceCriteria": [
+          "All six named sections occur once and contain the stated elements; exactly4 titled/described services,3 fictional title/description/image-placeholder portfolio entries and5 process stages.",
+          "All six navigation fragments resolve to intended visible sections; primary CTA reaches Contact. No broken section links or obscured targets.",
+          "Proposed matrix375px mobile,768px tablet,1440px desktop with named current-at-test browser versions recorded: readable content,no unintended horizontal overflow and unobscured required navigation/contact controls. Matrix remains proposed for owner review.",
+          "Logical headings/semantic landmarks,named controls,keyboard access,visible focus,sensible link text and accurate decorative/alt treatment pass smoke checks; text/controls remain distinguishable during contrast/zoom review. No accessibility certification claimed."
+        ],
+        "dependencies": [
+          "Content/design direction",
+          "Selected toolchain and assigned delivery capacity"
+        ]
+      },
+      {
+        "name": "Navigation and contact email link",
+        "description": "Six section anchors,primary CTA-to-contact,contact information and configurable synthetic mailto link.",
+        "expectedOutcome": "Required navigation and email-link interaction work without backend/mail service.",
+        "acceptanceCriteria": [
+          "All six navigation fragments resolve to intended visible sections; primary CTA reaches Contact. No broken section links or obscured targets.",
+          "Visible synthetic/configurable email agrees with syntactically valid mailto href; link invocation is checked without sending email or claiming mailbox/delivery."
+        ],
+        "dependencies": [
+          "Section IDs",
+          "Documented synthetic contact default"
+        ]
+      },
+      {
+        "name": "Source code and basic deployment instructions",
+        "description": "Source archive/repository content,local assets/dependencies/licence list and README prerequisites/install/build/run/configuration/static-host example.",
+        "expectedOutcome": "Reviewer can reproduce locally and understand possible later deployment;no public deployment performed.",
+        "acceptanceCriteria": [
+          "Source package includes dependencies/assets/licences where applicable and README with prerequisites,install/build/run,configuration and static-host guidance. A clean documented local build/preview is verified during future delivery QA,not claimed now.",
+          "Zero major defects:missing section,broken required link/control,unreadable/unreachable core content or failed navigation/contact behavior. Cosmetic issues are documented separately and require reviewer disposition.",
+          "Handover includes code and planned test evidence; instructions state no public deployment,credentials,DNS/domain configuration or mailbox provisioning was performed.",
+          "Record build/URL,date,tool/version,device/network profile,local asset sizes,transfer size/request count and LCP/CLS if reported on one mobile and desktop profile. Address identified avoidable heavy assets/scripts. No numeric score or guaranteed load time is promised."
+        ],
+        "dependencies": [
+          "Completed local build",
+          "Planned future delivery QA",
+          "Owner handover-format preference"
+        ]
+      }
+    ],
+    "acceptanceCriteria": [
+      "All six named sections occur once and contain the stated elements; exactly4 titled/described services,3 fictional title/description/image-placeholder portfolio entries and5 process stages.",
+      "All six navigation fragments resolve to intended visible sections; primary CTA reaches Contact. No broken section links or obscured targets.",
+      "Visible synthetic/configurable email agrees with syntactically valid mailto href; link invocation is checked without sending email or claiming mailbox/delivery.",
+      "Proposed matrix375px mobile,768px tablet,1440px desktop with named current-at-test browser versions recorded: readable content,no unintended horizontal overflow and unobscured required navigation/contact controls. Matrix remains proposed for owner review.",
+      "Logical headings/semantic landmarks,named controls,keyboard access,visible focus,sensible link text and accurate decorative/alt treatment pass smoke checks; text/controls remain distinguishable during contrast/zoom review. No accessibility certification claimed.",
+      "Record build/URL,date,tool/version,device/network profile,local asset sizes,transfer size/request count and LCP/CLS if reported on one mobile and desktop profile. Address identified avoidable heavy assets/scripts. No numeric score or guaranteed load time is promised.",
+      "Source package includes dependencies/assets/licences where applicable and README with prerequisites,install/build/run,configuration and static-host guidance. A clean documented local build/preview is verified during future delivery QA,not claimed now.",
+      "Zero major defects:missing section,broken required link/control,unreadable/unreachable core content or failed navigation/contact behavior. Cosmetic issues are documented separately and require reviewer disposition.",
+      "Handover includes code and planned test evidence; instructions state no public deployment,credentials,DNS/domain configuration or mailbox provisioning was performed."
+    ],
+    "exclusions": [
+      "Separate pages/routes,project details,CMS/admin,forms,notifications,APIs or real mail service.",
+      "Public deployment,hosting/domain/DNS procurement/configuration,credentials or service provisioning.",
+      "Real client assets/portfolio claims,external stock imagery,paid fonts/templates or production media licensing unless separately reviewed.",
+      "SEO campaign/ranking guarantee,analytics,formal accessibility/performance certification or guaranteed load score/time.",
+      "Ongoing hosting/maintenance/support,unbounded revisions or any financial operation."
+    ],
+    "assumptions": [
+      {
+        "assumptionId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-A1",
+        "description": "One scrolling static page with six section anchors,not six routes. No CMS/form/API/analytics/SEO campaign/details or public deployment.",
+        "status": "EXPLICIT_PLANNING_ASSUMPTION_NOT_CLIENT_APPROVAL",
+        "verificationRequired": "Supported planning interpretation of section-based brief; changes require re-estimation."
+      },
+      {
+        "assumptionId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-A2",
+        "description": "Synthetic agency copy,fictional examples and labelled local CSS/SVG placeholders are sufficient; real client assets are not missing dependencies.",
+        "status": "EXPLICIT_PLANNING_ASSUMPTION_NOT_CLIENT_APPROVAL",
+        "verificationRequired": "Intake explicitly fictional/placeholder-only; owner reviews presentation defaults."
+      },
+      {
+        "assumptionId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-A3",
+        "description": "Proposed synthetic contact default hello@novacreative.example is configurable; it is not a real mailbox or supplied client address. CTA targets Contact.",
+        "status": "EXPLICIT_PLANNING_ASSUMPTION_NOT_CLIENT_APPROVAL",
+        "verificationRequired": "Owner reviews or substitutes test address; only mailto syntax/invocation is required."
+      },
+      {
+        "assumptionId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-A4",
+        "description": "Use local/permissive assets/system fonts and no paid/external service by design; actual licence/cost checks still required if tooling/assets change.",
+        "status": "EXPLICIT_PLANNING_ASSUMPTION_NOT_CLIENT_APPROVAL",
+        "verificationRequired": "Owner reviews dependencies/asset policy; unselected external costs remain unknown,not confirmed zero."
+      },
+      {
+        "assumptionId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-A5",
+        "description": "Accessible means semantic/headings/names,keyboard/focus,link text,contrast/zoom and alt/decorative checks; no certification/conformance level.",
+        "status": "EXPLICIT_PLANNING_ASSUMPTION_NOT_CLIENT_APPROVAL",
+        "verificationRequired": "Proposed acceptance interpretation for owner review."
+      },
+      {
+        "assumptionId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-A6",
+        "description": "Reasonable load means lightweight local assets and recorded mobile/desktop observations. No score,guaranteed time or quantitative acceptance threshold adopted.",
+        "status": "EXPLICIT_PLANNING_ASSUMPTION_NOT_CLIENT_APPROVAL",
+        "verificationRequired": "Requirements specialist's optional3MB/500KB targets preserved as unapproved alternatives; owner may request a revised test scope."
+      },
+      {
+        "assumptionId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-A7",
+        "description": "32 planning hours at unverified2800 cents/hour,range25–39h;20% cost contingency. Staff capacity and actual costs unverified.",
+        "status": "EXPLICIT_PLANNING_ASSUMPTION_NOT_CLIENT_APPROVAL",
+        "verificationRequired": "Owner validates rates/resources before any future execution decision."
+      },
+      {
+        "assumptionId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-A8",
+        "description": "Conditional estimated duration8–10 business days; ten-day phase plan assumes at least4 productive hours/day through handoffs and internal feedback within1 business day.",
+        "status": "EXPLICIT_PLANNING_ASSUMPTION_NOT_CLIENT_APPROVAL",
+        "verificationRequired": "No deadline or calendar start/end agreed. Confirm reviewer/capacity before a promise."
+      },
+      {
+        "assumptionId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-A9",
+        "description": "Source archive with README,dependency/asset list and basic static-host deployment instructions is sufficient handover; no real environment provisioned.",
+        "status": "EXPLICIT_PLANNING_ASSUMPTION_NOT_CLIENT_APPROVAL",
+        "verificationRequired": "Owner confirms preferred archive/repository/toolchain; credentials and public hosting not required."
+      },
+      {
+        "assumptionId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-A10",
+        "description": "One bounded internal review/correction pass is included in base effort; extra cycles or expanded scope require re-estimation.",
+        "status": "EXPLICIT_PLANNING_ASSUMPTION_NOT_CLIENT_APPROVAL",
+        "verificationRequired": "Proposal assumption,not client approval or contractual restriction."
+      }
+    ],
+    "milestones": [
+      {
+        "milestoneId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-M1",
+        "name": "Content/scope and technical plan",
+        "estimatedDurationBusinessDays": 1,
+        "expectedCompletion": "Estimated day1 after agreed readiness/start trigger",
+        "dependencies": [
+          "Owner-reviewed defaults and confirmed staff/reviewer capacity"
+        ],
+        "deliverable": "Synthetic content map,scope/test/asset plan",
+        "completionCriteria": "Required elements/defaults and toolchain/handover plan recorded."
+      },
+      {
+        "milestoneId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-M2",
+        "name": "Responsive design",
+        "estimatedDurationBusinessDays": 2,
+        "expectedCompletion": "Estimated day3",
+        "dependencies": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-M1"
+        ],
+        "deliverable": "Six-section responsive design and placeholders",
+        "completionCriteria": "Internal reviewer accepts layout,content and accessible-state direction."
+      },
+      {
+        "milestoneId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-M3",
+        "name": "Static implementation",
+        "estimatedDurationBusinessDays": 4,
+        "expectedCompletion": "Estimated day7",
+        "dependencies": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-M2"
+        ],
+        "deliverable": "Local review build,source and draft README",
+        "completionCriteria": "All sections,anchors,mailto and local assets implemented; no public deployment."
+      },
+      {
+        "milestoneId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-M4",
+        "name": "QA and source/instruction handover",
+        "estimatedDurationBusinessDays": 2,
+        "expectedCompletion": "Estimated day9",
+        "dependencies": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-M3"
+        ],
+        "deliverable": "Tested source archive,README and defect log",
+        "completionCriteria": "Planned responsive/accessibility/link/load/reproduction checks pass; zero major defects."
+      },
+      {
+        "milestoneId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-M5",
+        "name": "Internal review/time allowance",
+        "estimatedDurationBusinessDays": 1,
+        "expectedCompletion": "Estimated day10",
+        "dependencies": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-M4"
+        ],
+        "deliverable": "Recorded internal acceptance and final handover",
+        "completionCriteria": "Bounded correction/review completed; open cosmetic items dispositioned. Calendar allowance is not an extra monetary allocation."
+      }
+    ],
+    "timelineBasis": "No deadline agreed.Conditional8–10-business-day estimate;10-day phases for planning only after chosen start,capacity and internal review defaults. No date promised.",
+    "commercialTerms": [
+      "180000 USD cents is a proposed estimate only;agreedRevenueCents remains null. No real client,contract,receipt or available funds exists in supplied synthetic scenario.",
+      "No payment is requested or due in this test. If later commercialized,a proposed50/50 structure would be90000 cents at accepted SOW and90000 at accepted source handover,subject to negotiation and authenticated owner review;not an agreement.",
+      "Any later real contract must resolve taxes/fees,collection dates,external costs,support and acceptance/change terms.",
+      "Source/instructions do not authorize public deployment or create a paid-hosting/mail-service obligation."
+    ],
+    "changeManagement": "Record any real-content,CMS/form,route/detail,public-deployment,paid-asset,extra-review or stronger-quality request as a new proposed scope revision. Preserve original intake revision1 and any earlier formal approvals;independently reassess effort,liabilities,schedule and economics before client/owner review. No earlier approved delivery revision is evidenced here."
+  },
+  "executionPlan": {
+    "tasks": [
+      {
+        "taskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-R1",
+        "title": "Plan synthetic content",
+        "description": "Outline all six sections, fictional copy and three labelled portfolio examples/placeholders.",
+        "workstream": "Research",
+        "priority": "High",
+        "estimatedEffortHours": 1,
+        "dependencies": [],
+        "expectedOutput": "Section/content manifest",
+        "completionCriteria": "All required section/card/stage content is accounted for and marked fictional."
+      },
+      {
+        "taskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-R2",
+        "title": "Define scope and acceptance",
+        "description": "Record single-page boundaries, configurable synthetic contact default and acceptance checklist.",
+        "workstream": "Research",
+        "priority": "High",
+        "estimatedEffortHours": 1,
+        "dependencies": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-R1"
+        ],
+        "expectedOutput": "Scope/defaults/checklist",
+        "completionCriteria": "No form/CMS/deployment implied; mailto default and proposed tests explicitly documented."
+      },
+      {
+        "taskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-R3",
+        "title": "Plan toolchain and local assets",
+        "description": "Select lightweight static tooling, local assets and dependencies; avoid paid/external services.",
+        "workstream": "Research",
+        "priority": "High",
+        "estimatedEffortHours": 1,
+        "dependencies": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-R2"
+        ],
+        "expectedOutput": "Technical/asset plan",
+        "completionCriteria": "Dependencies and licence provenance identified; no unapproved procurement."
+      },
+      {
+        "taskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-R4",
+        "title": "Coordinate review and handover",
+        "description": "Plan internal review, capacity, change controls and source delivery format.",
+        "workstream": "Research",
+        "priority": "High",
+        "estimatedEffortHours": 1,
+        "dependencies": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-R3"
+        ],
+        "expectedOutput": "Review/handover plan",
+        "completionCriteria": "Reviewer and source/archive expectations recorded; capacity still subject to owner confirmation."
+      },
+      {
+        "taskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-D1",
+        "title": "Set visual direction",
+        "description": "Define synthetic visual identity, type and spacing rules.",
+        "workstream": "Design",
+        "priority": "High",
+        "estimatedEffortHours": 1.5,
+        "dependencies": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-R4"
+        ],
+        "expectedOutput": "Visual direction",
+        "completionCriteria": "Reviewer can assess consistent hierarchy and fictional agency presentation."
+      },
+      {
+        "taskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-D2",
+        "title": "Design responsive six-section layout",
+        "description": "Lay out Home,About,Services,Portfolio,Our Process,Contact for desktop/tablet/mobile.",
+        "workstream": "Design",
+        "priority": "High",
+        "estimatedEffortHours": 2.5,
+        "dependencies": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-D1"
+        ],
+        "expectedOutput": "Responsive layouts",
+        "completionCriteria": "All six sections and controls remain readable at proposed viewport classes."
+      },
+      {
+        "taskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-D3",
+        "title": "Design cards and process",
+        "description": "Specify four service cards, three portfolio entries and five process stages.",
+        "workstream": "Design",
+        "priority": "High",
+        "estimatedEffortHours": 1,
+        "dependencies": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-D2"
+        ],
+        "expectedOutput": "Component specifications",
+        "completionCriteria": "Exact required counts and named labels are represented."
+      },
+      {
+        "taskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-D4",
+        "title": "Design accessible visual states",
+        "description": "Specify visible focus, contrast, readable scaling and zoom behavior.",
+        "workstream": "Design",
+        "priority": "High",
+        "estimatedEffortHours": 1,
+        "dependencies": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-D3"
+        ],
+        "expectedOutput": "Interaction/visual-state specification",
+        "completionCriteria": "Keyboard focus and zoom/contrast smoke checks have a defined reference."
+      },
+      {
+        "taskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-D5",
+        "title": "Define local fictional placeholders",
+        "description": "Use labelled CSS/SVG or equivalent local lightweight graphics with decorative/alt treatment.",
+        "workstream": "Design",
+        "priority": "High",
+        "estimatedEffortHours": 1,
+        "dependencies": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-D4"
+        ],
+        "expectedOutput": "Placeholder specification",
+        "completionCriteria": "No real client claims, external stock imagery or unverified media licences."
+      },
+      {
+        "taskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-DEV1",
+        "title": "Set up static source project",
+        "description": "Configure selected tooling, local preview and source structure.",
+        "workstream": "Development",
+        "priority": "High",
+        "estimatedEffortHours": 2,
+        "dependencies": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-D5"
+        ],
+        "expectedOutput": "Buildable source skeleton",
+        "completionCriteria": "Documented local run/build works without private credentials."
+      },
+      {
+        "taskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-DEV2",
+        "title": "Implement semantic six-section frontend",
+        "description": "Implement required section content, four service cards, three examples, five-stage process and navigation.",
+        "workstream": "Development",
+        "priority": "High",
+        "estimatedEffortHours": 5,
+        "dependencies": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-DEV1"
+        ],
+        "expectedOutput": "Six-section frontend",
+        "completionCriteria": "Required elements/counts and semantic structure match the content manifest."
+      },
+      {
+        "taskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-DEV3",
+        "title": "Draft fictional copy and placeholders",
+        "description": "Insert synthetic agency introduction/value proposition, service descriptions and three labelled local portfolio examples.",
+        "workstream": "Development",
+        "priority": "High",
+        "estimatedEffortHours": 2,
+        "dependencies": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-DEV2"
+        ],
+        "expectedOutput": "Synthetic content/assets",
+        "completionCriteria": "Every portfolio example has title,short description,image placeholder; fiction clearly identified."
+      },
+      {
+        "taskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-DEV4",
+        "title": "Implement anchor interactions",
+        "description": "Implement six section IDs, keyboard activation, CTA-to-contact and visible anchor targets.",
+        "workstream": "Development",
+        "priority": "High",
+        "estimatedEffortHours": 1,
+        "dependencies": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-DEV3"
+        ],
+        "expectedOutput": "Anchor/CTA behavior",
+        "completionCriteria": "Each link reaches intended section and target is not obscured by fixed UI."
+      },
+      {
+        "taskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-DEV5",
+        "title": "Implement contact email link",
+        "description": "Show configurable fictional contact information and syntactically valid mailto link; no message transmission.",
+        "workstream": "Development",
+        "priority": "High",
+        "estimatedEffortHours": 1.5,
+        "dependencies": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-DEV4"
+        ],
+        "expectedOutput": "Contact/mailto behavior",
+        "completionCriteria": "Visible email and href agree; invocation tested without asserting mailbox existence or delivery."
+      },
+      {
+        "taskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-DEV6",
+        "title": "Implement accessibility basics",
+        "description": "Add semantic landmarks/headings, accessible names, sensible link text and keyboard/focus behavior.",
+        "workstream": "Development",
+        "priority": "High",
+        "estimatedEffortHours": 1.5,
+        "dependencies": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-DEV5"
+        ],
+        "expectedOutput": "Accessible frontend implementation",
+        "completionCriteria": "Planned smoke checks are supported; no conformance certification asserted."
+      },
+      {
+        "taskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-DEV7",
+        "title": "Optimize lightweight local assets",
+        "description": "Use local placeholders, appropriate sizing and no unnecessary external scripts/fonts/media.",
+        "workstream": "Development",
+        "priority": "High",
+        "estimatedEffortHours": 1,
+        "dependencies": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-DEV6"
+        ],
+        "expectedOutput": "Local-asset/load implementation",
+        "completionCriteria": "Assets/dependencies inventoried and avoidable loading issues addressed."
+      },
+      {
+        "taskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-DEV8",
+        "title": "Prepare source and README",
+        "description": "Document prerequisites,dependencies,install/build/run,configuration and static-host example instructions; no actual deployment.",
+        "workstream": "Development",
+        "priority": "High",
+        "estimatedEffortHours": 1,
+        "dependencies": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-DEV7"
+        ],
+        "expectedOutput": "Source package and README",
+        "completionCriteria": "Instructions accurately describe clean reproduction; no credentials,DNS,hosting procurement or deployment claimed."
+      },
+      {
+        "taskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-Q1",
+        "title": "Coordinate planned test matrix",
+        "description": "Confirm proposed devices/viewports,browser versions,build identifier and reviewer.",
+        "workstream": "QA",
+        "priority": "High",
+        "estimatedEffortHours": 0.5,
+        "dependencies": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-DEV8"
+        ],
+        "expectedOutput": "Test plan",
+        "completionCriteria": "Every acceptance requirement maps to a planned check."
+      },
+      {
+        "taskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-Q2",
+        "title": "Test responsive layout classes",
+        "description": "Check desktop/tablet/mobile readability,navigation,overflow and unobscured controls.",
+        "workstream": "QA",
+        "priority": "High",
+        "estimatedEffortHours": 1,
+        "dependencies": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-Q1"
+        ],
+        "expectedOutput": "Responsive test record",
+        "completionCriteria": "No major defects on the agreed matrix."
+      },
+      {
+        "taskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-Q3",
+        "title": "Test six anchors and CTA",
+        "description": "Test every section link,keyboard activation,target visibility and primary CTA.",
+        "workstream": "QA",
+        "priority": "High",
+        "estimatedEffortHours": 0.75,
+        "dependencies": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-Q2"
+        ],
+        "expectedOutput": "Navigation test record",
+        "completionCriteria": "All six destinations resolve; CTA reaches Contact."
+      },
+      {
+        "taskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-Q4",
+        "title": "Test mailto syntax/invocation",
+        "description": "Verify intended synthetic/configurable address,scheme and browser link behavior without sending mail.",
+        "workstream": "QA",
+        "priority": "High",
+        "estimatedEffortHours": 0.5,
+        "dependencies": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-Q3"
+        ],
+        "expectedOutput": "Contact-link test record",
+        "completionCriteria": "Valid href/invocation; missing mail-client handler recorded as environment limitation."
+      },
+      {
+        "taskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-Q5",
+        "title": "Run accessibility smoke checks",
+        "description": "Check semantics,headings,names,keyboard/focus,link text,contrast/zoom and placeholder treatment.",
+        "workstream": "QA",
+        "priority": "High",
+        "estimatedEffortHours": 1,
+        "dependencies": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-Q4"
+        ],
+        "expectedOutput": "Accessibility checklist",
+        "completionCriteria": "No blocking usability issues; no certification claim."
+      },
+      {
+        "taskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-Q6",
+        "title": "Record local asset/load observations",
+        "description": "Record tool/build/profile,asset inventory,transfer/request data and available load metrics on mobile/desktop.",
+        "workstream": "QA",
+        "priority": "High",
+        "estimatedEffortHours": 0.5,
+        "dependencies": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-Q5"
+        ],
+        "expectedOutput": "Load observation record",
+        "completionCriteria": "Avoidable heavy assets/dependencies assessed; no invented score or guaranteed load time."
+      },
+      {
+        "taskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-Q7",
+        "title": "Correct and retest major defects",
+        "description": "Triage no-major-defect criteria,perform one bounded internal correction/retest cycle.",
+        "workstream": "QA",
+        "priority": "High",
+        "estimatedEffortHours": 0.75,
+        "dependencies": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-Q6"
+        ],
+        "expectedOutput": "Defect/retest log",
+        "completionCriteria": "Zero major defects; cosmetic items separately documented for reviewer disposition."
+      },
+      {
+        "taskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-Q8",
+        "title": "Verify reproducible handover",
+        "description": "Check source archive,README build/run/static-host instructions,dependencies/licences and explicit no-public-deployment statement.",
+        "workstream": "QA",
+        "priority": "High",
+        "estimatedEffortHours": 0.75,
+        "dependencies": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-Q7"
+        ],
+        "expectedOutput": "Source/instructions validation",
+        "completionCriteria": "Source is reproducible through documented commands and delivered in agreed format."
+      },
+      {
+        "taskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-Q9",
+        "title": "Package review evidence",
+        "description": "Collect planned implementation acceptance evidence for internal handover.",
+        "workstream": "QA",
+        "priority": "High",
+        "estimatedEffortHours": 0.25,
+        "dependencies": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-Q8"
+        ],
+        "expectedOutput": "Acceptance evidence pack",
+        "completionCriteria": "Named internal reviewer can inspect source,instructions and test results."
+      }
+    ],
+    "dependencies": [
+      {
+        "taskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-R2",
+        "dependsOn": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-R1"
+        ]
+      },
+      {
+        "taskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-R3",
+        "dependsOn": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-R2"
+        ]
+      },
+      {
+        "taskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-R4",
+        "dependsOn": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-R3"
+        ]
+      },
+      {
+        "taskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-D1",
+        "dependsOn": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-R4"
+        ]
+      },
+      {
+        "taskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-D2",
+        "dependsOn": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-D1"
+        ]
+      },
+      {
+        "taskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-D3",
+        "dependsOn": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-D2"
+        ]
+      },
+      {
+        "taskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-D4",
+        "dependsOn": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-D3"
+        ]
+      },
+      {
+        "taskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-D5",
+        "dependsOn": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-D4"
+        ]
+      },
+      {
+        "taskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-DEV1",
+        "dependsOn": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-D5"
+        ]
+      },
+      {
+        "taskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-DEV2",
+        "dependsOn": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-DEV1"
+        ]
+      },
+      {
+        "taskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-DEV3",
+        "dependsOn": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-DEV2"
+        ]
+      },
+      {
+        "taskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-DEV4",
+        "dependsOn": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-DEV3"
+        ]
+      },
+      {
+        "taskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-DEV5",
+        "dependsOn": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-DEV4"
+        ]
+      },
+      {
+        "taskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-DEV6",
+        "dependsOn": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-DEV5"
+        ]
+      },
+      {
+        "taskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-DEV7",
+        "dependsOn": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-DEV6"
+        ]
+      },
+      {
+        "taskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-DEV8",
+        "dependsOn": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-DEV7"
+        ]
+      },
+      {
+        "taskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-Q1",
+        "dependsOn": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-DEV8"
+        ]
+      },
+      {
+        "taskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-Q2",
+        "dependsOn": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-Q1"
+        ]
+      },
+      {
+        "taskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-Q3",
+        "dependsOn": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-Q2"
+        ]
+      },
+      {
+        "taskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-Q4",
+        "dependsOn": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-Q3"
+        ]
+      },
+      {
+        "taskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-Q5",
+        "dependsOn": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-Q4"
+        ]
+      },
+      {
+        "taskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-Q6",
+        "dependsOn": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-Q5"
+        ]
+      },
+      {
+        "taskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-Q7",
+        "dependsOn": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-Q6"
+        ]
+      },
+      {
+        "taskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-Q8",
+        "dependsOn": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-Q7"
+        ]
+      },
+      {
+        "taskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-Q9",
+        "dependsOn": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-Q8"
+        ]
+      }
+    ],
+    "milestones": [
+      {
+        "milestoneId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-M1",
+        "name": "Content/scope and technical plan",
+        "estimatedDurationBusinessDays": 1,
+        "expectedCompletion": "Estimated day1 after agreed readiness/start trigger",
+        "dependencies": [
+          "Owner-reviewed defaults and confirmed staff/reviewer capacity"
+        ],
+        "deliverable": "Synthetic content map,scope/test/asset plan",
+        "completionCriteria": "Required elements/defaults and toolchain/handover plan recorded."
+      },
+      {
+        "milestoneId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-M2",
+        "name": "Responsive design",
+        "estimatedDurationBusinessDays": 2,
+        "expectedCompletion": "Estimated day3",
+        "dependencies": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-M1"
+        ],
+        "deliverable": "Six-section responsive design and placeholders",
+        "completionCriteria": "Internal reviewer accepts layout,content and accessible-state direction."
+      },
+      {
+        "milestoneId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-M3",
+        "name": "Static implementation",
+        "estimatedDurationBusinessDays": 4,
+        "expectedCompletion": "Estimated day7",
+        "dependencies": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-M2"
+        ],
+        "deliverable": "Local review build,source and draft README",
+        "completionCriteria": "All sections,anchors,mailto and local assets implemented; no public deployment."
+      },
+      {
+        "milestoneId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-M4",
+        "name": "QA and source/instruction handover",
+        "estimatedDurationBusinessDays": 2,
+        "expectedCompletion": "Estimated day9",
+        "dependencies": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-M3"
+        ],
+        "deliverable": "Tested source archive,README and defect log",
+        "completionCriteria": "Planned responsive/accessibility/link/load/reproduction checks pass; zero major defects."
+      },
+      {
+        "milestoneId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-M5",
+        "name": "Internal review/time allowance",
+        "estimatedDurationBusinessDays": 1,
+        "expectedCompletion": "Estimated day10",
+        "dependencies": [
+          "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-M4"
+        ],
+        "deliverable": "Recorded internal acceptance and final handover",
+        "completionCriteria": "Bounded correction/review completed; open cosmetic items dispositioned. Calendar allowance is not an extra monetary allocation."
+      }
+    ],
+    "qualityChecks": [
+      "All six named sections occur once and contain the stated elements; exactly4 titled/described services,3 fictional title/description/image-placeholder portfolio entries and5 process stages.",
+      "All six navigation fragments resolve to intended visible sections; primary CTA reaches Contact. No broken section links or obscured targets.",
+      "Visible synthetic/configurable email agrees with syntactically valid mailto href; link invocation is checked without sending email or claiming mailbox/delivery.",
+      "Proposed matrix375px mobile,768px tablet,1440px desktop with named current-at-test browser versions recorded: readable content,no unintended horizontal overflow and unobscured required navigation/contact controls. Matrix remains proposed for owner review.",
+      "Logical headings/semantic landmarks,named controls,keyboard access,visible focus,sensible link text and accurate decorative/alt treatment pass smoke checks; text/controls remain distinguishable during contrast/zoom review. No accessibility certification claimed.",
+      "Record build/URL,date,tool/version,device/network profile,local asset sizes,transfer size/request count and LCP/CLS if reported on one mobile and desktop profile. Address identified avoidable heavy assets/scripts. No numeric score or guaranteed load time is promised.",
+      "Source package includes dependencies/assets/licences where applicable and README with prerequisites,install/build/run,configuration and static-host guidance. A clean documented local build/preview is verified during future delivery QA,not claimed now.",
+      "Zero major defects:missing section,broken required link/control,unreadable/unreachable core content or failed navigation/contact behavior. Cosmetic issues are documented separately and require reviewer disposition.",
+      "Handover includes code and planned test evidence; instructions state no public deployment,credentials,DNS/domain configuration or mailbox provisioning was performed."
+    ],
+    "estimatedTotalHours": 32,
+    "resources": [
+      {
+        "workstream": "Research",
+        "estimatedEffortHours": 4,
+        "assignmentStatus": "UNASSIGNED_UNRESERVED_CAPACITY_UNVERIFIED"
+      },
+      {
+        "workstream": "Design",
+        "estimatedEffortHours": 7,
+        "assignmentStatus": "UNASSIGNED_UNRESERVED_CAPACITY_UNVERIFIED"
+      },
+      {
+        "workstream": "Development",
+        "estimatedEffortHours": 15,
+        "assignmentStatus": "UNASSIGNED_UNRESERVED_CAPACITY_UNVERIFIED"
+      },
+      {
+        "workstream": "QA",
+        "estimatedEffortHours": 6,
+        "assignmentStatus": "UNASSIGNED_UNRESERVED_CAPACITY_UNVERIFIED"
+      }
+    ],
+    "implementationStatus": "PROPOSED_WORK_NOT_EXECUTED",
+    "qualityEvidenceStatus": "PLANNED_ACCEPTANCE_CHECKS_NOT_COMPLETED_WEBSITE_TESTS"
+  },
+  "riskRegister": [
+    {
+      "riskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-K1",
+      "category": "Scope",
+      "description": "Expanding six sections into pages/routes or adding CMS/forms/details/live deployment.",
+      "severity": "High",
+      "probability": "Medium",
+      "potentialImpact": "Unpriced build/QA/hosting scope.",
+      "mitigation": "Keep single-page boundaries;re-estimate changes.",
+      "responsibleWorkstream": "Research",
+      "status": "IDENTIFIED_RISK_NOT_OBSERVED_INCIDENT"
+    },
+    {
+      "riskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-K2",
+      "category": "Synthetic content",
+      "description": "Real/stock media or invented real-client claims enter fictional portfolio.",
+      "severity": "High",
+      "probability": "Medium",
+      "potentialImpact": "Rights/misleading-content exposure.",
+      "mitigation": "Use clearly labelled local fictional examples/placeholders;record asset licences.",
+      "responsibleWorkstream": "Design",
+      "status": "IDENTIFIED_RISK_NOT_OBSERVED_INCIDENT"
+    },
+    {
+      "riskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-K3",
+      "category": "Contact behavior",
+      "description": "Synthetic email default or absent local mail-client handler misinterpreted as real delivery.",
+      "severity": "High",
+      "probability": "Medium",
+      "potentialImpact": "Acceptance dispute or unintended contact expectation.",
+      "mitigation": "Document configurable fictitious target;test href/invocation only;never send mail.",
+      "responsibleWorkstream": "Development",
+      "status": "IDENTIFIED_RISK_NOT_OBSERVED_INCIDENT"
+    },
+    {
+      "riskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-K4",
+      "category": "Quality",
+      "description": "Accessible interpreted as certified conformance.",
+      "severity": "High",
+      "probability": "Medium",
+      "potentialImpact": "Unbounded remediation or misleading assurance.",
+      "mitigation": "Use explicit semantic/keyboard/focus/contrast/zoom checks;scope stronger target separately.",
+      "responsibleWorkstream": "QA",
+      "status": "IDENTIFIED_RISK_NOT_OBSERVED_INCIDENT"
+    },
+    {
+      "riskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-K5",
+      "category": "Performance",
+      "description": "Incomplete reasonable-load wording treated as guaranteed time/score.",
+      "severity": "Medium",
+      "probability": "High",
+      "potentialImpact": "Unbounded optimization.",
+      "mitigation": "Record bounded load observations/local asset checks;optional numeric targets require owner review.",
+      "responsibleWorkstream": "Development",
+      "status": "IDENTIFIED_RISK_NOT_OBSERVED_INCIDENT"
+    },
+    {
+      "riskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-K6",
+      "category": "Navigation",
+      "description": "Broken fragments or fixed headers obscure targets.",
+      "severity": "Medium",
+      "probability": "Medium",
+      "potentialImpact": "Required flow fails.",
+      "mitigation": "Test all six anchors,CTA,keyboard activation and target visibility.",
+      "responsibleWorkstream": "QA",
+      "status": "IDENTIFIED_RISK_NOT_OBSERVED_INCIDENT"
+    },
+    {
+      "riskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-K7",
+      "category": "Handover",
+      "description": "Source delivered without reproducible build or useful instructions.",
+      "severity": "High",
+      "probability": "Medium",
+      "potentialImpact": "Incomplete deliverable.",
+      "mitigation": "Test README commands and include prerequisites/dependencies/static-host example;no public deployment implied.",
+      "responsibleWorkstream": "Development",
+      "status": "IDENTIFIED_RISK_NOT_OBSERVED_INCIDENT"
+    },
+    {
+      "riskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-K8",
+      "category": "Schedule",
+      "description": "No booked staff/start date/internal review cadence.",
+      "severity": "High",
+      "probability": "Medium",
+      "potentialImpact": "8–10-day estimate may not hold.",
+      "mitigation": "Confirm role capacity and feedback timing before assigning dates.",
+      "responsibleWorkstream": "Research",
+      "status": "IDENTIFIED_RISK_NOT_OBSERVED_INCIDENT"
+    },
+    {
+      "riskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-K9",
+      "category": "Financial",
+      "description": "Proposed180000 estimate mistaken for agreed/received revenue or funds.",
+      "severity": "Critical",
+      "probability": "Medium",
+      "potentialImpact": "Unauthorized financial inference.",
+      "mitigation": "Keep agreedRevenueCents null and hypothetical margin labelled;owner/backend verification before authority.",
+      "responsibleWorkstream": "Research",
+      "status": "IDENTIFIED_RISK_NOT_OBSERVED_INCIDENT"
+    },
+    {
+      "riskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-K10",
+      "category": "External dependency",
+      "description": "Later paid fonts/templates/hosting/support introduce liabilities.",
+      "severity": "Medium",
+      "probability": "Medium",
+      "potentialImpact": "Unpriced recurring/licence costs.",
+      "mitigation": "No procurement now;identify vendor,price,payer,licence and renewal before any change.",
+      "responsibleWorkstream": "Research",
+      "status": "IDENTIFIED_RISK_NOT_OBSERVED_INCIDENT"
+    },
+    {
+      "riskId": "rt-task-39d913b9-f059-48b7-b3a8-d5f9a6722164-K11",
+      "category": "Financial",
+      "description": "Unverified rate/capacity/ledger and excluded overhead/taxes/fees.",
+      "severity": "High",
+      "probability": "Medium",
+      "potentialImpact": "Projected margin differs from actual economics.",
+      "mitigation": "Verify actual costs/resources/ledger in authorized workflow;contingency not ordinary-work allowance.",
+      "responsibleWorkstream": "Research",
+      "status": "IDENTIFIED_RISK_NOT_OBSERVED_INCIDENT"
+    }
+  ],
+  "specialistContributions": [
+    {
+      "specialist": "req-agent",
+      "status": "FINAL_REPORT_RECEIVED_AND_REVIEWED",
+      "decision": "READY_WITH_EXPLICIT_ASSUMPTIONS",
+      "conclusion": "Six-section single-page synthetic scope is sufficiently bounded. Fictional entries/placeholders are required content, not missing real assets. Adopt responsive/link/accessibility/source checks; numeric load targets remain optional and unapproved.",
+      "sourceMessageIds": [
+        "sw_699b9a7fde674266872fd6e557fd13a7"
+      ]
+    },
+    {
+      "specialist": "challenge-agent",
+      "status": "FINAL_REPORT_RECEIVED_AND_REVIEWED",
+      "decision": "PASS_WITH_CONDITIONS_FOR_SYNTHETIC_PLANNING",
+      "conclusion": "Independent follow-up confirms 32h, costs and hypothetical margin. Source/README, mailto/anchors, accessibility/load checks and correction are base work. Execution, real deployment and financial authorization still require separate review.",
+      "sourceMessageIds": [
+        "sw_0fbd256d81614c41b5f9e37a91c09350",
+        "sw_3b2762eb776d492b919193696959f525",
+        "sw_30e365a9a4d64ff08017870e18bc6f96"
+      ]
+    },
+    {
+      "specialist": "commitment-intelligence-agent",
+      "status": "FINAL_REPORT_RECEIVED_AND_REVIEWED",
+      "decision": "NO_MATERIAL_COMMITMENTS_FOUND_IN_SYNTHETIC_INTAKE",
+      "conclusion": "Brief explicitly says no real client/payment/external commitment. No assigned resources, reservations or vendor obligations evidenced; authoritative ledger, duplicates and capacity remain unverified.",
+      "sourceMessageIds": [
+        "sw_4f21058e678145b8950e55ea03e91cb6"
+      ]
+    },
+    {
+      "specialist": "treasury-ops-agent",
+      "status": "FINAL_REPORT_RECEIVED_AND_REVIEWED",
+      "decision": "VIABLE_WITH_CONDITIONS_FOR_SYNTHETIC_PLANNING",
+      "conclusion": "Independent estimate32h at unverified2800 cents/hour:89600 base+17920 contingency=107520; hypothetical72480 margin versus proposed180000. All ordinary work itemized in base; no funding or profitability verification.",
+      "sourceMessageIds": [
+        "sw_ac2c9c4fbbf149a2823178e4d6f7777b",
+        "sw_452e6cc682a54f438604c6d0b8f89134"
+      ]
+    }
+  ],
+  "financialSummary": {
+    "agreedRevenueCents": null,
+    "proposedRevenueCents": 180000,
+    "proposedDeliveryBudgetCents": 107520,
+    "projectedGrossMarginCents": 72480,
+    "totalAllocationCents": 107520,
+    "baseEstimatedCostCents": 89600,
+    "contingencyCents": 17920,
+    "projectedGrossMarginPercent": 40.27,
+    "marginBasis": "HYPOTHETICAL_PROPOSED_REVENUE_TARGET_MINUS_INTERNAL_BUDGET",
+    "cashReceivedCents": null,
+    "availableDeliveryFundsCents": null,
+    "settledSpendCents": null,
+    "externalExpensesCents": null,
+    "ledgerVerificationStatus": "NO_AUTHORIZED_BACKEND_EVIDENCE",
+    "scenarios": [
+      {
+        "name": "Low",
+        "hours": 25,
+        "baseCostCents": 70000,
+        "contingencyCents": 14000,
+        "budgetCents": 84000,
+        "projectedGrossMarginCents": 96000,
+        "projectedGrossMarginPercent": 53.33
+      },
+      {
+        "name": "Planning",
+        "hours": 32,
+        "baseCostCents": 89600,
+        "contingencyCents": 17920,
+        "budgetCents": 107520,
+        "projectedGrossMarginCents": 72480,
+        "projectedGrossMarginPercent": 40.27
+      },
+      {
+        "name": "High",
+        "hours": 39,
+        "baseCostCents": 109200,
+        "contingencyCents": 21840,
+        "budgetCents": 131040,
+        "projectedGrossMarginCents": 48960,
+        "projectedGrossMarginPercent": 27.2
+      }
+    ],
+    "explanation": "Proposed180000 target minus107520 internal planning budget. Not agreed revenue,actual profit,cash or spending authority;excludes overhead,taxes,fees and unpriced external choices."
+  },
+  "unresolvedQuestions": [
+    "Owner review:accept synthetic contact default hello@novacreative.example,local labelled placeholder convention and configurable contact information?",
+    "Owner review:confirm proposed browser/viewport and accessibility/load checklist;optional numerical load targets are not adopted unless requested.",
+    "Handover preference:source archive or repository,chosen static toolchain and README/static-host example?",
+    "Before any execution promise:who is assigned,what capacity is booked,who reviews and what start/feedback dates apply?",
+    "Before any commercial conversion:are price/payment/tax/fee/support/external-cost terms to become real? Nothing is agreed or received now.",
+    "Before financial authority:verify current request/revision,financial-engine balances/commitments/reservations/policy and authenticated human owner approval."
+  ],
+  "ownerApprovalRequired": true,
+  "readinessExplanation": "Complete four-specialist analysis and reconciliations support internal owner review of the bounded synthetic scope with documented defaults. Unknown real assets/payment/hosting are not artificial blockers because none are required. Rates/capacity,proposed defaults and handover/test preferences need owner review;financial authority,actual implementation or real public launch remain separate and unauthorized.",
+  "ownerDecisionRecommendation": {
+    "recommendation": "REVIEW_CONDITIONAL_SYNTHETIC_PROPOSAL_NO_EXECUTION_AUTHORITY",
+    "decisions": [
+      "Accept or amend synthetic mailto/placeholder/toolchain/source-package defaults.",
+      "Review bounded acceptance checklist versus optional numeric load targets;scope any stronger target separately.",
+      "Validate assumed rate,capacity and review cadence before any implementation promise.",
+      "Keep proposed180000 distinct from agreed/received funds;use verified RoomTreasury human owner mechanism for any later financial authority."
+    ]
+  },
+  "reconciliation": [
+    {
+      "issue": "Six sections versus six pages",
+      "resolution": "Single scrolling frontend with6 anchors is the bounded recommended scope;no extra routes,CMS,form or public deployment imported from prior tasks."
+    },
+    {
+      "issue": "Synthetic assets and contact",
+      "resolution": "Fictional examples/placeholders are required deliverables,not missing real-client assets. Configurable reserved .example mailto is a proposed synthetic default;no mailbox or email-delivery claim."
+    },
+    {
+      "issue": "Initial challenge lacked model",
+      "resolution": "Financial reconciliation sw_3b2762eb776d492b919193696959f525 and base-coverage confirmation sw_30e365a9a4d64ff08017870e18bc6f96 supersede initial no-numerical-finding limitation. Arithmetic and conditional scope accepted."
+    },
+    {
+      "issue": "Ordinary work and contingency",
+      "resolution": "Use treasury addendum sw_452e6cc682a54f438604c6d0b8f89134 task-for-task:4/7/15/6 base hours cover copy/placeholders,anchors/mailto,accessibility/load/source/README,correction and handover.17920 contingency is additional uncertainty within107520 total,not omitted base work."
+    },
+    {
+      "issue": "Optional numeric load thresholds",
+      "resolution": "Requirements proposes optional<=3MB transfer and<=500KB placeholder targets;treasury/challenge cover bounded observations without thresholds. Retain these as unapproved alternatives in evidence;coordinator adopts checklist/measurement acceptance only pending owner review,not a score/limit guarantee."
+    },
+    {
+      "issue": "Readiness interpretation",
+      "resolution": "Requirements ready-with-assumptions,challenge pass-with-conditions and treasury viable-with-conditions support READY_FOR_OWNER_REVIEW for this bounded synthetic proposal. This is not permission to execute,deployment acceptance,financial approval or verified funding."
+    },
+    {
+      "issue": "Digest provenance",
+      "resolution": "Preserve supplied intake SHA exactly. Attachment byte digest and extracted-brief digest are separately computed and differ;canonical intake hashing payload unspecified,so supplied digest is not independently verified and no integrity failure is inferred."
+    },
+    {
+      "issue": "Timeline",
+      "resolution": "No deadline supplied.8–10-business-day estimate;conservative10-day phases require4 productive hours/day and responsive internal reviewer. No calendar dates or staff reservations invented."
+    }
+  ],
+  "sourceReferences": [
+    {
+      "messageId": "sw_c0b32f8f10bc694ff49ca20d06b285c4",
+      "system": "Switch",
+      "actualDiscordMessageId": null,
+      "attachment": "roomtreasury-intake.txt",
+      "mxc": "switch-media://77d910f3c62c44129636e9818d9899de"
+    }
+  ],
+  "authorityStatement": "Analysis and artifact preparation only. No website implementation,project creation,backend submission/acceptance,approval,spending,reservation,settlement,resource booking,public deployment or agent modification performed."
+}

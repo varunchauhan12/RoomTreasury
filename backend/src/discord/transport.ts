@@ -2,9 +2,9 @@ import type { Database } from 'better-sqlite3';
 import type { DispatchRequest, JobTransport, TransportEvent } from '../jobs/transport.js';
 import { DispatchFailure } from '../jobs/transport.js';
 import { DiscordConfig } from './config.js';
-import { DiscordRestClient, DiscordMessage } from './client.js';
+import { DiscordRestClient, DiscordMessage, DiscordApiError, dispatchDiagnostic } from './client.js';
 import { DiscordGateway } from './gateway.js';
-import { DiscordMessageCollector } from './collector.js';
+import { DiscordMessageCollector, classifySender } from './collector.js';
 import { importDiscordPackage } from '../imports/project-linked.js';
 import { ImportError } from '../imports/service.js';
 
@@ -23,6 +23,7 @@ export class DiscordTransport implements JobTransport {
   private readonly config: DiscordConfig;
   private readonly client: DiscordRestClient;
   private readonly gateway: DiscordGateway | null;
+  private readonly ownsGateway: boolean;
   private readonly collector: DiscordMessageCollector;
   private readonly pollIntervalMs: number;
   private readonly timeoutMs: number;
@@ -31,10 +32,19 @@ export class DiscordTransport implements JobTransport {
     this.db = options.db;
     this.config = options.config;
     this.client = options.client ?? new DiscordRestClient({ config: options.config });
-    this.gateway = options.gateway ?? null;
+    if (options.gateway !== undefined) {
+      this.gateway = options.gateway;
+      this.ownsGateway = false;
+    } else if (!options.client && options.config.botToken) {
+      this.gateway = new DiscordGateway({ config: options.config });
+      this.ownsGateway = true;
+    } else {
+      this.gateway = null;
+      this.ownsGateway = false;
+    }
     this.collector = new DiscordMessageCollector(this.db, this.config, this.client);
-    this.pollIntervalMs = options.pollIntervalMs ?? 500;
-    this.timeoutMs = options.timeoutMs ?? 30000;
+    this.pollIntervalMs = options.pollIntervalMs ?? (this.gateway ? 1000 : 500);
+    this.timeoutMs = options.timeoutMs ?? options.config.jobTimeoutMs ?? 900000;
   }
 
   async dispatch(request: DispatchRequest): Promise<{ correlationId: string; messageId?: string }> {
@@ -56,7 +66,7 @@ export class DiscordTransport implements JobTransport {
       `- Intake Revision: \`${intakeRevision}\``,
       `- Intake SHA-256: \`${request.intakeHash}\``,
       `- Client: ${request.clientName ?? 'Client'}`,
-      `- Agreed Revenue: ${request.revenueCents !== undefined ? `$${(request.revenueCents / 100).toFixed(2)}` : 'Unspecified'} (${request.revenueCents ?? 0} cents ${request.currency ?? 'USD'})`,
+      `- Proposed Revenue Target: ${request.revenueCents !== undefined ? `$${(request.revenueCents / 100).toFixed(2)}` : 'Unspecified'} (${request.revenueCents ?? 0} cents ${request.currency ?? 'USD'}) [PROPOSED ESTIMATE — NOT AGREED OR RECEIVED REVENUE]`,
       '',
       '**Original Project Brief:**',
       '```',
@@ -71,15 +81,23 @@ export class DiscordTransport implements JobTransport {
       '4. IMPORTANT: Do NOT approve, spend, reserve, settle or deploy funds. All spending is simulated and requires explicit human owner review in RoomTreasury.',
     ];
 
-    const content = messageLines.join('\n');
+    const fullContent = messageLines.join('\n');
+    // One atomic Discord message, rather than activating the coordinator with a partial brief.
+    const attachment = fullContent.length > 2000 ? { filename: 'roomtreasury-intake.txt', content: fullContent } : undefined;
+    const content = attachment
+      ? messageLines.map((line, index) => index === messageLines.indexOf(brief) ? 'Read the complete original brief in the attached roomtreasury-intake.txt before coordinating.' : line).join('\n')
+      : fullContent;
 
+    let accepted = false;
     try {
-      const sent = await this.client.sendMessage(this.config.channelId, content);
+      const sent = await this.client.sendMessage(this.config.channelId, content, attachment);
+      accepted = true;
+      if (!sent.id || sent.channel_id !== this.config.channelId) throw new Error('Invalid acknowledgement');
       this.collector.updateCheckpoint(this.config.channelId, sent.id);
       return { correlationId: request.correlationId, messageId: sent.id };
-    } catch (err: any) {
-      const certain = err?.statusCode === 400 || err?.statusCode === 401 || err?.statusCode === 403 || err?.statusCode === 404;
-      throw new DispatchFailure(certain, `Discord dispatch failed: ${err.message}`);
+    } catch (err: unknown) {
+      const certain = !accepted && err instanceof DiscordApiError && [400, 401, 403, 404, 429].includes(err.statusCode);
+      throw new DispatchFailure(certain, 'Discord dispatch failed.', accepted ? 'unknown_dispatch_outcome' : dispatchDiagnostic(err));
     }
   }
 
@@ -92,29 +110,52 @@ export class DiscordTransport implements JobTransport {
     const seenSpecialists = new Set<string>();
     const correlatedMessages: DiscordMessage[] = [];
 
-    // Optional Gateway subscription
+    // Gateway subscription
     const liveMessages: DiscordMessage[] = [];
     let messageHandler: ((msg: DiscordMessage) => void) | null = null;
+    // An unhandled EventEmitter error terminates Node; continue with REST backfill.
+    const gatewayErrorHandler = () => {};
 
     if (this.gateway) {
+      this.gateway.on('error', gatewayErrorHandler);
       messageHandler = (msg: DiscordMessage) => {
-        if (this.collector.filterMessage(msg) && this.collector.isCorrelated(msg, jobId, correlationId, taskId)) {
+        if (this.collector.filterMessage(msg) && (this.collector.isCorrelated(msg, jobId, correlationId, taskId)||msg.attachments.length>0&&classifySender(msg.author.username,!!msg.author.bot).role==='coordinator')) {
           liveMessages.push(msg);
         }
       };
       this.gateway.on('message_create', messageHandler);
+      if (this.ownsGateway) {
+        try {
+          this.gateway.connect();
+        } catch {
+          // Gracefully continue with REST history backfill
+        }
+      }
     }
+
+    let lastBackfillTime = 0;
+    const backfillThrottleMs = this.gateway ? 10000 : this.pollIntervalMs;
 
     try {
       while (Date.now() - startTime < this.timeoutMs) {
-        // Collect messages from REST history backfill and live gateway
-        const backfilled = await this.collector.backfillHistory(jobId, correlationId, taskId);
-        const incoming: DiscordMessage[] = [
-          ...backfilled.map((b) => b.message),
-          ...liveMessages.splice(0, liveMessages.length),
-        ];
+        const incoming: DiscordMessage[] = [];
 
+        // REST backfill on schedule or at start
+        const now = Date.now();
+        if (now - lastBackfillTime >= backfillThrottleMs) {
+          lastBackfillTime = now;
+          const backfilled = await this.collector.backfillHistory(jobId, correlationId, taskId);
+          for (const b of backfilled) {
+            incoming.push(b.message);
+          }
+        }
+
+        // Live gateway messages
+        incoming.push(...liveMessages.splice(0, liveMessages.length));
+
+        incoming.sort((a,b)=>a.id<b.id?-1:a.id>b.id?1:0);
         for (const msg of incoming) {
+          if(!await this.collector.correlateMessage(msg,jobId,correlationId,taskId))continue;
           const classified = this.collector.recordMessage(msg, jobId);
           if (!classified) continue;
           correlatedMessages.push(msg);
@@ -160,6 +201,11 @@ export class DiscordTransport implements JobTransport {
         return;
       }
 
+      // One final chronological backfill includes attachment-only messages before the completion marker.
+      const finalBackfill=await this.collector.backfillHistory(jobId,correlationId,taskId);
+      correlatedMessages.push(...finalBackfill.map(item=>item.message));
+      const stored=this.db.prepare('SELECT raw_json FROM discord_messages WHERE job_id=? ORDER BY occurred_at,id').all(jobId) as {raw_json:string}[];
+      correlatedMessages.push(...stored.map(row=>JSON.parse(row.raw_json) as DiscordMessage));
       // Validating phase: retrieve attachments
       let artifacts;
       try {
@@ -197,6 +243,13 @@ export class DiscordTransport implements JobTransport {
       if (this.gateway && messageHandler) {
         this.gateway.off('message_create', messageHandler);
       }
+      if (this.ownsGateway && this.gateway) {
+        try {
+          this.gateway.close();
+        } catch {}
+      }
+      // Owned sockets may emit an asynchronous error while closing.
+      if (!this.ownsGateway) this.gateway?.off('error', gatewayErrorHandler);
     }
   }
 }

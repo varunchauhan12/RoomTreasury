@@ -162,7 +162,7 @@ test('Discord transport end-to-end: dispatch, specialist progress, completion ma
   // Verify dispatch message content
   assert.equal(sentMessages.length, 1);
   const sent = sentMessages[0]!.content;
-  assert.match(sent, /@make-proposal-agent/);
+  assert.match(sent, /<@&1568256403179569252>|@make-proposal-agent/);
   assert.match(sent, new RegExp(`Project ID: \`${data.binding.client_project_id}\``));
   assert.match(sent, new RegExp(`Task ID: \`${data.binding.task_id}\``));
   assert.match(sent, new RegExp(`Processing Job ID: \`${job.id}\``));

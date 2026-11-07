@@ -38,7 +38,7 @@ test('Discord configuration validates token, snowflakes and provides safe defaul
   assert.equal(config.botToken, 'sample-valid-bot-token-1234567890');
   assert.equal(config.guildId, '1567957507656384543');
   assert.equal(config.channelId, '1567957508985847880');
-  assert.equal(config.coordinatorMention, '@make-proposal-agent');
+  assert.equal(config.coordinatorMention, '<@&1568256403179569252>');
   assert.equal(config.apiBaseUrl, 'https://discord.com/api/v10');
 });
 

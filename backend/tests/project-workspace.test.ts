@@ -84,3 +84,175 @@ test('unlinked legacy imports remain readable but are not presented as project-l
  assert.equal((await data.app.inject({method:'POST',url:'/v1/proposal-imports/'+imported.id+'/review/approve',headers:data.headers,payload:{revisionId:imported.id,fingerprint:validateBundle(bundle).proposalFingerprint,confirmation:'APPROVE_EXACT_REVISION'}})).statusCode,409);
  assert.equal(data.db.prepare('SELECT count(*) FROM projects').pluck().get(),0);
 });
+
+test('regression: processing job creation validates strictly, returns safe diagnostics on invalid payload, and workspace script dispatches discord and mock correctly', async t => {
+  const data = await fixture(t), binding = await onboarding(data);
+  const path = '/v1/client-projects/' + binding.client_project_id + '/processing-jobs';
+
+  // 1. Direct request with unexpected properties is rejected by AJV schema with safe diagnostic message
+  const rejected = await data.app.inject({
+    method: 'POST',
+    url: path,
+    headers: { ...data.headers, 'idempotency-key': 'rejected-job' },
+    payload: { transport: 'discord', projectId: binding.client_project_id, previousJob: null }
+  });
+  assert.equal(rejected.statusCode, 400);
+  assert.equal(rejected.json().error.code, 'INVALID_REQUEST');
+  assert.match(rejected.json().error.message, /must NOT have additional properties/);
+  assert.deepEqual(rejected.json().error.details, {});
+
+  // 2. Workspace script projects { transport: payload.transport } to conform to backend schema
+  const script = (await data.app.inject('/project-workspace.js')).body;
+  assert.match(script, /submitJob=M\.submission\(async\(payload,key\)=>api\('\/v1\/client-projects\/'\+encodeURIComponent\(id\)\+'\/processing-jobs',\{transport:payload\.transport\},key\)/);
+
+  // 3. Valid Discord job creation via projected payload succeeds with HTTP 201
+  const discordJob = await data.app.inject({
+    method: 'POST',
+    url: path,
+    headers: { ...data.headers, 'idempotency-key': 'valid-discord-job' },
+    payload: { transport: 'discord' }
+  });
+  assert.equal(discordJob.statusCode, 201);
+  assert.equal(discordJob.json().job.transport, 'discord');
+  assert.equal(discordJob.json().job.state, 'queued');
+
+  // 4. Second project for mock job creation succeeds with HTTP 201
+  const payload2 = model().intake({ ...fields, projectName: 'Second project' });
+  const onboard2 = await data.app.inject({
+    method: 'POST',
+    url: '/v1/client-projects/onboard',
+    headers: { ...data.headers, 'idempotency-key': 'workspace-onboard-2' },
+    payload: payload2
+  });
+  assert.equal(onboard2.statusCode, 201);
+  const binding2 = onboard2.json().binding;
+  const mockJob = await data.app.inject({
+    method: 'POST',
+    url: '/v1/client-projects/' + binding2.client_project_id + '/processing-jobs',
+    headers: { ...data.headers, 'idempotency-key': 'valid-mock-job' },
+    payload: { transport: 'mock' }
+  });
+  assert.equal(mockJob.statusCode, 201);
+  assert.equal(mockJob.json().job.transport, 'mock');
+  assert.equal(mockJob.json().job.state, 'queued');
+});
+
+test('transport labels and lifecycle descriptions use the persisted transport, including safe dispatch diagnostics', () => {
+  const M = model();
+  assert.equal(M.transportLabel(null), 'PROCESSING TRANSPORT · NOT STARTED');
+  assert.equal(M.transportLabel({ transport: 'discord' }), 'DISCORD / SWITCH · AGENT TRANSPORT');
+  assert.match(M.transportLabel({ transport: 'mock' }), /NO LIVE AGENTS/);
+  for (const state of ['queued', 'dispatching', 'dispatched', 'running', 'collecting', 'validating', 'imported']) {
+    const description = M.status({ transport: 'discord', state }).description;
+    assert.ok(!/mock|manually uploaded/.test(description));
+  }
+  assert.match(M.status({ transport: 'discord', state: 'failed', error_code: 'discord_dispatch_failed', dispatch_diagnostic: 'invalid_message_payload; http=400; discord=50035' }).description, /message payload/);
+  assert.match(M.status({ transport: 'discord', state: 'dispatch_uncertain', dispatch_diagnostic: 'network_failure; http=0; discord=none' }).description, /Do not blindly resend/);
+  assert.match(M.status({ transport: 'mock', state: 'running' }).description, /deterministic mock/);
+});
+
+test('workspace serves external styles with strict CSP and no inline styling or style injection', async t => {
+  const { app } = await fixture(t);
+  for (const url of ['/projects/new', '/projects/project-id']) {
+    const response = await app.inject(url);
+    assert.match(String(response.headers['content-security-policy']), /style-src 'self'/);
+    assert.ok(!String(response.headers['content-security-policy']).includes('unsafe-inline'));
+    assert.ok(!/<style\b|\sstyle\s*=/i.test(response.body));
+    assert.match(response.body, /<link rel="stylesheet" href="\/project-workspace.css">/);
+  }
+  const js = (await app.inject('/project-workspace.js')).body;
+  assert.ok(!/\.style\.|createElement\(['"]style['"]\)/.test(js));
+  assert.match(js, /pw-transport-label/);
+  assert.match(js, /M\.transportLabel\(job\)/);
+  const css = await app.inject('/project-workspace.css');
+  assert.equal(css.statusCode, 200);
+  assert.match(String(css.headers['content-type']), /text\/css/);
+});
+
+test('retry eligibility allows terminal failures below the shared limit and blocks active, uncertain and submitting states', () => {
+  const M = model();
+  assert.equal(M.retryEligibility(null).disabled, false);
+  for (const transport of ['discord', 'mock']) {
+    for (const attempt of [1, 2]) {
+      assert.equal(M.retryEligibility({ state: 'failed', error_code: 'discord_dispatch_failed', transport, attempt }).disabled, false);
+    }
+    for (const state of ['queued', 'dispatching', 'dispatched', 'running', 'collecting', 'validating', 'dispatch_uncertain']) {
+      assert.equal(M.retryEligibility({ state, transport, attempt: 1 }).disabled, true);
+    }
+    const exhausted = { state: 'failed', transport, attempt: 3 };
+    assert.equal(M.retryEligibility(exhausted).disabled, true);
+    assert.match(M.retryEligibility(exhausted).reason, /Three-attempt limit/);
+    assert.match(M.retryEligibility(JSON.parse(JSON.stringify(exhausted))).reason, /refreshing does not reset/);
+  }
+  assert.equal(M.retryEligibility({ state: 'failed', attempt: 1 }, true).disabled, true);
+  assert.equal(M.retryEligibility({ state: 'failed', attempt: 1 }, false).disabled, false);
+});
+
+test('workspace rendering synchronizes both retry buttons and explains exhausted attempts without disabling refresh', async t => {
+  const { app } = await fixture(t);
+  const script = (await app.inject('/project-workspace.js')).body;
+  const nodes = new Map<string, any>();
+  const node = () => ({ disabled: false, dataset: {}, hidden: false, textContent: '', title: '', append() {}, replaceChildren() {} });
+  const document = { getElementById(id: string) { if (!nodes.has(id)) nodes.set(id, node()); return nodes.get(id); }, createElement: node };
+  const context: Record<string, any> = { RoomTreasuryWorkspace: model(), document };
+  const ending = "addEventListener('pagehide',()=>watcher?.stop());void init();})();";
+  assert.ok(script.includes(ending));
+  runInNewContext(script.replace(ending, 'globalThis.harness={renderJob,setSubmitting(value){jobSubmitting=value;}};})();'), context);
+  const job = { id: 'synthetic-failed-job', state: 'failed', transport: 'discord', attempt: 1, created_at: 0, updated_at: 0 };
+  const check = (disabled: boolean) => {
+    assert.equal(document.getElementById('pw-start').disabled, disabled);
+    assert.equal(document.getElementById('pw-start-mock').disabled, disabled);
+    assert.equal(document.getElementById('pw-refresh').disabled, false);
+  };
+  context.harness.renderJob(job); check(false);
+  context.harness.setSubmitting(true); context.harness.renderJob(job); check(true);
+  context.harness.setSubmitting(false); context.harness.renderJob(job); check(false);
+  context.harness.renderJob({ ...job, state: 'dispatching' }); check(true);
+  context.harness.renderJob({ ...job, attempt: 3 }); check(true);
+  assert.match(document.getElementById('pw-poll-note').textContent, /Three-attempt limit/);
+  assert.match(document.getElementById('pw-start').title, /Discord and mock share/);
+});
+
+test('failed Discord jobs retry with fresh job IDs and keys; active duplicates and exhausted attempts are rejected', async t => {
+  const data = await fixture(t), binding = await onboarding(data);
+  const path = '/v1/client-projects/' + binding.client_project_id + '/processing-jobs';
+  const M = model(), keys: string[] = [];
+  const submit = M.submission(async (payload: { transport: string }, key: string) => {
+    keys.push(key);
+    const response = await data.app.inject({ method: 'POST', url: path, headers: { ...data.headers, 'idempotency-key': key }, payload: { transport: payload.transport } });
+    assert.equal(response.statusCode, 201);
+    return response.json().job;
+  }, () => 'synthetic-retry-' + keys.length);
+  const jobs = new ProcessingJobs(data.db);
+  const first = await submit.run({ transport: 'discord', projectId: binding.client_project_id, previousJob: null });
+  const claimed = jobs.claim('discord')!;
+  jobs.apply(first.id, claimed.lease_owner!, 'synthetic-dispatch-failed', 'failed', 'discord_dispatch_failed');
+  const firstEvents = jobs.events(data.session, first.id).events;
+  const second = await submit.run({ transport: 'discord', projectId: binding.client_project_id, previousJob: first.id });
+  assert.notEqual(first.id, second.id);
+  assert.notEqual(keys[0], keys[1]);
+  assert.equal(second.attempt, 2);
+  assert.equal(second.transport, 'discord');
+  assert.equal(jobs.get(data.session, first.id).state, 'failed');
+  assert.deepEqual(jobs.events(data.session, first.id).events, firstEvents);
+  assert.equal(submit.busy, false);
+  for (const transport of ['discord', 'mock']) {
+    const duplicate = await data.app.inject({ method: 'POST', url: path, headers: { ...data.headers, 'idempotency-key': 'active-duplicate-' + transport }, payload: { transport } });
+    assert.equal(duplicate.statusCode, 409);
+    assert.equal(duplicate.json().error.code, 'JOB_ALREADY_ACTIVE');
+  }
+  const repeated = await data.app.inject({ method: 'POST', url: path, headers: { ...data.headers, 'idempotency-key': keys[1]! }, payload: { transport: 'discord' } });
+  assert.equal(repeated.json().job.id, second.id);
+  const secondClaim = jobs.claim('discord')!;
+  jobs.apply(second.id, secondClaim.lease_owner!, 'synthetic-dispatch-failed', 'failed', 'discord_dispatch_failed');
+  const third = await submit.run({ transport: 'mock', projectId: binding.client_project_id, previousJob: second.id });
+  assert.equal(third.transport, 'mock');
+  assert.equal(third.attempt, 3);
+  assert.notEqual(third.id, second.id);
+  const thirdClaim = jobs.claim('mock')!;
+  jobs.apply(third.id, thirdClaim.lease_owner!, 'synthetic-mock-failed', 'failed', 'mock_dispatch_failed');
+  const fourth = await data.app.inject({ method: 'POST', url: path, headers: { ...data.headers, 'idempotency-key': 'exhausted' }, payload: { transport: 'discord' } });
+  assert.equal(fourth.statusCode, 409);
+  assert.equal(fourth.json().error.code, 'JOB_ATTEMPT_LIMIT');
+  assert.equal(jobs.list(data.session, binding.client_project_id).length, 3);
+});
