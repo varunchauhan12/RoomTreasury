@@ -1,7 +1,8 @@
-// Cult UI Kanban, MIT. Read-only adaptation: dragging cannot change backend lifecycle.
+// Cult UI Kanban, MIT.
 "use client"
 
-import { useCallback, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
+import { cn } from "./utils"
 
 import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 
@@ -18,55 +19,40 @@ const TAG_VARIANTS = {
   docs: { bg: "rgba(6,182,212,0.10)", color: "#0891b2" },
 }
 
-const COLUMN_META = {
+const COLUMN_META: Record<string, { icon: React.ReactNode }> = {
+  backlog: {
+    icon: (
+      <svg aria-hidden="true" fill="none" height="13" stroke="#94a3b8" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" viewBox="0 0 24 24" width="13">
+        <circle cx="12" cy="12" r="10" strokeDasharray="4 4" />
+      </svg>
+    ),
+  },
   todo: {
     icon: (
-      <svg
-        aria-hidden="true"
-        fill="none"
-        height="13"
-        stroke="#b0b0b0"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="2.2"
-        viewBox="0 0 24 24"
-        width="13"
-      >
+      <svg aria-hidden="true" fill="none" height="13" stroke="#b0b0b0" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" viewBox="0 0 24 24" width="13">
         <circle cx="12" cy="12" r="10" />
       </svg>
     ),
   },
   "in-progress": {
     icon: (
-      <svg
-        aria-hidden="true"
-        fill="none"
-        height="13"
-        stroke="#f59e0b"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="2.2"
-        viewBox="0 0 24 24"
-        width="13"
-      >
+      <svg aria-hidden="true" fill="none" height="13" stroke="#f59e0b" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" viewBox="0 0 24 24" width="13">
         <circle cx="12" cy="12" r="10" />
         <polyline points="12 6 12 12 16 14" />
       </svg>
     ),
   },
+  review: {
+    icon: (
+      <svg aria-hidden="true" fill="none" height="13" stroke="#6366f1" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" viewBox="0 0 24 24" width="13">
+        <circle cx="12" cy="12" r="10" />
+        <path d="M12 8v4l3 3" />
+      </svg>
+    ),
+  },
   done: {
     icon: (
-      <svg
-        aria-hidden="true"
-        fill="none"
-        height="13"
-        stroke="#10b981"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="2.2"
-        viewBox="0 0 24 24"
-        width="13"
-      >
+      <svg aria-hidden="true" fill="none" height="13" stroke="#10b981" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" viewBox="0 0 24 24" width="13">
         <circle cx="12" cy="12" r="10" />
         <path d="m9 12 2 2 4-4" />
       </svg>
@@ -75,7 +61,7 @@ const COLUMN_META = {
 }
 
 export type TagVariant = keyof typeof TAG_VARIANTS
-export type ColumnStatus = keyof typeof COLUMN_META
+export type ColumnStatus = string
 
 export type CardTag = {
   label: string
@@ -97,7 +83,7 @@ export type CardData = {
 }
 
 export type ColumnData = {
-  id: ColumnStatus
+  id: string
   title: string
   status: ColumnStatus
   cards: CardData[]
@@ -105,7 +91,7 @@ export type ColumnData = {
 
 export type DragState = {
   cardId: string
-  fromColumn: ColumnStatus
+  fromColumn: string
 } | null
 
 type TagProps = {
@@ -120,11 +106,14 @@ type AvatarProps = {
 
 type CardProps = {
   card: CardData
+  columnId: string
+  allColumns?: ColumnData[]
   isDone: boolean
   index: number
   onDragStart: () => void
   onDragEnd: () => void
   isDragging: boolean
+  onMoveCard?: (cardId: string, fromColumnId: string, toColumnId: string) => void
 }
 
 type DropIndicatorProps = {
@@ -133,13 +122,15 @@ type DropIndicatorProps = {
 
 export type ColumnProps = {
   column: ColumnData
+  allColumns?: ColumnData[]
   onDrop: (
     cardId: string,
-    fromColumnId: ColumnStatus,
-    toColumnId: ColumnStatus
+    fromColumnId: string,
+    toColumnId: string
   ) => void
   dragState: DragState
   setDragState: React.Dispatch<React.SetStateAction<DragState>>
+  onMoveCard?: (cardId: string, fromColumnId: string, toColumnId: string) => void
 }
 
 const springTransition = {
@@ -217,11 +208,14 @@ const cardVariants = {
 
 function Card({
   card,
+  columnId,
+  allColumns,
   isDone,
   index,
   onDragStart,
   onDragEnd,
   isDragging,
+  onMoveCard,
 }: CardProps) {
   const shouldReduce = useReducedMotion()
   const tags = card.tags ?? []
@@ -229,28 +223,38 @@ function Card({
   return (
     <motion.div
       animate="animate"
-      className="not-prose flex cursor-grab select-none flex-col gap-1.5 active:cursor-grabbing"
-      draggable={false}
+      className="not-prose flex cursor-grab select-none flex-col gap-2 active:cursor-grabbing"
+      draggable={true}
       exit="exit"
       initial="initial"
       layout
       layoutId={card.id}
       onDragEnd={onDragEnd}
-      onDragStart={onDragStart}
+      onDragStart={(e: any) => {
+        if (e.target?.closest?.("a, select, button, input")) {
+          e.preventDefault?.()
+          return
+        }
+        if (e.dataTransfer) {
+          e.dataTransfer.setData("text/plain", card.id)
+          e.dataTransfer.effectAllowed = "move"
+        }
+        onDragStart()
+      }}
       style={{
         borderRadius: 14,
-        background: "var(--muted)",
-        padding: "8px 10px",
+        background: "var(--card, #ffffff)",
+        padding: "10px 12px",
         boxShadow: isDragging
           ? "0 0 0 1px var(--border), 0 12px 32px rgba(0,0,0,0.18), 0 4px 8px rgba(0,0,0,0.10)"
           : "0 0 0 1px var(--border), 0 1px 2px rgba(0,0,0,0.04), 0 2px 6px rgba(0,0,0,0.03)",
-        opacity: isDone && !isDragging ? 0.5 : 1,
+        opacity: isDone && !isDragging ? 0.6 : 1,
         position: "relative",
         zIndex: isDragging ? 50 : 1,
       }}
       transition={{
         ...gentleSpring,
-        delay: shouldReduce ? 0 : index * 0.05,
+        delay: shouldReduce ? 0 : index * 0.04,
         layout: springTransition,
       }}
       variants={cardVariants}
@@ -260,7 +264,7 @@ function Card({
           "0 0 0 1px var(--border), 0 4px 12px rgba(0,0,0,0.10), 0 2px 4px rgba(0,0,0,0.06)",
         transition: { type: "spring", stiffness: 400, damping: 20 },
       }}
-      whileTap={{ scale: 0.97 }}
+      whileTap={{ scale: 0.98 }}
     >
       {/* Tags */}
       {tags.length > 0 && (
@@ -275,9 +279,9 @@ function Card({
         </div>
       )}
 
-      {/* Title — `div` avoids `.prose p` margins when embedded in MDX/docs */}
+      {/* Title with preserved workspace navigation */}
       <div
-        className="font-semibold text-[11.5px] leading-snug"
+        className="font-semibold text-[12px] leading-snug"
         style={{
           color: "var(--foreground)",
           textDecoration: isDone ? "line-through" : "none",
@@ -285,12 +289,22 @@ function Card({
           textWrap: "pretty",
         }}
       >
-        {card.href ? <a href={card.href}>{card.title}</a> : card.title}
+        {card.href ? (
+          <a
+            href={card.href}
+            onClick={(e) => e.stopPropagation()}
+            className="hover:underline focus:outline-none focus:ring-1 focus:ring-emerald-500 rounded"
+          >
+            {card.title}
+          </a>
+        ) : (
+          card.title
+        )}
       </div>
 
-      {/* Footer */}
+      {/* Footer metadata */}
       {(card.assignee || card.date) && (
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between pt-1">
           {card.assignee ? (
             <Avatar name={card.assignee.name} src={card.assignee.avatar} />
           ) : (
@@ -304,6 +318,29 @@ function Card({
               {card.date}
             </span>
           )}
+        </div>
+      )}
+
+      {/* Accessible Stage Selector for keyboard/touch movement */}
+      {allColumns && allColumns.length > 0 && (
+        <div className="mt-1 flex items-center justify-between gap-1 pt-1.5 border-t border-[var(--border)] border-opacity-40">
+          <span className="text-[10px] text-[var(--muted-foreground)] font-medium">Stage:</span>
+          <select
+            aria-label={`Move ${card.title} to stage`}
+            className="rt-card-stage-select text-[10.5px] py-0.5 px-1.5 rounded-md bg-[var(--muted,#f3f4f6)] text-[var(--foreground)] border border-[var(--border)] cursor-pointer focus:ring-1 focus:ring-emerald-500"
+            value={columnId}
+            onClick={(e) => e.stopPropagation()}
+            onChange={(e) => {
+              e.stopPropagation()
+              onMoveCard?.(card.id, columnId, e.target.value)
+            }}
+          >
+            {allColumns.map((col) => (
+              <option key={col.id} value={col.id}>
+                {col.title}
+              </option>
+            ))}
+          </select>
         </div>
       )}
     </motion.div>
@@ -328,7 +365,7 @@ function DropIndicator({ isActive }: DropIndicatorProps) {
         width: "60%",
         borderRadius: 99,
         background:
-          "linear-gradient(90deg, transparent, rgba(59,130,246,0.4), transparent)",
+          "linear-gradient(90deg, transparent, rgba(16,185,129,0.5), transparent)",
         marginTop: 2,
         marginBottom: 2,
       }}
@@ -343,9 +380,11 @@ function DropIndicator({ isActive }: DropIndicatorProps) {
 
 export function Column({
   column,
+  allColumns,
   onDrop,
   dragState,
   setDragState,
+  onMoveCard,
 }: ColumnProps) {
   const [dragOver, setDragOver] = useState(false)
   const meta = COLUMN_META[column.status] || COLUMN_META.todo
@@ -369,8 +408,10 @@ export function Column({
     (e: React.DragEvent<HTMLDivElement>) => {
       e.preventDefault()
       setDragOver(false)
-      if (dragState) {
-        onDrop(dragState.cardId, dragState.fromColumn, column.id)
+      const droppedCardId = e.dataTransfer.getData("text/plain") || dragState?.cardId
+      const fromCol = dragState?.fromColumn
+      if (droppedCardId && fromCol) {
+        onDrop(droppedCardId, fromCol, column.id)
       }
     },
     [dragState, onDrop, column.id]
@@ -381,20 +422,20 @@ export function Column({
       {/* Header */}
       <motion.div
         animate={{ opacity: 1, y: 0 }}
-        className="mb-[14px] flex items-center gap-[7px] px-[2px]"
+        className="mb-[12px] flex items-center gap-[7px] px-[2px]"
         initial={{ opacity: 0, y: -4 }}
         transition={{ ...gentleSpring, delay: 0.05 }}
       >
-        {meta.icon}
+        {meta?.icon}
         <span
-          className="font-bold text-[13px] tracking-[-0.01em]"
+          className="font-bold text-[12.5px] tracking-[-0.01em]"
           style={{ color: "var(--foreground)" }}
         >
           {column.title}
         </span>
         <motion.span
           animate={{ scale: 1, opacity: 1 }}
-          className="ml-auto font-semibold text-[12.5px] tabular-nums"
+          className="ml-auto font-semibold text-[11.5px] tabular-nums"
           initial={{ scale: 0.6, opacity: 0 }}
           key={column.cards.length}
           style={{ color: "var(--muted-foreground)" }}
@@ -404,15 +445,15 @@ export function Column({
         </motion.span>
       </motion.div>
 
-      {/* Card list — flex-1 so drop target spans full column below header (short / empty columns) */}
+      {/* Card list */}
       <motion.div
         animate={{
           backgroundColor: dragOver
-            ? "rgba(59,130,246,0.045)"
+            ? "rgba(16,185,129,0.06)"
             : "rgba(0,0,0,0)",
-          scale: dragOver ? 1.012 : 1,
+          scale: dragOver ? 1.01 : 1,
         }}
-        className="flex min-h-0 flex-1 flex-col gap-2 rounded-2xl p-0.5"
+        className="flex min-h-[140px] flex-1 flex-col gap-2.5 rounded-2xl p-1 border border-transparent transition-colors"
         onDragLeave={handleDragLeave}
         onDragOver={handleDragOver}
         onDrop={handleDrop}
@@ -424,6 +465,8 @@ export function Column({
           {column.cards.map((card, i) => (
             <Card
               card={card}
+              columnId={column.id}
+              allColumns={allColumns}
               index={i}
               isDone={isDone}
               isDragging={dragState?.cardId === card.id}
@@ -432,10 +475,124 @@ export function Column({
               onDragStart={() =>
                 setDragState({ cardId: card.id, fromColumn: column.id })
               }
+              onMoveCard={onMoveCard}
             />
           ))}
         </AnimatePresence>
       </motion.div>
+    </div>
+  )
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   KANBAN BOARD (Root interactive component with optimistic updates)
+   ═══════════════════════════════════════════════════════════════════════ */
+
+export function KanbanBoard({
+  initialColumns,
+  onMove,
+  className,
+}: {
+  initialColumns: ColumnData[]
+  onMove?: (
+    cardId: string,
+    fromColumnId: string,
+    toColumnId: string
+  ) => Promise<boolean | void> | void
+  className?: string
+}) {
+  const [columns, setColumns] = useState(initialColumns)
+  const [dragState, setDragState] = useState<DragState>(null)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [isBusy, setIsBusy] = useState(false)
+
+  useEffect(() => {
+    setColumns(initialColumns)
+  }, [initialColumns])
+
+  const handleMove = async (
+    cardId: string,
+    fromColId: string,
+    toColId: string
+  ) => {
+    if (fromColId === toColId || isBusy) return
+    setErrorMessage(null)
+
+    const previousColumns = columns
+    let movingCard: CardData | undefined
+
+    for (const col of columns) {
+      if (col.id === fromColId) {
+        movingCard = col.cards.find((c) => c.id === cardId)
+        break
+      }
+    }
+    if (!movingCard) return
+
+    // Optimistic update
+    setColumns((prev) =>
+      prev.map((col) => {
+        if (col.id === fromColId) {
+          return { ...col, cards: col.cards.filter((c) => c.id !== cardId) }
+        }
+        if (col.id === toColId) {
+          return { ...col, cards: [...col.cards, movingCard!] }
+        }
+        return col
+      })
+    )
+
+    if (onMove) {
+      setIsBusy(true)
+      try {
+        const result = await onMove(cardId, fromColId, toColId)
+        if (result === false) {
+          throw new Error("Transition rejected")
+        }
+      } catch (error) {
+        // Rollback on failure
+        setColumns(previousColumns)
+        setErrorMessage(
+          error instanceof Error
+            ? error.message
+            : "Stage transition was rejected."
+        )
+      } finally {
+        setIsBusy(false)
+      }
+    }
+  }
+
+  return (
+    <div className={cn("rt-cult-kanban-root flex flex-col gap-3 w-full", className)}>
+      {errorMessage && (
+        <div
+          className="rt-kanban-alert flex items-center justify-between rounded-xl border border-amber-300 bg-amber-50 px-4 py-2.5 text-xs text-amber-900 shadow-sm"
+          role="alert"
+        >
+          <span>{errorMessage}</span>
+          <button
+            type="button"
+            className="ml-3 font-bold text-amber-800 hover:text-amber-950"
+            onClick={() => setErrorMessage(null)}
+          >
+            ×
+          </button>
+        </div>
+      )}
+      <div className="rt-cult-kanban grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3.5 min-h-[460px]">
+        {columns.map((column) => (
+          <Column
+            allColumns={columns}
+            column={column}
+            dragState={dragState}
+            key={column.id}
+            onDrop={handleMove}
+            onMoveCard={handleMove}
+            setDragState={setDragState}
+          />
+        ))}
+      </div>
     </div>
   )
 }

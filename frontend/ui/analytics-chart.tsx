@@ -249,6 +249,15 @@ export function AnalyticsLineChart({
   valueLabel = "clicks",
   className,
 }: AnalyticsLineChartProps) {
+  if (!data || data.length === 0) {
+    return (
+      <div className={cn("flex flex-col items-center justify-center p-8 text-center rounded-2xl border border-[var(--border)] bg-[var(--card)]", className)} style={{ minHeight: height }}>
+        <div className="text-sm font-semibold text-[var(--foreground)] mb-1">No financial activity recorded yet</div>
+        <div className="text-xs text-[var(--muted-foreground)]">Commercial agreements, issued invoices and receipts will plot performance trends here.</div>
+      </div>
+    )
+  }
+
   const wrapRef = useRef<HTMLDivElement | null>(null)
   const svgRef = useRef<SVGSVGElement | null>(null)
   const [hovered, setHovered] = useState<number | null>(null)

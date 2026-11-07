@@ -19,7 +19,9 @@ function revenue(value){if(!/^\d+(\.\d{1,2})?$/.test(value))throw Error('Enter a
 function intake(fields){
  const clientName=fields.clientName.trim(),name=fields.projectName.trim(),description=fields.description.trim(),requirements=fields.requirements.trim(),deliverables=fields.deliverables.trim();
  if(!clientName||!name||!description||!requirements||!deliverables)throw Error('Enter the client, project name, description, scope and deliverables.');
- const brief=['RoomTreasury project intake','Project name: '+name,'Description: '+description,'Requirements and scope: '+requirements,'Deliverables: '+deliverables,'Desired deadline: '+(fields.deadline||'Not specified'),'Additional notes: '+(fields.notes.trim()||'None supplied')].join('\n');
+ const contactNote=fields.clientContact?.trim()?'Client contact: '+fields.clientContact.trim():'';
+ const notesText=[contactNote,fields.notes?.trim()].filter(Boolean).join('; ');
+ const brief=['RoomTreasury project intake','Project name: '+name,'Description: '+description,'Requirements and scope: '+requirements,'Deliverables: '+deliverables,'Desired deadline: '+(fields.deadline||'Not specified'),'Additional notes: '+(notesText||'None supplied')].join('\n');
  if(clientName.length>300||brief.length>4000)throw Error('Keep the complete project brief within 4,000 characters.');
  return {clientName,brief,revenueCents:revenue(fields.price)};
 }

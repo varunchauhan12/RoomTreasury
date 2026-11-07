@@ -175,8 +175,8 @@ async function loadDashboardData(passive=false){
     api('/v1/proposal-imports/',options),session?api('/v1/commercial',options):null
   ]);
   Object.assign(state,{session,projects:projects.projects||[],imports:imports.imports||[],commercial});
-  $('rt-owner-name').textContent=session?.demoAccess?'Open demo workspace':session?'Owner workspace':'Owner account';
-  $('rt-owner-role').textContent=session?.demoAccess?'No sign-in required':session?'Signed in':'Sign in';if(session?.demoAccess)for(const link of document.querySelectorAll('a[href="/owner-login"]')){if(!link.querySelector('#rt-owner-name'))link.textContent='Open demo access';else link.setAttribute('aria-label','Open demo workspace — no sign-in required');}
+  $('rt-owner-name').textContent=session?.ownerId?'Owner · '+session.ownerId:session?'Owner workspace':'Owner account';
+  $('rt-owner-role').textContent=session?'Active Session':'Sign in';
 }
 function watchDashboard(){
   const signature=()=>JSON.stringify([state.session?.ownerId,state.projects,state.imports,state.commercial]);
@@ -271,6 +271,14 @@ async function init(){
     if(pCount)pCount.textContent=String(state.projects.length);
     const impCount=$('nav-proposal-count');
     if(impCount)impCount.textContent=String(state.imports.length);
+
+    const topRefresh=$('rt-topbar-refresh');
+    if(topRefresh){
+      topRefresh.addEventListener('click',async()=>{
+        topRefresh.disabled=true;
+        try{await loadDashboardData();await renderRoute();}finally{topRefresh.disabled=false;}
+      });
+    }
 
     // Initial route
     window.addEventListener('hashchange',()=>{

@@ -55,10 +55,13 @@ function termsFor(p,reviews){
   return {proposed:commercial?.proposedCents??terms?.proposedRevenueCents??null,agreed:commercial?.agreedCents??null};
 }
 function stages(p,reviews){
+  const comm=commercialFor(p.client.id);
+  if(comm?.stage==='completed'||p.client.status==='completed')return 'Completed';
+  const saved=typeof localStorage!=='undefined'?localStorage.getItem('rt_stage_'+p.client.id):null;
+  if(saved&&['Brief Intake','AI Analysis','Proposal Review','Approved / Ready','Active Delivery','Completed'].includes(saved))return saved;
   const job=snapshotJob(p), review=reviewFor(p,reviews);
   const record=p.workspace?.imports?.[0];
-  if(p.client.status==='completed')return 'Completed';
-  if(p.delivery)return 'Active Delivery';
+  if(p.delivery||comm?.stage==='delivery')return 'Active Delivery';
   if(activeOverviewJobs.has(job?.state))return 'AI Analysis';
   if(review?.status==='APPROVED_SYNTHETIC_DELIVERY')return 'Approved / Ready';
   if(record)return 'Proposal Review';
@@ -143,8 +146,62 @@ function pipelinePanel(reviews){
   if(globalThis.RoomTreasuryUI?.kanban){
     const names=['Brief Intake','AI Analysis','Proposal Review','Approved / Ready','Active Delivery','Completed'];
     const kinds=['backlog','todo','in-progress','review','review','done'];
-    const columns=names.map((stage,index)=>({id:'stage-'+index,status:kinds[index],title:stage,cards:state.projects.filter(p=>stages(p,reviews)===stage).map(p=>({id:p.client.id,title:projectTitle(p),href:projectHref(p),tags:[{label:p.client.client_name,variant:'feature'}],date:deadline(p)}))}));
-    board.replaceChildren();globalThis.RoomTreasuryUI.kanban(board,columns);
+    const columns=names.map((stage,index)=>({
+      id:'stage-'+index,
+      status:kinds[index],
+      title:stage,
+      cards:state.projects.filter(p=>stages(p,reviews)===stage).map(p=>({
+        id:p.client.id,
+        title:projectTitle(p),
+        href:projectHref(p),
+        tags:[{label:p.client.client_name,variant:stages(p,reviews)==='Completed'?'done':'feature'}],
+        date:deadline(p)
+      }))
+    }));
+
+    const onMove = async (cardId, fromColId, toColId) => {
+      const toIndex = parseInt(toColId.replace('stage-',''),10);
+      const targetStage = names[toIndex];
+      const project = state.projects.find(p=>p.client.id===cardId);
+      if(!project)return false;
+
+      if(targetStage==='Completed'){
+        try {
+          await api('/v1/client-projects/'+encodeURIComponent(cardId)+'/commercial',{
+            action:'complete',
+            reference:'Marked completed from project board'
+          },{key:crypto.randomUUID()});
+          if(typeof localStorage!=='undefined')localStorage.removeItem('rt_stage_'+cardId);
+          await loadDashboardData();
+          return true;
+        } catch(error) {
+          alert('Cannot move to Completed: '+error.message);
+          throw error;
+        }
+      } else if(targetStage==='Active Delivery'){
+        try {
+          await api('/v1/client-projects/'+encodeURIComponent(cardId)+'/commercial',{
+            action:'delivery_start',
+            reference:'Delivery started from project board'
+          },{key:crypto.randomUUID()});
+          if(typeof localStorage!=='undefined')localStorage.removeItem('rt_stage_'+cardId);
+          await loadDashboardData();
+          return true;
+        } catch(error) {
+          alert('Cannot move to Active Delivery: '+error.message);
+          throw error;
+        }
+      } else {
+        if(typeof localStorage!=='undefined'){
+          localStorage.setItem('rt_stage_'+cardId,targetStage);
+        }
+        await loadDashboardData();
+        return true;
+      }
+    };
+
+    board.replaceChildren();
+    globalThis.RoomTreasuryUI.kanban(board,columns,onMove);
   }
   return board;
 }
